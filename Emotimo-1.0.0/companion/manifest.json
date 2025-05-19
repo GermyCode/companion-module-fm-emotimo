@@ -1,26 +1,26 @@
 {
-	"id": "emotimo-st4",
-	"name": "emotimo-st4",
-	"shortname": "Emotimo",
+	"id": "fm-emotimo-st4",
+	"name": "fm-emotimo-st4",
+	"shortname": "fm-Emotimo",
 	"description": "A module to control your Emotimo product on Companion 3.0",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-emotimo-st4.git",
-	"bugs": "https://github.com/bitfocus/companion-module-emotimo-st4/issues",
+	"repository": "git+https://github.com/GermyCode/companion-module-fm-emotimo.git",
+	"bugs": "",
 	"maintainers": [
 		{
-			"name": "Jacob",
-			"email": "jacobw@emotimo.com"
+			"name": "me",
+			"email": "me@me.com"
 		}
 	],
 	"runtime": {
 		"type": "node18",
 		"api": "nodejs-ipc",
-		"apiVersion": "0.0.0",
+		"apiVersion": "1.8.0",
 		"entrypoint": "../main.js"
 	},
-	"legacyIds": ["Emotimo-ST4"],
-	"manufacturer": "eMotimo",
+	"legacyIds": ["fm-Emotimo-ST4"],
+	"manufacturer": "fm-eMotimo",
 	"products": ["ST4", "ST4.3", "SA2.6"],
 	"keywords": []
 }

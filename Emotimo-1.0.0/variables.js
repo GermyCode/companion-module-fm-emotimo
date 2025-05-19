@@ -203,6 +203,7 @@ module.exports = async function (self) {
 		{ name: 'RSRollStopB', variableId: 'RSRollStopB'},
 		{ name: 'RSFocusStopA', variableId: 'RSFocusStopA'},
 		{ name: 'RSFocusStopB', variableId: 'RSFocusStopB'},
-		{ name: 'Last TCP Response', variableId: 'tcp_response' }
+		{ name: 'Last TCP Response', variableId: 'tcp_response' },
+		{ name: 'Last Recalled Preset ID', variableId: 'LastPstID'},
 	])
 }

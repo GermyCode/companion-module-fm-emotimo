@@ -931,6 +931,7 @@ module.exports = function (self) {
 				// console.log('Hello world!', event.options.num)
 				const cmd = 'G20 P'
 				const sendBuf = Buffer.from(cmd + recallPreset.options.num + '\n', 'latin1')
+				self.setVariableValues({ LastPstID: recallPreset.options.num })
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -1427,10 +1428,6 @@ module.exports = function (self) {
 //  ***   mine mine mine mine mine   ***
 //========================================
 
-
-
-    // mine mine mine mine mine
-
     // Sets the run time based on an inputted value instead of just increments of 1
     setPresetRunTimeSetValue: {
 			name: 'Set Preset Run Time Set Value',
@@ -1490,7 +1487,7 @@ module.exports = function (self) {
               } 
             }
             // this is to wait so all of the api calls arent all at the same time, in ms
-            await new Promise(r => setTimeout(r, 100));
+						await new Promise(r => setTimeout(r, 50));
             pstnum++
           }
         } else { // if preset is selected to only change selected preset
@@ -1524,7 +1521,7 @@ module.exports = function (self) {
             { id: 2, label: 'All' },
           ],
         },
-        { // input value for the run time
+        { // input value for the ramp time
           id: 'setvalue',
 					type: 'number',
 					label: 'Value',
@@ -1547,13 +1544,13 @@ module.exports = function (self) {
 				} else if (ramptemp < 1) {
 					ramptemp = 1;
 				}
-        self.setVariableValues({ CurrentPstSetRun: runtemp })
+        self.setVariableValues({ CurrentPstSetRamp: ramptemp })
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
         // setup variables for api call
         const cmd = 'G21 N1 P'
 				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
 
-        if (runTime.options.count === 2) { // all presets
+        if (rampTime.options.count === 2) { // all presets
           var pstnum = 0;
           while (pstnum <= 30) { // loop through all presets setting them to the inputted value
             var varID = 'Pst'+pstnum+'RampT'
@@ -1570,7 +1567,7 @@ module.exports = function (self) {
               }
             }
             // this is to wait so all of the api calls arent all at the same time, in ms
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 50));
             pstnum++
           }
         } else { // if preset is selected to only change selected preset
@@ -1729,7 +1726,7 @@ module.exports = function (self) {
 			}
 		},
 
-    // Resets the run time smart
+    // Resets the ramp time smart
 		resetPresetRampTimeSmart: {
 			name: 'Reset Preset Ramp Time Smart',
 			options: [
@@ -1840,7 +1837,7 @@ module.exports = function (self) {
 			],
 			callback: async (recallPreset) => {
 				var preset = self.getVariableValue('CurrentPstSet')
-
+				self.setVariableValues({ LastPstID: preset })
 				const cmd = 'G20 P'
 
 				const sendBuf = Buffer.from(cmd + preset + '\n', 'latin1')

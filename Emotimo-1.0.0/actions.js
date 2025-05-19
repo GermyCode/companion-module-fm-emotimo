@@ -959,7 +959,18 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [ ...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' },
+					],
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 10,
+					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (runTime) => {
@@ -969,7 +980,11 @@ module.exports = function (self) {
 				ramptemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RampT')
 				runtemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RunT')
 
-				runtemp += runTime.options.direction
+				if (runTime.options.direction === 'amount') {
+					runtemp += runTime.options.amountValue
+				} else {
+					runtemp += runTime.options.direction
+				}
 
 				if (runtemp > 600) {
 					runtemp = 600;
@@ -1073,7 +1088,18 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [ ...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' },
+					],
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 10,
+					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (rampTime) => {
@@ -1144,7 +1170,11 @@ module.exports = function (self) {
 				// 	temp = self.getVariableValue('Pst29RampT')
 				// }
 
-				ramptemp += rampTime.options.direction
+				if (rampTime.options.direction === 'amount') {
+					ramptemp += rampTime.options.amountValue
+				} else {
+					ramptemp += rampTime.options.direction
+				}
 
 				if (ramptemp > 250) {
 					ramptemp = 250;
@@ -1428,86 +1458,86 @@ module.exports = function (self) {
 //  ***   mine mine mine mine mine   ***
 //========================================
 
-    // Sets the run time based on an inputted value instead of just increments of 1
-    setPresetRunTimeSetValue: {
+		// Sets the run time based on an inputted value
+		setPresetRunTimeSetValue: {
 			name: 'Set Preset Run Time Set Value',
 			options: [
-        { // select to change all presets or just selected one
-          id: 'count',
+				{ // select to change all presets or just selected one
+					id: 'count',
 					type: 'dropdown',
 					label: 'All or Current Preset',
-          default: 1,
-          choices: [
-            { id: 1, label: 'Preset' },
-            { id: 2, label: 'All' },
-          ],
-        },
-        { // input value for the run time
-          id: 'setvalue',
+					default: 1,
+					choices: [
+						{ id: 1, label: 'Preset' },
+						{ id: 2, label: 'All' },
+					],
+				},
+				{ // input value for the run time
+					id: 'setvalue',
 					type: 'number',
 					label: 'Value',
-          min: 10,
-		    	max: 600,
-          default: 50,
-        },
+					min: 10,
+					max: 600,
+					default: 50,
+				},
 			],
 			callback: async (runTime) => {
-        // set variables
+				// set variables
 				var runtemp = 0
 				var ramptemp = 0
 				var preset = self.getVariableValue('CurrentPstSet')
-        // stores the inputed run value and gets ramp value from variables
-        runtemp = runTime.options.setvalue
-        ramptemp = self.getVariableValue('CurrentPstSetRamp')
-        // checks to make sure inputted values are in an acceptiable range
+				// stores the inputed run value and gets ramp value from variables
+				runtemp = runTime.options.setvalue
+				ramptemp = self.getVariableValue('CurrentPstSetRamp')
+				// checks to make sure inputted values are in an acceptiable range
 				if (runtemp > 600) {
 					runtemp = 600;
 				} else if (runtemp < 10) {
 					runtemp = 10;
-        }
-        self.setVariableValues({ CurrentPstSetRun: runtemp })
+				}
+				self.setVariableValues({ CurrentPstSetRun: runtemp })
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-        // setup variables for api call
-        const cmd = 'G21 N1 P'
+				// setup variables for api call
+				const cmd = 'G21 N1 P'
 				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
 
-        if (runTime.options.count === 2) { // if all presets
-          var pstnum = 0;
-          while (pstnum <= 30) { // loop through all presets setting them to the inputted value
-            var varID = 'Pst'+pstnum+'RunT'
-            self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-            self.setVariableValues({ [varID]: runtemp })
-            // api call
-            if (self.config.prot == 'tcp') {
-              self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-              if (self.socket !== undefined && self.socket.isConnected) {
-                self.socket.send(sendBuf)
-              } else {
-                self.log('debug', 'Socket not connected :(')
-              } 
-            }
-            // this is to wait so all of the api calls arent all at the same time, in ms
+				if (runTime.options.count === 2) { // if all presets
+					var pstnum = 0;
+					while (pstnum <= 30) { // loop through all presets setting them to the inputted value
+						var varID = 'Pst'+pstnum+'RunT'
+						self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+						self.setVariableValues({ [varID]: runtemp })
+						// api call
+						if (self.config.prot == 'tcp') {
+							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+							if (self.socket !== undefined && self.socket.isConnected) {
+								self.socket.send(sendBuf)
+							} else {
+								self.log('debug', 'Socket not connected :(')
+							}
+						}
+						// this is to wait so all of the api calls arent all at the same time, in ms
 						await new Promise(r => setTimeout(r, 50));
-            pstnum++
-          }
-        } else { // if preset is selected to only change selected preset
-          var varID = 'Pst'+preset+'RunT'
-          self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-          self.setVariableValues({ [varID]: runtemp })
-          // api call
-          if (self.config.prot == 'tcp') {
-            self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-            if (self.socket !== undefined && self.socket.isConnected) {
-              self.socket.send(sendBuf)
-            } else {
-              self.log('debug', 'Socket not connected :(')
-            } 
-          }
-        }
+						pstnum++
+					}
+				} else { // if preset is selected to only change selected preset
+					var varID = 'Pst'+preset+'RunT'
+					self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+					self.setVariableValues({ [varID]: runtemp })
+					// api call
+					if (self.config.prot == 'tcp') {
+						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+						if (self.socket !== undefined && self.socket.isConnected) {
+							self.socket.send(sendBuf)
+						} else {
+							self.log('debug', 'Socket not connected :(')
+						}
+					}
+				}
 			}
 		},
 
-    // Sets the ramp time based on an inputted value instead of just increments of 1
+    // Sets the ramp time based on an inputted value
     setPresetRampTimeSetValue: {
 			name: 'Set Preset Ramp Time Set Value',
 			options: [
@@ -1600,7 +1630,18 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [ ...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' },
+					],
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 10,
+					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (runTime) => {
@@ -1611,7 +1652,11 @@ module.exports = function (self) {
 				runtemp = self.getVariableValue('CurrentPstSetRun')
 				ramptemp = self.getVariableValue('CurrentPstSetRamp')
 
-				runtemp += runTime.options.direction
+				if (runTime.options.direction === 'amount') {
+					runtemp += runTime.options.amountValue
+				} else {
+					runtemp += runTime.options.direction
+				}
 
 				if (runtemp > 600) {
 					runtemp = 600;
@@ -1642,7 +1687,7 @@ module.exports = function (self) {
 			}
 		},
 
-    // Sets the ramp time based on increments of 1
+		// Sets the ramp time based on increments of 1
 		setPresetRampTimeSmart: {
 			name: 'Smart Set Preset Ramp Time',
 			options: [
@@ -1651,7 +1696,18 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [ ...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' },
+					],
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 10,
+					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (rampTime) => {
@@ -1661,10 +1717,13 @@ module.exports = function (self) {
 
 				runtemp = self.getVariableValue('CurrentPstSetRun')
 				ramptemp = self.getVariableValue('CurrentPstSetRamp')
+
+				if (rampTime.options.direction === 'amount') {
+					ramptemp += rampTime.options.amountValue
+				} else {
+					ramptemp += rampTime.options.direction
+				}
 				
-
-				ramptemp += rampTime.options.direction
-
 				if (ramptemp > 250) {
 					ramptemp = 250;
 				} else if (ramptemp < 1) {

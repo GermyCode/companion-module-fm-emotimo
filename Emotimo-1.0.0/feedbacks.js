@@ -34,7 +34,7 @@ module.exports = async function (self) {
 				},
 			],
 			callback: (feedback) => {
-				console.log('Hello world!', feedback.options.num)
+				//console.log('Hello world!', feedback.options.num)
 				if(feedback.options.num > 5) {
 					return true
 				} else {

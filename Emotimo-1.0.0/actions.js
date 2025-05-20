@@ -41,6 +41,7 @@ const TN_MOTOR_ID = [
 const DIRECTION_ID = [
 	{ id: 1, label: 'Positive' },
 	{ id: -1, label: 'Negative' },
+	{ id: 'amount', label: 'Amount' },
 ]
 
 const MOTOR_SPEED = [
@@ -182,7 +183,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
 			callback: async (actionJogSmart) => {
@@ -276,7 +277,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
 			callback: async (actionJogSmart) => {
@@ -411,7 +412,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
 			callback: async (setMotorPosition) => {
@@ -500,7 +501,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
 			callback: async (setMotorPosition) => {
@@ -710,6 +711,15 @@ module.exports = function (self) {
 					default: 1,
 					choices: DIRECTION_ID,
 				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
 			],
 			callback: async (jogSpeed) => {
 				var temp = 0
@@ -732,7 +742,11 @@ module.exports = function (self) {
 					temp = self.getVariableValue('RollSpeedLimit')
 				}
 
-				temp += jogSpeed.options.direction
+				if (jogSpeed.options.direction === 'amount') {
+					temp += jogSpeed.options.amountValue
+				} else {
+					temp += jogSpeed.options.direction
+				}
 
 				if (temp > 100) {
 					temp = 100;
@@ -759,7 +773,6 @@ module.exports = function (self) {
 				} else if (jogSpeed.options.id_mot == 8) {
 					self.setVariableValues({ RollSpeedLimit: temp })
 				}
-
 			}
 		},
 		resetJogSpeedLimit: {
@@ -959,9 +972,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [ ...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' },
-					],
+					choices: DIRECTION_ID
 				},
 				{
 					type: 'number',
@@ -969,16 +980,13 @@ module.exports = function (self) {
 					id: 'amountValue',
 					min: -250,
 		    	max: 250,
-          default: 10,
+          default: 5,
 					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (runTime) => {
-				var runtemp = 0
-				var ramptemp = 0
-
-				ramptemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RampT')
-				runtemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RunT')
+				var runtemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RunT')
+				var ramptemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RampT')
 
 				if (runTime.options.direction === 'amount') {
 					runtemp += runTime.options.amountValue
@@ -994,70 +1002,9 @@ module.exports = function (self) {
 
 				self.log('debug', 'Preset ID: ' + runTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
-				// var varID = 'Pst'+runTime.options.id_pst+'RunT'
-				// self.log('debug', 'Variable ID: ' + varID)
-				// self.setVariable( varID, temp )
-				if (runTime.options.id_pst == 0) {
-					self.setVariableValues({ Pst0RunT: runtemp })
-				} else if (runTime.options.id_pst == 1) {
-					self.setVariableValues({ Pst1RunT: runtemp })
-				} else if (runTime.options.id_pst == 2) {
-					self.setVariableValues({ Pst2RunT: runtemp })
-				} else if (runTime.options.id_pst == 3) {
-					self.setVariableValues({ Pst3RunT: runtemp })
-				} else if (runTime.options.id_pst == 4) {
-					self.setVariableValues({ Pst4RunT: runtemp })
-				} else if (runTime.options.id_pst == 5) {
-					self.setVariableValues({ Pst5RunT: runtemp })
-				} else if (runTime.options.id_pst == 6) {
-					self.setVariableValues({ Pst6RunT: runtemp })
-				} else if (runTime.options.id_pst == 7) {
-					self.setVariableValues({ Pst7RunT: runtemp })
-				} else if (runTime.options.id_pst == 8) {
-					self.setVariableValues({ Pst8RunT: runtemp })
-				} else if (runTime.options.id_pst == 9) {
-					self.setVariableValues({ Pst9RunT: runtemp })
-				} else if (runTime.options.id_pst == 10) {
-					self.setVariableValues({ Pst10RunT: runtemp })
-				} else if (runTime.options.id_pst == 11) {
-					self.setVariableValues({ Pst11RunT: runtemp })
-				} else if (runTime.options.id_pst == 12) {
-					self.setVariableValues({ Pst12RunT: runtemp })
-				} else if (runTime.options.id_pst == 13) {
-					self.setVariableValues({ Pst13RunT: runtemp })
-				} else if (runTime.options.id_pst == 14) {
-					self.setVariableValues({ Pst14RunT: runtemp })
-				} else if (runTime.options.id_pst == 15) {
-					self.setVariableValues({ Pst15RunT: runtemp })
-				} else if (runTime.options.id_pst == 16) {
-					self.setVariableValues({ Pst16RunT: runtemp })
-				} else if (runTime.options.id_pst == 17) {
-					self.setVariableValues({ Pst17RunT: runtemp })
-				} else if (runTime.options.id_pst == 18) {
-					self.setVariableValues({ Pst18RunT: runtemp })
-				} else if (runTime.options.id_pst == 19) {
-					self.setVariableValues({ Pst19RunT: runtemp })
-				} else if (runTime.options.id_pst == 20) {
-					self.setVariableValues({ Pst20RunT: runtemp })
-				} else if (runTime.options.id_pst == 21) {
-					self.setVariableValues({ Pst21RunT: runtemp })
-				} else if (runTime.options.id_pst == 22) {
-					self.setVariableValues({ Pst22RunT: runtemp })
-				} else if (runTime.options.id_pst == 23) {
-					self.setVariableValues({ Pst23RunT: runtemp })
-				} else if (runTime.options.id_pst == 24) {
-					self.setVariableValues({ Pst24RunT: runtemp })
-				} else if (runTime.options.id_pst == 25) {
-					self.setVariableValues({ Pst25RunT: runtemp })
-				} else if (runTime.options.id_pst == 26) {
-					self.setVariableValues({ Pst26RunT: runtemp })
-				} else if (runTime.options.id_pst == 27) {
-					self.setVariableValues({ Pst27RunT: runtemp })
-				} else if (runTime.options.id_pst == 28) {
-					self.setVariableValues({ Pst28RunT: runtemp })
-				} else if (runTime.options.id_pst == 29) {
-					self.setVariableValues({ Pst29RunT: runtemp })
-				}
+				var varID = 'Pst'+runTime.options.id_pst+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+				self.setVariableValues({ [varID]: runtemp })
 
 				const cmd = 'G21 N1 P'
 				const sendBuf = Buffer.from(cmd + runTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
@@ -1088,9 +1035,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [ ...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' },
-					],
+					choices: DIRECTION_ID
 				},
 				{
 					type: 'number',
@@ -1098,77 +1043,13 @@ module.exports = function (self) {
 					id: 'amountValue',
 					min: -250,
 		    	max: 250,
-          default: 10,
+          default: 5,
 					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (rampTime) => {
-				var ramptemp = 0
-				var runtemp = 0
-
-				runtemp = self.getVariableValue('Pst' + rampTime.options.id_pst + 'RunT')
-				ramptemp = self.getVariableValue('Pst' + rampTime.options.id_pst + 'RampT')
-				// if (rampTime.options.id_pst == 0) {
-				// 	temp = self.getVariableValue('Pst0RampT')
-				// } else if (rampTime.options.id_pst == 1) {
-				// 	temp = self.getVariableValue('Pst1RampT')
-				// } else if (rampTime.options.id_pst == 2) {
-				// 	temp = self.getVariableValue('Pst2RampT')
-				// } else if (rampTime.options.id_pst == 3) {
-				// 	temp = self.getVariableValue('Pst3RampT')
-				// } else if (rampTime.options.id_pst == 4) {
-				// 	temp = self.getVariableValue('Pst4RampT')
-				// } else if (rampTime.options.id_pst == 5) {
-				// 	temp = self.getVariableValue('Pst5RampT')
-				// } else if (rampTime.options.id_pst == 6) {
-				// 	temp = self.getVariableValue('Pst6RampT')
-				// } else if (rampTime.options.id_pst == 7) {
-				// 	temp = self.getVariableValue('Pst7RampT')
-				// } else if (rampTime.options.id_pst == 8) {
-				// 	temp = self.getVariableValue('Pst8RampT')
-				// } else if (rampTime.options.id_pst == 9) {
-				// 	temp = self.getVariableValue('Pst9RampT')
-				// } else if (rampTime.options.id_pst == 10) {
-				// 	temp = self.getVariableValue('Pst10RampT')
-				// } else if (rampTime.options.id_pst == 11) {
-				// 	temp = self.getVariableValue('Pst11RampT')
-				// } else if (rampTime.options.id_pst == 12) {
-				// 	temp = self.getVariableValue('Pst12RampT')
-				// } else if (rampTime.options.id_pst == 13) {
-				// 	temp = self.getVariableValue('Pst13RampT')
-				// } else if (rampTime.options.id_pst == 14) {
-				// 	temp = self.getVariableValue('Pst14RampT')
-				// } else if (rampTime.options.id_pst == 15) {
-				// 	temp = self.getVariableValue('Pst15RampT')
-				// } else if (rampTime.options.id_pst == 16) {
-				// 	temp = self.getVariableValue('Pst16RampT')
-				// } else if (rampTime.options.id_pst == 17) {
-				// 	temp = self.getVariableValue('Pst17RampT')
-				// } else if (rampTime.options.id_pst == 18) {
-				// 	temp = self.getVariableValue('Pst18RampT')
-				// } else if (rampTime.options.id_pst == 19) {
-				// 	temp = self.getVariableValue('Pst19RampT')
-				// } else if (rampTime.options.id_pst == 20) {
-				// 	temp = self.getVariableValue('Pst20RampT')
-				// } else if (rampTime.options.id_pst == 21) {
-				// 	temp = self.getVariableValue('Pst21RampT')
-				// } else if (rampTime.options.id_pst == 22) {
-				// 	temp = self.getVariableValue('Pst22RampT')
-				// } else if (rampTime.options.id_pst == 23) {
-				// 	temp = self.getVariableValue('Pst23RampT')
-				// } else if (rampTime.options.id_pst == 24) {
-				// 	temp = self.getVariableValue('Pst24RampT')
-				// } else if (rampTime.options.id_pst == 25) {
-				// 	temp = self.getVariableValue('Pst25RampT')
-				// } else if (rampTime.options.id_pst == 26) {
-				// 	temp = self.getVariableValue('Pst26RampT')
-				// } else if (rampTime.options.id_pst == 27) {
-				// 	temp = self.getVariableValue('Pst27RampT')
-				// } else if (rampTime.options.id_pst == 28) {
-				// 	temp = self.getVariableValue('Pst28RampT')
-				// } else if (rampTime.options.id_pst == 29) {
-				// 	temp = self.getVariableValue('Pst29RampT')
-				// }
+				var ramptemp = self.getVariableValue('Pst' + rampTime.options.id_pst + 'RampT')
+				var runtemp = self.getVariableValue('Pst' + rampTime.options.id_pst + 'RunT')
 
 				if (rampTime.options.direction === 'amount') {
 					ramptemp += rampTime.options.amountValue
@@ -1184,67 +1065,9 @@ module.exports = function (self) {
 
 				self.log('debug', 'Preset ID: ' + rampTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
-				if (rampTime.options.id_pst == 0) {
-					self.setVariableValues({ Pst0RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 1) {
-					self.setVariableValues({ Pst1RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 2) {
-					self.setVariableValues({ Pst2RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 3) {
-					self.setVariableValues({ Pst3RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 4) {
-					self.setVariableValues({ Pst4RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 5) {
-					self.setVariableValues({ Pst5RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 6) {
-					self.setVariableValues({ Pst6RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 7) {
-					self.setVariableValues({ Pst7RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 8) {
-					self.setVariableValues({ Pst8RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 9) {
-					self.setVariableValues({ Pst9RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 10) {
-					self.setVariableValues({ Pst10RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 11) {
-					self.setVariableValues({ Pst11RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 12) {
-					self.setVariableValues({ Pst12RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 13) {
-					self.setVariableValues({ Pst13RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 14) {
-					self.setVariableValues({ Pst14RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 15) {
-					self.setVariableValues({ Pst15RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 16) {
-					self.setVariableValues({ Pst16RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 17) {
-					self.setVariableValues({ Pst17RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 18) {
-					self.setVariableValues({ Pst18RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 19) {
-					self.setVariableValues({ Pst19RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 20) {
-					self.setVariableValues({ Pst20RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 21) {
-					self.setVariableValues({ Pst21RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 22) {
-					self.setVariableValues({ Pst22RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 23) {
-					self.setVariableValues({ Pst23RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 24) {
-					self.setVariableValues({ Pst24RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 25) {
-					self.setVariableValues({ Pst25RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 26) {
-					self.setVariableValues({ Pst26RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 27) {
-					self.setVariableValues({ Pst27RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 28) {
-					self.setVariableValues({ Pst28RampT: ramptemp })
-				} else if (rampTime.options.id_pst == 29) {
-					self.setVariableValues({ Pst29RampT: ramptemp })
-				}
+				var varID = 'Pst'+rampTime.options.id_pst+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+				self.setVariableValues({ [varID]: ramptemp })
 
 				const cmd = 'G21 N1 P'
 				const sendBuf = Buffer.from(cmd + rampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
@@ -1277,67 +1100,11 @@ module.exports = function (self) {
 				var runtemp = 50;
 				var ramptemp = self.getVariableValue('Pst' + resetPresetRunTime.options.id_pst + 'RampT')
 
-				if (resetPresetRunTime.options.id_pst == 0) {
-					self.setVariableValues({ Pst0RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 1) {
-					self.setVariableValues({ Pst1RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 2) {
-					self.setVariableValues({ Pst2RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 3) {
-					self.setVariableValues({ Pst3RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 4) {
-					self.setVariableValues({ Pst4RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 5) {
-					self.setVariableValues({ Pst5RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 6) {
-					self.setVariableValues({ Pst6RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 7) {
-					self.setVariableValues({ Pst7RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 8) {
-					self.setVariableValues({ Pst8RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 9) {
-					self.setVariableValues({ Pst9RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 10) {
-					self.setVariableValues({ Pst10RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 11) {
-					self.setVariableValues({ Pst11RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 12) {
-					self.setVariableValues({ Pst12RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 13) {
-					self.setVariableValues({ Pst13RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 14) {
-					self.setVariableValues({ Pst14RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 15) {
-					self.setVariableValues({ Pst15RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 16) {
-					self.setVariableValues({ Pst16RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 17) {
-					self.setVariableValues({ Pst17RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 18) {
-					self.setVariableValues({ Pst18RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 19) {
-					self.setVariableValues({ Pst19RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 20) {
-					self.setVariableValues({ Pst20RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 21) {
-					self.setVariableValues({ Pst21RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 22) {
-					self.setVariableValues({ Pst22RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 23) {
-					self.setVariableValues({ Pst23RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 24) {
-					self.setVariableValues({ Pst24RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 25) {
-					self.setVariableValues({ Pst25RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 26) {
-					self.setVariableValues({ Pst26RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 27) {
-					self.setVariableValues({ Pst27RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 28) {
-					self.setVariableValues({ Pst28RunT: runtemp })
-				} else if (resetPresetRunTime.options.id_pst == 29) {
-					self.setVariableValues({ Pst29RunT: runtemp })
-				}
+				self.log('debug', 'Preset ID: ' + resetPresetRunTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Pst'+resetPresetRunTime.options.id_pst+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+				self.setVariableValues({ [varID]: runtemp })
 
 				const cmd = 'G21 N1 P'
 				const sendBuf = Buffer.from(cmd + resetPresetRunTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
@@ -1369,67 +1136,11 @@ module.exports = function (self) {
 				var ramptemp = 10;
 				var runtemp = self.getVariableValue('Pst' + resetPresetRampTime.options.id_pst + 'RunT')
 
-				if (resetPresetRampTime.options.id_pst == 0) {
-					self.setVariableValues({ Pst0RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 1) {
-					self.setVariableValues({ Pst1RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 2) {
-					self.setVariableValues({ Pst2RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 3) {
-					self.setVariableValues({ Pst3RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 4) {
-					self.setVariableValues({ Pst4RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 5) {
-					self.setVariableValues({ Pst5RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 6) {
-					self.setVariableValues({ Pst6RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 7) {
-					self.setVariableValues({ Pst7RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 8) {
-					self.setVariableValues({ Pst8RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 9) {
-					self.setVariableValues({ Pst9RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 10) {
-					self.setVariableValues({ Pst10RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 11) {
-					self.setVariableValues({ Pst11RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 12) {
-					self.setVariableValues({ Pst12RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 13) {
-					self.setVariableValues({ Pst13RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 14) {
-					self.setVariableValues({ Pst14RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 15) {
-					self.setVariableValues({ Pst15RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 16) {
-					self.setVariableValues({ Pst16RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 17) {
-					self.setVariableValues({ Pst17RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 18) {
-					self.setVariableValues({ Pst18RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 19) {
-					self.setVariableValues({ Pst19RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 20) {
-					self.setVariableValues({ Pst20RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 21) {
-					self.setVariableValues({ Pst21RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 22) {
-					self.setVariableValues({ Pst22RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 23) {
-					self.setVariableValues({ Pst23RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 24) {
-					self.setVariableValues({ Pst24RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 25) {
-					self.setVariableValues({ Pst25RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 26) {
-					self.setVariableValues({ Pst26RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 27) {
-					self.setVariableValues({ Pst27RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 28) {
-					self.setVariableValues({ Pst28RampT: ramptemp })
-				} else if (resetPresetRampTime.options.id_pst == 29) {
-					self.setVariableValues({ Pst29RampT: ramptemp })
-				}
+				self.log('debug', 'Preset ID: ' + resetPresetRampTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Pst'+resetPresetRampTime.options.id_pst+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+				self.setVariableValues({ [varID]: ramptemp })
 
 				const cmd = 'G21 N1 P'
 				const sendBuf = Buffer.from(cmd + resetPresetRampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
@@ -1459,8 +1170,8 @@ module.exports = function (self) {
 //========================================
 
 		// Sets the run time based on an inputted value
-		setPresetRunTimeSetValue: {
-			name: 'Set Preset Run Time Set Value',
+		setPresetRunTimeByValue: {
+			name: 'Set Preset Run Time By Value',
 			options: [
 				{ // select to change all presets or just selected one
 					id: 'count',
@@ -1517,7 +1228,7 @@ module.exports = function (self) {
 							}
 						}
 						// this is to wait so all of the api calls arent all at the same time, in ms
-						await new Promise(r => setTimeout(r, 50));
+						await new Promise(r => setTimeout(r, 200));
 						pstnum++
 					}
 				} else { // if preset is selected to only change selected preset
@@ -1538,8 +1249,8 @@ module.exports = function (self) {
 		},
 
     // Sets the ramp time based on an inputted value
-    setPresetRampTimeSetValue: {
-			name: 'Set Preset Ramp Time Set Value',
+    setPresetRampTimeByValue: {
+			name: 'Set Preset Ramp Time By Value',
 			options: [
         { // select to change all presets or just selected one
           id: 'count',
@@ -1563,11 +1274,10 @@ module.exports = function (self) {
 			callback: async (rampTime) => {
         // set variables
 				var ramptemp = 0
-				var runtemp = 0
+				var runtemp = self.getVariableValue('CurrentPstSetRun')
 				var preset = self.getVariableValue('CurrentPstSet')
-        // stores the inputed ramp value and gets run value from variables
-				runtemp = self.getVariableValue('CurrentPstSetRun')
 				ramptemp = rampTime.options.setvalue
+
         // checks to make sure inputted values are in an acceptiable range
 				if (ramptemp > 250) {
 					ramptemp = 250;
@@ -1597,7 +1307,7 @@ module.exports = function (self) {
               }
             }
             // this is to wait so all of the api calls arent all at the same time, in ms
-            await new Promise(r => setTimeout(r, 50));
+            await new Promise(r => setTimeout(r, 200));
             pstnum++
           }
         } else { // if preset is selected to only change selected preset
@@ -1727,9 +1437,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [ ...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' },
-					],
+					choices: DIRECTION_ID
 				},
 				{
 					type: 'number',
@@ -1737,17 +1445,14 @@ module.exports = function (self) {
 					id: 'amountValue',
 					min: -250,
 		    	max: 250,
-          default: 10,
+          default: 5,
 					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (runTime) => {
-				var runtemp = 0
-				var ramptemp = 0
+				var runtemp = self.getVariableValue('CurrentPstSetRun')
+				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
 				var preset = self.getVariableValue('CurrentPstSet')
-
-				runtemp = self.getVariableValue('CurrentPstSetRun')
-				ramptemp = self.getVariableValue('CurrentPstSetRamp')
 
 				if (runTime.options.direction === 'amount') {
 					runtemp += runTime.options.amountValue
@@ -1764,7 +1469,7 @@ module.exports = function (self) {
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
         var varID = 'Pst'+preset+'RunT'
-        self.log('debug', 'Variable ID: ' + varID)
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
         self.setVariableValues({ [varID]: runtemp })
 
 				self.setVariableValues({ CurrentPstSetRun: runtemp })
@@ -1793,9 +1498,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [ ...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' },
-					],
+					choices: DIRECTION_ID,
 				},
 				{
 					type: 'number',
@@ -1803,17 +1506,14 @@ module.exports = function (self) {
 					id: 'amountValue',
 					min: -250,
 		    	max: 250,
-          default: 10,
+          default: 5,
 					isVisible: (options) => options.direction === 'amount',
 				},
 			],
 			callback: async (rampTime) => {
-				var ramptemp = 0
-				var runtemp = 0
+				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
+				var runtemp = self.getVariableValue('CurrentPstSetRun')
 				var preset = self.getVariableValue('CurrentPstSet')
-
-				runtemp = self.getVariableValue('CurrentPstSetRun')
-				ramptemp = self.getVariableValue('CurrentPstSetRamp')
 
 				if (rampTime.options.direction === 'amount') {
 					ramptemp += rampTime.options.amountValue
@@ -1830,7 +1530,7 @@ module.exports = function (self) {
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
         var varID = 'Pst'+preset+'RampT'
-        self.log('debug', 'Variable ID: ' + varID)
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
         self.setVariableValues({ [varID]: ramptemp })
 
 				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
@@ -1860,6 +1560,9 @@ module.exports = function (self) {
 				var preset = self.getVariableValue('CurrentPstSet')
 				var runtemp = 50;
 				var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
+
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
 
         var varID = 'Pst'+preset+'RunT'
         self.log('debug', 'Variable ID: ' + varID)
@@ -1893,6 +1596,8 @@ module.exports = function (self) {
 				var ramptemp = 10;
 				var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
 
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
         var varID = 'Pst'+preset+'RampT'
         self.log('debug', 'Variable ID: ' + varID)
         self.setVariableValues({ [varID]: ramptemp })
@@ -1923,15 +1628,12 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
+				
 			],
 			callback: async (pst) => {
-				var ramptemp = 0
-				var runtemp = 0
 				var preset = self.getVariableValue('CurrentPstSet')
-
-				
 				preset += pst.options.direction
 				
 				if (preset > 30) {
@@ -1939,10 +1641,10 @@ module.exports = function (self) {
 				} else if (preset < 0) {
 					preset = 0;
 				}
-				
-				runtemp = self.getVariableValue('Pst' + preset + 'RunT')
-				ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
-				
+
+				var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
+				var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
+
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
 				self.setVariableValues({ CurrentPstSet: preset })
@@ -1950,8 +1652,6 @@ module.exports = function (self) {
 				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
 
 				self.checkFeedbacks("SetPresetSmart")
-
-				
 			}
 		},
 
@@ -1962,12 +1662,9 @@ module.exports = function (self) {
 			
 			],
 			callback: async (setPreset) => {
-				var runtemp = 0
-				var ramptemp = 0
+				var runtemp = self.getVariableValue('CurrentPstSetRun')
+				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
 				var preset = self.getVariableValue('CurrentPstSet')
-
-				runtemp = self.getVariableValue('CurrentPstSetRun')
-				ramptemp = self.getVariableValue('CurrentPstSetRamp')
 
 				const cmd = 'G21 P'
 
@@ -1994,8 +1691,8 @@ module.exports = function (self) {
 			callback: async (recallPreset) => {
 				var preset = self.getVariableValue('CurrentPstSet')
 				self.setVariableValues({ LastPstID: preset })
-				const cmd = 'G20 P'
 
+				const cmd = 'G20 P'
 				const sendBuf = Buffer.from(cmd + preset + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
@@ -2032,57 +1729,34 @@ module.exports = function (self) {
 					default: 1,
 					choices: DIRECTION_ID,
 				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
 			],
 			callback: async (runTime) => {
-				var temp = 0
+				var runtemp = self.getVariableValue('Lp'+runTime.options.id_loop+'RunT')
 
-				if (runTime.options.id_loop == 0) {
-					temp = self.getVariableValue('Lp0RunT')
-				} else if (runTime.options.id_loop == 1) {
-					temp = self.getVariableValue('Lp1RunT')
-				} else if (runTime.options.id_loop == 2) {
-					temp = self.getVariableValue('Lp2RunT')
-				} else if (runTime.options.id_loop == 3) {
-					temp = self.getVariableValue('Lp3RunT')
-				} else if (runTime.options.id_loop == 4) {
-					temp = self.getVariableValue('Lp4RunT')
-				} else if (runTime.options.id_loop == 5) {
-					temp = self.getVariableValue('Lp5RunT')
-				} else if (runTime.options.id_loop == 6) {
-					temp = self.getVariableValue('Lp6RunT')
-				} else if (runTime.options.id_loop == 7) {
-					temp = self.getVariableValue('Lp7RunT')
-				} else if (runTime.options.id_loop == 8) {
-					temp = self.getVariableValue('Lp8RunT')
+				if (runTime.options.direction === 'amount') {
+					runtemp += runTime.options.amountValue
+				} else {
+					runtemp += runTime.options.direction
 				}
 
-				temp += runTime.options.direction
-
-				if (temp > 600) {
-					temp = 600;
-				} else if (temp < 10) {
-					temp = 10;
+				if (runtemp > 600) {
+					runtemp = 600;
+				} else if (runtemp < 10) {
+					runtemp = 10;
 				}
 
-				self.log('debug', 'Loop ID: ' + runTime.options.id_loop + ' RunT: ' + temp)
-
-				if (runTime.options.id_loop == 0) {
-					self.setVariableValues({ Lp0RunT: temp })
-				} else if (runTime.options.id_loop == 1) {
-					self.setVariableValues({ Lp1RunT: temp })
-				} else if (runTime.options.id_loop == 2) {
-					self.setVariableValues({ Lp2RunT: temp })
-				} else if (runTime.options.id_loop == 3) {
-					self.setVariableValues({ Lp3RunT: temp })
-				} else if (runTime.options.id_loop == 4) {
-					self.setVariableValues({ Lp4RunT: temp })
-				} else if (runTime.options.id_loop == 5) {
-					self.setVariableValues({ Lp5RunT: temp })
-				} else if (runTime.options.id_loop == 6) {
-					self.setVariableValues({ Lp6RunT: temp })
-				} else if (runTime.options.id_loop == 7) {
-					self.setVariableValues({ Lp7RunT: temp })
-				}
+				var varID = 'Lp'+runTime.options.id_loop+'RunT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+        self.setVariableValues({ [varID]: runtemp })
 			}
 		},
 		setLoopRampTime: {
@@ -2102,55 +1776,34 @@ module.exports = function (self) {
 					default: 1,
 					choices: DIRECTION_ID,
 				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
 			],
 			callback: async (rampTime) => {
-				var temp = 0
+				var ramptemp = self.getVariableValue('Lp'+rampTime.options.id_loop+'RampT')
 
-				if (rampTime.options.id_loop == 0) {
-					temp = self.getVariableValue('Lp0RampT')
-				} else if (rampTime.options.id_loop == 1) {
-					temp = self.getVariableValue('Lp1RampT')
-				} else if (rampTime.options.id_loop == 2) {
-					temp = self.getVariableValue('Lp2RampT')
-				} else if (rampTime.options.id_loop == 3) {
-					temp = self.getVariableValue('Lp3RampT')
-				} else if (rampTime.options.id_loop == 4) {
-					temp = self.getVariableValue('Lp4RampT')
-				} else if (rampTime.options.id_loop == 5) {
-					temp = self.getVariableValue('Lp5RampT')
-				} else if (rampTime.options.id_loop == 6) {
-					temp = self.getVariableValue('Lp6RampT')
-				} else if (rampTime.options.id_loop == 7) {
-					temp = self.getVariableValue('Lp7RampT')
+				if (rampTime.options.direction === 'amount') {
+					ramptemp += rampTime.options.amountValue
+				} else {
+					ramptemp += rampTime.options.direction
 				}
 
-				temp += rampTime.options.direction
-
-				if (temp > 250) {
-					temp = 250;
-				} else if (temp < 1) {
-					temp = 1;
+				if (ramptemp > 250) {
+					ramptemp = 250;
+				} else if (ramptemp < 1) {
+					ramptemp = 1;
 				}
 
-				self.log('debug', 'Loop ID: ' + rampTime.options.id_loop + ' RampT: ' + temp)
-
-				if (rampTime.options.id_loop == 0) {
-					self.setVariableValues({ Lp0RampT: temp })
-				} else if (rampTime.options.id_loop == 1) {
-					self.setVariableValues({ Lp1RampT: temp })
-				} else if (rampTime.options.id_loop == 2) {
-					self.setVariableValues({ Lp2RampT: temp })
-				} else if (rampTime.options.id_loop == 3) {
-					self.setVariableValues({ Lp3RampT: temp })
-				} else if (rampTime.options.id_loop == 4) {
-					self.setVariableValues({ Lp4RampT: temp })
-				} else if (rampTime.options.id_loop == 5) {
-					self.setVariableValues({ Lp5RampT: temp })
-				} else if (rampTime.options.id_loop == 6) {
-					self.setVariableValues({ Lp6RampT: temp })
-				} else if (rampTime.options.id_loop == 7) {
-					self.setVariableValues({ Lp7RampT: temp })
-				}
+				var varID = 'Lp'+rampTime.options.id_loop+'RunT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+        self.setVariableValues({ [varID]: ramptemp })
 			}
 		},
 		resetLoopRunTime: {
@@ -2165,25 +1818,11 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (resetLpRunTime) => {
-				var temp = 50;
+				var runtemp = 50;
 
-				if (resetLpRunTime.options.id_loop == 0) {
-					self.setVariableValues({ Lp0RunT: temp })
-				} else if (resetLpRunTime.options.id_loop == 1) {
-					self.setVariableValues({ Lp1RunT: temp })
-				} else if (resetLpRunTime.options.id_loop == 2) {
-					self.setVariableValues({ Lp2RunT: temp })
-				} else if (resetLpRunTime.options.id_loop == 3) {
-					self.setVariableValues({ Lp3RunT: temp })
-				} else if (resetLpRunTime.options.id_loop == 4) {
-					self.setVariableValues({ Lp4RunT: temp })
-				} else if (resetLpRunTime.options.id_loop == 5) {
-					self.setVariableValues({ Lp5RunT: temp })
-				} else if (resetLpRunTime.options.id_loop == 6) {
-					self.setVariableValues({ Lp6RunT: temp })
-				} else if (resetLpRunTime.options.id_loop == 7) {
-					self.setVariableValues({ Lp7RunT: temp })
-				}
+				var varID = 'Lp'+resetLpRunTime.options.id_loop+'RampT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+        self.setVariableValues({ [varID]: runtemp })
 			}
 		},
 		resetLoopRampTime: {
@@ -2198,25 +1837,11 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (resetLpRampTime) => {
-				var temp = 10;
+				var ramptemp = 50;
 
-				if (resetLpRampTime.options.id_loop == 0) {
-					self.setVariableValues({ Lp0RampT: temp })
-				} else if (resetLpRampTime.options.id_loop == 1) {
-					self.setVariableValues({ Lp1RampT: temp })
-				} else if (resetLpRampTime.options.id_loop == 2) {
-					self.setVariableValues({ Lp2RampT: temp })
-				} else if (resetLpRampTime.options.id_loop == 3) {
-					self.setVariableValues({ Lp3RampT: temp })
-				} else if (resetLpRampTime.options.id_loop == 4) {
-					self.setVariableValues({ Lp4RampT: temp })
-				} else if (resetLpRampTime.options.id_loop == 5) {
-					self.setVariableValues({ Lp5RampT: temp })
-				} else if (resetLpRampTime.options.id_loop == 6) {
-					self.setVariableValues({ Lp6RampT: temp })
-				} else if (resetLpRampTime.options.id_loop == 7) {
-					self.setVariableValues({ Lp7RampT: temp })
-				}
+				var varID = 'Lp'+resetLpRampTime.options.id_loop+'RampT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+        self.setVariableValues({ [varID]: ramptemp })
 			}
 		},
 		setLoopAPoint: {
@@ -2234,59 +1859,23 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
 			callback: async (LpAPt) => {
-				var temp = 0
+				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
 
-				if (LpAPt.options.id_loop == 0) {
-					temp = self.getVariableValue('Lp0APoint')
-				} else if (LpAPt.options.id_loop == 1) {
-					temp = self.getVariableValue('Lp1APoint')
-				} else if (LpAPt.options.id_loop == 2) {
-					temp = self.getVariableValue('Lp2APoint')
-				} else if (LpAPt.options.id_loop == 3) {
-					temp = self.getVariableValue('Lp3APoint')
-				} else if (LpAPt.options.id_loop == 4) {
-					temp = self.getVariableValue('Lp4APoint')
-				} else if (LpAPt.options.id_loop == 5) {
-					temp = self.getVariableValue('Lp5APoint')
-				} else if (LpAPt.options.id_loop == 6) {
-					temp = self.getVariableValue('Lp6APoint')
-				} else if (LpAPt.options.id_loop == 7) {
-					temp = self.getVariableValue('Lp7APoint')
-				} else if (LpAPt.options.id_loop == 8) {
-					temp = self.getVariableValue('Lp8APoint')
+				pointTemp += LpAPt.options.direction
+
+				if (pointTemp > 29) {
+					pointTemp = 29;
+				} else if (pointTemp < 0) {
+					pointTemp = 0;
 				}
 
-				temp += LpAPt.options.direction
-
-				if (temp > 29) {
-					temp = 29;
-				} else if (temp < 0) {
-					temp = 0;
-				}
-
-				self.log('debug', 'Loop ID: ' + LpAPt.options.id_loop + ' APoint: ' + temp)
-
-				if (LpAPt.options.id_loop == 0) {
-					self.setVariableValues({ Lp0APoint: temp })
-				} else if (LpAPt.options.id_loop == 1) {
-					self.setVariableValues({ Lp1APoint: temp })
-				} else if (LpAPt.options.id_loop == 2) {
-					self.setVariableValues({ Lp2APoint: temp })
-				} else if (LpAPt.options.id_loop == 3) {
-					self.setVariableValues({ Lp3APoint: temp })
-				} else if (LpAPt.options.id_loop == 4) {
-					self.setVariableValues({ Lp4APoint: temp })
-				} else if (LpAPt.options.id_loop == 5) {
-					self.setVariableValues({ Lp5APoint: temp })
-				} else if (LpAPt.options.id_loop == 6) {
-					self.setVariableValues({ Lp6APoint: temp })
-				} else if (LpAPt.options.id_loop == 7) {
-					self.setVariableValues({ Lp7APoint: temp })
-				}
+				var varID = 'Lp'+LpAPt.options.id_loop+'APoint'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
+        self.setVariableValues({ [varID]: pointTemp })
 			}
 		},
 		setLoopBPoint: {
@@ -2304,59 +1893,23 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
 			callback: async (LpBPt) => {
-				var temp = 0
+				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
 
-				if (LpBPt.options.id_loop == 0) {
-					temp = self.getVariableValue('Lp0BPoint')
-				} else if (LpBPt.options.id_loop == 1) {
-					temp = self.getVariableValue('Lp1BPoint')
-				} else if (LpBPt.options.id_loop == 2) {
-					temp = self.getVariableValue('Lp2BPoint')
-				} else if (LpBPt.options.id_loop == 3) {
-					temp = self.getVariableValue('Lp3BPoint')
-				} else if (LpBPt.options.id_loop == 4) {
-					temp = self.getVariableValue('Lp4BPoint')
-				} else if (LpBPt.options.id_loop == 5) {
-					temp = self.getVariableValue('Lp5BPoint')
-				} else if (LpBPt.options.id_loop == 6) {
-					temp = self.getVariableValue('Lp6BPoint')
-				} else if (LpBPt.options.id_loop == 7) {
-					temp = self.getVariableValue('Lp7BPoint')
-				} else if (LpBPt.options.id_loop == 8) {
-					temp = self.getVariableValue('Lp8BPoint')
+				pointTemp += LpBPt.options.direction
+
+				if (pointTemp > 29) {
+					pointTemp = 29;
+				} else if (pointTemp < 0) {
+					pointTemp = 0;
 				}
 
-				temp += LpBPt.options.direction
-
-				if (temp > 29) {
-					temp = 29;
-				} else if (temp < 0) {
-					temp = 0;
-				}
-
-				self.log('debug', 'Loop ID: ' + LpBPt.options.id_loop + ' BPoint: ' + temp)
-
-				if (LpBPt.options.id_loop == 0) {
-					self.setVariableValues({ Lp0BPoint: temp })
-				} else if (LpBPt.options.id_loop == 1) {
-					self.setVariableValues({ Lp1BPoint: temp })
-				} else if (LpBPt.options.id_loop == 2) {
-					self.setVariableValues({ Lp2BPoint: temp })
-				} else if (LpBPt.options.id_loop == 3) {
-					self.setVariableValues({ Lp3BPoint: temp })
-				} else if (LpBPt.options.id_loop == 4) {
-					self.setVariableValues({ Lp4BPoint: temp })
-				} else if (LpBPt.options.id_loop == 5) {
-					self.setVariableValues({ Lp5BPoint: temp })
-				} else if (LpBPt.options.id_loop == 6) {
-					self.setVariableValues({ Lp6BPoint: temp })
-				} else if (LpBPt.options.id_loop == 7) {
-					self.setVariableValues({ Lp7BPoint: temp })
-				}
+				var varID = 'Lp'+LpBPt.options.id_loop+'BPoint'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
+        self.setVariableValues({ [varID]: pointTemp })
 			}
 		},
 		recallAPoint: {
@@ -2371,32 +1924,10 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (LpAPt) => {
-				var temp = 0
-
-				if (LpAPt.options.id_loop == 0) {
-					temp = self.getVariableValue('Lp0APoint')
-				} else if (LpAPt.options.id_loop == 1) {
-					temp = self.getVariableValue('Lp1APoint')
-				} else if (LpAPt.options.id_loop == 2) {
-					temp = self.getVariableValue('Lp2APoint')
-				} else if (LpAPt.options.id_loop == 3) {
-					temp = self.getVariableValue('Lp3APoint')
-				} else if (LpAPt.options.id_loop == 4) {
-					temp = self.getVariableValue('Lp4APoint')
-				} else if (LpAPt.options.id_loop == 5) {
-					temp = self.getVariableValue('Lp5APoint')
-				} else if (LpAPt.options.id_loop == 6) {
-					temp = self.getVariableValue('Lp6APoint')
-				} else if (LpAPt.options.id_loop == 7) {
-					temp = self.getVariableValue('Lp7APoint')
-				} else if (LpAPt.options.id_loop == 8) {
-					temp = self.getVariableValue('Lp8APoint')
-				}
-
-				// self.log('debug', 'Loop ID: ' + LpAPt.options.id_loop + ' APoint: ' + temp)
+				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
 
 				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + temp + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + pointTemp + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -2421,32 +1952,10 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (LpBPt) => {
-				var temp = 0
-
-				if (LpBPt.options.id_loop == 0) {
-					temp = self.getVariableValue('Lp0BPoint')
-				} else if (LpBPt.options.id_loop == 1) {
-					temp = self.getVariableValue('Lp1BPoint')
-				} else if (LpBPt.options.id_loop == 2) {
-					temp = self.getVariableValue('Lp2BPoint')
-				} else if (LpBPt.options.id_loop == 3) {
-					temp = self.getVariableValue('Lp3BPoint')
-				} else if (LpBPt.options.id_loop == 4) {
-					temp = self.getVariableValue('Lp4BPoint')
-				} else if (LpBPt.options.id_loop == 5) {
-					temp = self.getVariableValue('Lp5BPoint')
-				} else if (LpBPt.options.id_loop == 6) {
-					temp = self.getVariableValue('Lp6BPoint')
-				} else if (LpBPt.options.id_loop == 7) {
-					temp = self.getVariableValue('Lp7BPoint')
-				} else if (LpBPt.options.id_loop == 8) {
-					temp = self.getVariableValue('Lp8BPoint')
-				}
-
-				// self.log('debug', 'Loop ID: ' + LpBPt.options.id_loop + ' BPoint Recall: ' + temp)
+				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
 
 				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + temp + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + pointTemp + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -2472,39 +1981,9 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (LpRecall) => {
-				var tempA = 0
-				var tempB = 0
+				var tempA = self.getVariableValue('Lp'+LpRecall.options.id_loop+'APoint');
+				var tempB = self.getVariableValue('Lp'+LpRecall.options.id_loop+'BPoint');
 				var loopActive = self.getVariableValue('LpActive')
-
-				if (LpRecall.options.id_loop == 0) {
-					tempA = self.getVariableValue('Lp0APoint')
-					tempB = self.getVariableValue('Lp0BPoint')
-				} else if (LpRecall.options.id_loop == 1) {
-					tempA = self.getVariableValue('Lp1APoint')
-					tempB = self.getVariableValue('Lp1BPoint')
-				} else if (LpRecall.options.id_loop == 2) {
-					tempA = self.getVariableValue('Lp2APoint')
-					tempB = self.getVariableValue('Lp2BPoint')
-				} else if (LpRecall.options.id_loop == 3) {
-					tempA = self.getVariableValue('Lp3APoint')
-					tempB = self.getVariableValue('Lp3BPoint')
-				} else if (LpRecall.options.id_loop == 4) {
-					tempA = self.getVariableValue('Lp4APoint')
-					tempB = self.getVariableValue('Lp4BPoint')
-				} else if (LpRecall.options.id_loop == 5) {
-					tempA = self.getVariableValue('Lp5APoint')
-					tempB = self.getVariableValue('Lp5BPoint')
-				} else if (LpRecall.options.id_loop == 6) {
-					tempA = self.getVariableValue('Lp6APoint')
-					tempB = self.getVariableValue('Lp6BPoint')
-				} else if (LpRecall.options.id_loop == 7) {
-					tempA = self.getVariableValue('Lp7APoint')
-					tempB = self.getVariableValue('Lp7BPoint')
-				} else if (LpRecall.options.id_loop == 8) {
-					tempA = self.getVariableValue('Lp8APoint')
-					tempB = self.getVariableValue('Lp8BPoint')
-				}
-
 
 				self.log('debug', 'Active Loop: ' + loopActive)
 				if (loopActive == -1) {
@@ -2554,18 +2033,28 @@ module.exports = function (self) {
 					default: 1,
 					choices: DIRECTION_ID,
 				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
 			],
 			callback: async (runTime) => {
-				var runtemp = 0
-				var ramptemp = 0
-				var loop = self.getVariableValue('CurrentLpSet')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var id_loop = self.getVariableValue('CurrentLpSet')
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				runtemp = self.getVariableValue('CurrentLpRun')
-				ramptemp = self.getVariableValue('CurrentLpRamp')
-
-				runtemp += runTime.options.direction
+				if (runTime.options.direction === 'amount') {
+					runtemp += runTime.options.amountValue
+				} else {
+					runtemp += runTime.options.direction
+				}
 
 				if (runtemp > 600) {
 					runtemp = 600;
@@ -2573,34 +2062,16 @@ module.exports = function (self) {
 					runtemp = 10;
 				}
 
-				self.log('debug', 'Loop ID: ' + loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+				self.log('debug', 'Loop ID: ' + id_loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
-				// var varID = 'Lp'+loop+'RunT'
-				// self.log('debug', 'Variable ID: ' + varID)
-				// self.setVariable( varID, temp )
-				if (loop == 0) {
-					self.setVariableValues({ Lp0RunT: runtemp })
-				} else if (loop == 1) {
-					self.setVariableValues({ Lp1RunT: runtemp })
-				} else if (loop == 2) {
-					self.setVariableValues({ Lp2RunT: runtemp })
-				} else if (loop == 3) {
-					self.setVariableValues({ Lp3RunT: runtemp })
-				} else if (loop == 4) {
-					self.setVariableValues({ Lp4RunT: runtemp })
-				} else if (loop == 5) {
-					self.setVariableValues({ Lp5RunT: runtemp })
-				} else if (loop == 6) {
-					self.setVariableValues({ Lp6RunT: runtemp })
-				} else if (loop == 7) {
-					self.setVariableValues({ Lp7RunT: runtemp })
-				} else if (loop == 8) {
-					self.setVariableValues({ Lp8RunT: runtemp })
-				}
+				var varID = 'Lp'+id_loop+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+        self.setVariableValues({ [varID]: runtemp })
+
 				self.setVariableValues({ CurrentLpRun: runtemp })
 
 				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -2623,51 +2094,45 @@ module.exports = function (self) {
 					default: 1,
 					choices: DIRECTION_ID,
 				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
 			],
 			callback: async (rampTime) => {
-				var ramptemp = 0
-				var runtemp = 0
-				var loop = self.getVariableValue('CurrentLpSet')
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				runtemp = self.getVariableValue('CurrentLpRun')
-				ramptemp = self.getVariableValue('CurrentLpRamp')
+				if (rampTime.options.direction === 'amount') {
+					ramptemp += rampTime.options.amountValue
+				} else {
+					ramptemp += rampTime.options.direction
+				}
 				
-
-				ramptemp += rampTime.options.direction
-
 				if (ramptemp > 250) {
 					ramptemp = 250;
 				} else if (ramptemp < 1) {
 					ramptemp = 1;
 				}
 
-				self.log('debug', 'Loop ID: ' + loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+				self.log('debug', 'Loop ID: ' + id_loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
-				if (loop == 0) {
-					self.setVariableValues({ Lp0RampT: ramptemp })
-				} else if (loop == 1) {
-					self.setVariableValues({ Lp1RampT: ramptemp })
-				} else if (loop == 2) {
-					self.setVariableValues({ Lp2RampT: ramptemp })
-				} else if (loop == 3) {
-					self.setVariableValues({ Lp3RampT: ramptemp })
-				} else if (loop == 4) {
-					self.setVariableValues({ Lp4RampT: ramptemp })
-				} else if (loop == 5) {
-					self.setVariableValues({ Lp5RampT: ramptemp })
-				} else if (loop == 6) {
-					self.setVariableValues({ Lp6RampT: ramptemp })
-				} else if (loop == 7) {
-					self.setVariableValues({ Lp7RampT: ramptemp })
-				} else if (loop == 8) {
-					self.setVariableValues({ Lp8RampT: ramptemp })
-				}
+				var varID = 'Lp'+id_loop+'RampT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+        self.setVariableValues({ [varID]: ramptemp })
+
 				self.setVariableValues({ CurrentLpRamp: ramptemp })
 
 				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -2686,28 +2151,14 @@ module.exports = function (self) {
 				
 			],
 			callback: async (resetLpRunTime) => {
-				var loop = self.getVariableValue('CurrentLpSet')		
-				
-				var temp = 50;
+				var runtemp = 50;
+				var id_loop = self.getVariableValue('CurrentLpSet')
 
-				if (loop == 0) {
-					self.setVariableValues({ Lp0RunT: temp })
-				} else if (loop == 1) {
-					self.setVariableValues({ Lp1RunT: temp })
-				} else if (loop == 2) {
-					self.setVariableValues({ Lp2RunT: temp })
-				} else if (loop == 3) {
-					self.setVariableValues({ Lp3RunT: temp })
-				} else if (loop == 4) {
-					self.setVariableValues({ Lp4RunT: temp })
-				} else if (loop == 5) {
-					self.setVariableValues({ Lp5RunT: temp })
-				} else if (loop == 6) {
-					self.setVariableValues({ Lp6RunT: temp })
-				} else if (loop == 7) {
-					self.setVariableValues({ Lp7RunT: temp })
-				}
-				self.setVariableValues({ CurrentLpRun: temp })
+				var varID = 'Lp'+id_loop+'RampT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+        self.setVariableValues({ [varID]: runtemp })
+
+				self.setVariableValues({ CurrentLpRun: runtemp })
 			}
 		},
 		resetLoopRampTimeSmart: {
@@ -2716,28 +2167,14 @@ module.exports = function (self) {
 				
 			],
 			callback: async (resetLpRampTime) => {
-				var loop = self.getVariableValue('CurrentLpSet')	
+				var ramptemp = 50;
+				var id_loop = self.getVariableValue('CurrentLpSet')
 
-				var temp = 10;
+				var varID = 'Lp'+id_loop+'RampT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+        self.setVariableValues({ [varID]: ramptemp })
 
-				if (loop == 0) {
-					self.setVariableValues({ Lp0RampT: temp })
-				} else if (loop == 1) {
-					self.setVariableValues({ Lp1RampT: temp })
-				} else if (loop == 2) {
-					self.setVariableValues({ Lp2RampT: temp })
-				} else if (loop == 3) {
-					self.setVariableValues({ Lp3RampT: temp })
-				} else if (loop == 4) {
-					self.setVariableValues({ Lp4RampT: temp })
-				} else if (loop == 5) {
-					self.setVariableValues({ Lp5RampT: temp })
-				} else if (loop == 6) {
-					self.setVariableValues({ Lp6RampT: temp })
-				} else if (loop == 7) {
-					self.setVariableValues({ Lp7RampT: temp })
-				}
-				self.setVariableValues({ CurrentLpRamp: temp })
+				self.setVariableValues({ CurrentLpRamp: ramptemp })
 			}
 		},
 		setLoopAPointSmart: {
@@ -2748,20 +2185,17 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
-			callback: async (runTime) => {
-				var ramptemp = 0
-				var runtemp = 0
-				var loop = self.getVariableValue('CurrentLpSet')
+			callback: async (dir) => {
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				runtemp = self.getVariableValue('CurrentLpRun')
-				ramptemp = self.getVariableValue('CurrentLpRamp')
-
-				lpAPt += runTime.options.direction
+				lpAPt += dir.options.direction
 
 				if (lpAPt > 29) {
 					lpAPt = 29;
@@ -2769,32 +2203,16 @@ module.exports = function (self) {
 					lpAPt = 0;
 				}
 
-				self.log('debug', 'Loop ID: ' + loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
+				self.log('debug', 'Loop ID: ' + id_loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
 
-				// var varID = 'Lp'+loop+'RunT'
-				// self.log('debug', 'Variable ID: ' + varID)
-				// self.setVariable( varID, temp )
-				if (loop == 0) {
-					self.setVariableValues({ Lp0APoint: lpAPt })
-				} else if (loop == 1) {
-					self.setVariableValues({ Lp1APoint: lpAPt })
-				} else if (loop == 2) {
-					self.setVariableValues({ Lp2APoint: lpAPt })
-				} else if (loop == 3) {
-					self.setVariableValues({ Lp3APoint: lpAPt })
-				} else if (loop == 4) {
-					self.setVariableValues({ Lp4APoint: lpAPt })
-				} else if (loop == 5) {
-					self.setVariableValues({ Lp5APoint: lpAPt })
-				} else if (loop == 6) {
-					self.setVariableValues({ Lp6APoint: lpAPt })
-				} else if (loop == 7) {
-					self.setVariableValues({ Lp7APoint: lpAPt })
-				} 
+				var varID = 'Lp'+id_loop+'APoint'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + lpAPt)
+        self.setVariableValues({ [varID]: lpAPt })
+				
 				self.setVariableValues({ CurrentLpA: lpAPt })
 
 				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -2815,20 +2233,17 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
-			callback: async (runTime) => {
-				var ramptemp = 0
-				var runtemp = 0
-				var loop = self.getVariableValue('CurrentLpSet')
+			callback: async (dir) => {
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				runtemp = self.getVariableValue('CurrentLpRun')
-				ramptemp = self.getVariableValue('CurrentLpRamp')
-
-				lpBPt += runTime.options.direction
+				lpBPt += dir.options.direction
 
 				if (lpBPt > 29) {
 					lpBPt = 29;
@@ -2836,32 +2251,16 @@ module.exports = function (self) {
 					lpBPt = 0;
 				}
 
-				self.log('debug', 'Loop ID: ' + loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
+				self.log('debug', 'Loop ID: ' + id_loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
 
-				// var varID = 'Lp'+loop+'RunT'
-				// self.log('debug', 'Variable ID: ' + varID)
-				// self.setVariable( varID, temp )
-				if (loop == 0) {
-					self.setVariableValues({ Lp0BPoint: lpBPt })
-				} else if (loop == 1) {
-					self.setVariableValues({ Lp1BPoint: lpBPt })
-				} else if (loop == 2) {
-					self.setVariableValues({ Lp2BPoint: lpBPt })
-				} else if (loop == 3) {
-					self.setVariableValues({ Lp3BPoint: lpBPt })
-				} else if (loop == 4) {
-					self.setVariableValues({ Lp4BPoint: lpBPt })
-				} else if (loop == 5) {
-					self.setVariableValues({ Lp5BPoint: lpBPt })
-				} else if (loop == 6) {
-					self.setVariableValues({ Lp6BPoint: lpBPt })
-				} else if (loop == 7) {
-					self.setVariableValues({ Lp7BPoint: lpBPt })
-				} 
+				var varID = 'Lp'+id_loop+'BPoint'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + lpBPt)
+        self.setVariableValues({ [varID]: lpBPt })
+				
 				self.setVariableValues({ CurrentLpB: lpBPt })
 
 				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -2880,13 +2279,7 @@ module.exports = function (self) {
 				
 			],
 			callback: async (LpAPt) => {
-				var temp = 0
-
-				
-				temp = self.getVariableValue('CurrentLpA')
-				
-
-				// self.log('debug', 'Loop ID: ' + LpAPt.options.id_loop + ' APoint: ' + temp)
+				var temp = self.getVariableValue('CurrentLpA')
 
 				const cmd = 'G20 P'
 				const sendBuf = Buffer.from(cmd + temp + '\n', 'latin1')
@@ -2908,13 +2301,7 @@ module.exports = function (self) {
 				
 			],
 			callback: async (LpAPt) => {
-				var temp = 0
-
-				
-				temp = self.getVariableValue('CurrentLpB')
-				
-
-				// self.log('debug', 'Loop ID: ' + LpAPt.options.id_loop + ' APoint: ' + temp)
+				var temp = self.getVariableValue('CurrentLpB')
 
 				const cmd = 'G20 P'
 				const sendBuf = Buffer.from(cmd + temp + '\n', 'latin1')
@@ -2938,41 +2325,33 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
-			callback: async (pst) => {
-				var ramptemp = 0
-				var runtemp = 0
-				var lpApt = 0
-				var lpBpt = 0
-				var loop = self.getVariableValue('CurrentLpSet')
+			callback: async (dir) => {
+				var id_loop = self.getVariableValue('CurrentLpSet')
 
-				
-				loop += pst.options.direction
-				
-				if (loop > 7) {
-					loop = 7;
-				} else if (loop < 0) {
-					loop = 0;
+				id_loop += dir.options.direction
+				if (id_loop > 7) {
+					id_loop = 7;
+				} else if (id_loop < 0) {
+					id_loop = 0;
 				}
-				
-				runtemp = self.getVariableValue('Lp' + loop + 'RunT')
-				ramptemp = self.getVariableValue('Lp' + loop + 'RampT')
-				lpApt = self.getVariableValue('Lp' + loop + 'APoint')
-				lpBpt = self.getVariableValue('Lp' + loop + 'BPoint')
-				
-				self.log('debug', 'Loop ID: ' + loop + ' A: ' + lpApt + ' B: ' + lpBpt + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
 
-				self.setVariableValues({ CurrentLpSet: loop })
+				var ramptemp = self.getVariableValue('Lp' + id_loop + 'RampT')
+				var runtemp = self.getVariableValue('Lp' + id_loop + 'RunT')
+				var lpApt = lpApt = self.getVariableValue('Lp' + id_loop + 'APoint')
+				var lpBpt = self.getVariableValue('Lp' + id_loop + 'BPoint')
+
+				self.log('debug', 'Loop ID: ' + id_loop + ' A: ' + lpApt + ' B: ' + lpBpt + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				self.setVariableValues({ CurrentLpSet: id_loop })
 				self.setVariableValues({ CurrentLpRun: runtemp })
 				self.setVariableValues({ CurrentLpRamp: ramptemp })
 				self.setVariableValues({ CurrentLpA: lpApt })
 				self.setVariableValues({ CurrentLpB: lpBpt })
 
 				self.checkFeedbacks("SetLoopSmart")
-
-				
 			}
 		},
 		saveLpSmart: {
@@ -2981,17 +2360,14 @@ module.exports = function (self) {
 			
 			],
 			callback: async (setLoop) => {
-				var ramptemp = 0
-				var runtemp = 0
-				var loop = self.getVariableValue('CurrentLpSet')
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				runtemp = self.getVariableValue('CurrentLpRun')
-				ramptemp = self.getVariableValue('CurrentLpRamp')
-
 				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -3371,7 +2747,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
 				},
 			],
 			callback: async (pst) => {
@@ -3584,8 +2960,6 @@ module.exports = function (self) {
 			callback: async (jogSpeed) => {
 				var motor = self.getVariableValue('CurrentMtrSet')
 				var motorSpeed = self.getVariableValue('CurrentMtrSpeed')
-
-				
 
 				motorSpeed += jogSpeed.options.direction
 
@@ -3946,64 +3320,6 @@ module.exports = function (self) {
 
 				const cmd = 'G21 N1 P'
 				const sendBuf = Buffer.from(cmd + presetRunTimeD.options.num + ' T' + self.presetRunTimes[presetRunTimeD.options.num] / 10 + ' A' + self.presetRampTimes[presetRunTimeD.options.num] / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
-			},
-		},
-		presetRampTimeU: {
-			name: 'Preset Ramp Time Increment',
-			options: [
-				{
-					id: 'num',
-					type: 'number',
-					label: 'Preset Number',
-					default: 0,
-					min: 0,
-					max: 127,
-				},
-			],
-			callback: async (presetRampTimeU) => {
-				self.presetRampTimes[presetRampTimeU.options.num] += 1;
-
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + presetRampTimeU.options.num + ' T' + self.presetRunTimes[presetRampTimeU.options.num] / 10 + ' A' + self.presetRampTimes[presetRampTimeU.options.num] / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
-			},
-		},
-		presetRampTimeD: {
-			name: 'Preset Ramp Time Decrement',
-			options: [
-				{
-					id: 'num',
-					type: 'number',
-					label: 'Preset Number',
-					default: 0,
-					min: 0,
-					max: 127,
-				},
-			],
-			callback: async (presetRampTimeD) => {
-				self.presetRampTimes[presetRampTimeD.options.num] -= 1;
-
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + presetRampTimeD.options.num + ' T' + self.presetRunTimes[presetRampTimeD.options.num] / 10 + ' A' + self.presetRampTimes[presetRampTimeD.options.num] / 10 + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())

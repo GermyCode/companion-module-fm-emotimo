@@ -1617,6 +1617,103 @@ module.exports = function (self) {
 			}
 		},
 
+		setJogSpeedLimitByValue: {
+			name: 'Set Motor Jog Speed By Value',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_mot',
+					label: 'Motor ID',
+					default: 1,
+					choices: MOTOR_ID,
+				},
+				{
+					type: 'number',
+					label: 'Amount',
+					id: 'amountValue',
+					min: 0,
+		    	max: 100,
+          default: 100,
+				},
+			],
+			callback: async (jogSpeed) => {
+				var temp = jogSpeed.options.amountValue
+
+				if (temp > 100) {
+					temp = 100;
+				} else if (temp < 0) {
+					temp = 0;
+				}
+
+				self.log('debug', 'Motor ID: ' + jogSpeed.options.id_mot + ' Speed: ' + temp)
+
+				if (jogSpeed.options.id_mot == 1) {
+					self.setVariableValues({ PanSpeedLimit: temp })
+				} else if (jogSpeed.options.id_mot == 2) {
+					self.setVariableValues({ TiltSpeedLimit: temp })
+				} else if (jogSpeed.options.id_mot == 3) {
+					self.setVariableValues({ M3SpeedLimit: temp })
+				} else if (jogSpeed.options.id_mot == 4) {
+					self.setVariableValues({ M4SpeedLimit: temp })
+				} else if (jogSpeed.options.id_mot == 5) {
+					self.setVariableValues({ TN1SpeedLimit: temp })
+				} else if (jogSpeed.options.id_mot == 6) {
+					self.setVariableValues({ TN2SpeedLimit: temp })
+				} else if (jogSpeed.options.id_mot == 7) {
+					self.setVariableValues({ TN3SpeedLimit: temp })
+				} else if (jogSpeed.options.id_mot == 8) {
+					self.setVariableValues({ RollSpeedLimit: temp })
+				}
+			}
+		},
+		setJogSpeedLimitSmartByValue: {
+			name: 'Set Motor Jog Speed Smart By Value',
+			options: [
+				{
+					type: 'number',
+					label: 'Amount',
+					id: 'amountValue',
+					min: 0,
+		    	max: 100,
+          default: 100,
+				},
+			],
+			callback: async (jogSpeed) => {
+				var motor = self.getVariableValue('CurrentMtrSet')
+				var motorSpeed = jogSpeed.options.amountValue
+
+				if (motorSpeed > 100) {
+					motorSpeed = 100;
+				} else if (motorSpeed < 0) {
+					motorSpeed = 0;
+				}
+
+				self.log('debug', 'Motor ID: ' + motor + ' Speed: ' + motorSpeed)
+
+				if (motor == 1) {
+					self.setVariableValues({ PanSpeedLimit: motorSpeed })
+				} else if (motor == 2) {
+					self.setVariableValues({ TiltSpeedLimit: motorSpeed })
+				} else if (motor == 3) {
+					self.setVariableValues({ M3SpeedLimit: motorSpeed })
+				} else if (motor == 4) {
+					self.setVariableValues({ M4SpeedLimit: motorSpeed })
+				} else if (motor == 5) {
+					self.setVariableValues({ TN1SpeedLimit: motorSpeed })
+				} else if (motor == 6) {
+					self.setVariableValues({ TN2SpeedLimit: motorSpeed })
+				} else if (motor == 7) {
+					self.setVariableValues({ TN3SpeedLimit: motorSpeed })
+				} else if (motor == 8) {
+					self.setVariableValues({ RollSpeedLimit: motorSpeed })
+				} else if (motor == 9) {
+					self.setVariableValues({ FocusSpeedLimit: motorSpeed })
+				}
+
+				self.setVariableValues({ CurrentMtrSpeed: motorSpeed })
+			}
+		},
+
 //=============================
 //  ***   Smart Presets   ***
 //=============================

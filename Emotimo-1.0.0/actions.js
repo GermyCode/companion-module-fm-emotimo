@@ -1630,13 +1630,23 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: [DIRECTION_ID[0], DIRECTION_ID[1], { id: 'goto', label: 'Goto Preset' }],
 				},
-				
+				{
+					id: 'gotoPst',
+					type: 'number',
+					label: 'Goto Preset ID',
+					default: 0,
+					isVisible: (options) => options.direction === 'goto'
+				}
 			],
 			callback: async (pst) => {
 				var preset = self.getVariableValue('CurrentPstSet')
+				if (pst.options.direction === 'goto') {
+					preset = pst.options.gotoPst
+				} else {
 				preset += pst.options.direction
+				}
 
 				if (preset < 0) {
 					preset = 0;

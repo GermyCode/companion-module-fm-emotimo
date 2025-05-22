@@ -6,11 +6,13 @@
 * * Run time
 * * Run time set from value
 * * Smart Run Time
+* * Smart Run Time set from value
 ###
 * Ramp time // How fast the preset speeds up from a stop
 * * Ramp time
 * * Ramp time set from value
 * * Smart ramp Time
+* * Smart ramp Time set from value
 
 ## Company Overview
 eMotimo is an industry leader in motion control. We specialize in makes multi axis motion control heads for the cinema space. 

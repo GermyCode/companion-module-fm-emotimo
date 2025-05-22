@@ -1,4 +1,4 @@
-# companion-module-eMotimo
+# companion-module-fm-eMotimo
 
 This module lets you control the ST4/S4.3 or the new SA2.6
 

@@ -43,7 +43,6 @@ const TN_MOTOR_ID = [
 const DIRECTION_ID = [
 	{ id: 1, label: 'Positive' },
 	{ id: -1, label: 'Negative' },
-	{ id: 'amount', label: 'Amount' },
 ]
 
 const MOTOR_SPEED = [
@@ -59,48 +58,12 @@ const MOTOR_SPEED = [
 
 ]
 
-const PRESET_ID = [
+var PRESET_ID = [
 	{ id: 0, label: 'Pst0' },
-	{ id: 1, label: 'Pst1' },
-	{ id: 2, label: 'Pst2' },
-	{ id: 3, label: 'Pst3' },
-	{ id: 4, label: 'Pst4' },
-	{ id: 5, label: 'Pst5' },
-	{ id: 6, label: 'Pst6' },
-	{ id: 7, label: 'Pst7' },
-	{ id: 8, label: 'Pst8' },
-	{ id: 9, label: 'Pst9' },
-	{ id: 10, label: 'Pst10' },
-	{ id: 11, label: 'Pst11' },
-	{ id: 12, label: 'Pst12' },
-	{ id: 13, label: 'Pst13' },
-	{ id: 14, label: 'Pst14' },
-	{ id: 15, label: 'Pst15' },
-	{ id: 16, label: 'Pst16' },
-	{ id: 17, label: 'Pst17' },
-	{ id: 18, label: 'Pst18' },
-	{ id: 19, label: 'Pst19' },
-	{ id: 20, label: 'Pst20' },
-	{ id: 21, label: 'Pst21' },
-	{ id: 22, label: 'Pst22' },
-	{ id: 23, label: 'Pst23' },
-	{ id: 24, label: 'Pst24' },
-	{ id: 25, label: 'Pst25' },
-	{ id: 26, label: 'Pst26' },
-	{ id: 27, label: 'Pst27' },
-	{ id: 28, label: 'Pst28' },
-	{ id: 29, label: 'Pst29' },
 ]
 
-const LOOP_ID = [
+var LOOP_ID = [
 	{ id: 0, label: 'Lp0' },
-	{ id: 1, label: 'Lp1' },
-	{ id: 2, label: 'Lp2' },
-	{ id: 3, label: 'Lp3' },
-	{ id: 4, label: 'Lp4' },
-	{ id: 5, label: 'Lp5' },
-	{ id: 6, label: 'Lp6' },
-	{ id: 7, label: 'Lp7' },
 ]
 
 const VIRTUAL_BUTTON = [
@@ -185,7 +148,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (actionJogSmart) => {
@@ -279,7 +242,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (actionJogSmart) => {
@@ -414,7 +377,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (setMotorPosition) => {
@@ -503,7 +466,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (setMotorPosition) => {
@@ -711,7 +674,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -966,7 +932,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					id: 'id_pst',
 					label: 'Preset ID',
-					default: 1,
+					default: 0,
 					choices: PRESET_ID,
 				},
 				{
@@ -974,7 +940,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -1029,7 +998,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					id: 'id_pst',
 					label: 'Preset ID',
-					default: 1,
+					default: 0,
 					choices: PRESET_ID,
 				},
 				{
@@ -1037,7 +1006,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -1092,7 +1064,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					id: 'id_pst',
 					label: 'Preset ID',
-					default: 1,
+					default: 0,
 					choices: PRESET_ID,
 					// allowCustom: true,
 					// allowExpression: true,
@@ -1129,7 +1101,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					id: 'id_pst',
 					label: 'Preset ID',
-					default: 1,
+					default: 0,
 					choices: PRESET_ID,
 					// allowCustom: true,
 				},
@@ -1439,7 +1411,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -1500,7 +1475,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -1630,7 +1608,9 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1], { id: 'goto', label: 'Goto Preset' }],
+					choices: [...DIRECTION_ID,
+						{ id: 'goto', label: 'Goto Preset' }
+					]
 				},
 				{
 					id: 'gotoPst',
@@ -1645,7 +1625,7 @@ module.exports = function (self) {
 				if (pst.options.direction === 'goto') {
 					preset = pst.options.gotoPst
 				} else {
-				preset += pst.options.direction
+					preset += pst.options.direction
 				}
 
 				if (preset < 0) {
@@ -1654,15 +1634,16 @@ module.exports = function (self) {
 
 				var exists = false
 				for (const item of variableList) {
-					self.log('debug', 'Here: ' + item.variableId)
-					if (item.variableId === `Pst${preset}RunT`) {
-						self.log('debug', 'There!')
+					if (item.variableId === `Pst${preset}Stat`) {
 						exists = true
 						break
 					}
 				}
 				if (!exists) {
 					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
+
+					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
+					self.updateActions()
 
 					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
 					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
@@ -1760,7 +1741,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -1807,7 +1791,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -1892,7 +1879,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (LpAPt) => {
@@ -1926,7 +1913,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (LpBPt) => {
@@ -2064,7 +2051,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -2125,7 +2115,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 				{
 					type: 'number',
@@ -2218,7 +2211,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (dir) => {
@@ -2266,7 +2259,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (dir) => {
@@ -2358,22 +2351,61 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: [...DIRECTION_ID,
+						{ id: 'goto', label: 'Goto Loop' }
+					]
 				},
+				{
+					id: 'gotoLoop',
+					type: 'number',
+					label: 'Goto Loop ID',
+					default: 0,
+					isVisible: (options) => options.direction === 'goto'
+				}
 			],
-			callback: async (dir) => {
+			callback: async (loop) => {
 				var id_loop = self.getVariableValue('CurrentLpSet')
 
-				id_loop += dir.options.direction
-				if (id_loop > 7) {
-					id_loop = 7;
-				} else if (id_loop < 0) {
+				if (loop.options.direction === 'goto') {
+					id_loop = loop.options.gotoLoop
+				} else {
+					id_loop += loop.options.direction
+				}
+
+				if (id_loop < 0) {
 					id_loop = 0;
+				}
+
+				var exists = false
+				for (const item of variableList) {
+					if (item.variableId === `Lp${id_loop}RunT`) {
+						exists = true
+						break
+					}
+				}
+
+				if (!exists) {
+					self.log('debug', `Loop ${id_loop} does not exist yet. Adding now`)
+
+					LOOP_ID.push({ id: id_loop, label: `Lp${id_loop}` })
+					self.updateActions()
+
+					variableList.push({ name: `Loop${id_loop}RunT`, variableId: `Lp${id_loop}RunT` })
+					variableList.push({ name: `Loop${id_loop}RampT`, variableId: `Lp${id_loop}RampT` })
+					variableList.push({ name: `Loop${id_loop}APoint`, variableId: `Lp${id_loop}APoint` })
+					variableList.push({ name: `Loop${id_loop}BPoint`, variableId: `Lp${id_loop}BPoint` })
+
+					self.setVariableDefinitions(variableList)
+
+					self.setVariableValues({ [`Lp${id_loop}RunT`]: 50 })
+					self.setVariableValues({ [`Lp${id_loop}RampT`]: 10 })
+					self.setVariableValues({ [`Lp${id_loop}APoint`]: 0 })
+					self.setVariableValues({ [`Lp${id_loop}BPoint`]: 0 })
 				}
 
 				var ramptemp = self.getVariableValue('Lp' + id_loop + 'RampT')
 				var runtemp = self.getVariableValue('Lp' + id_loop + 'RunT')
-				var lpApt = lpApt = self.getVariableValue('Lp' + id_loop + 'APoint')
+				var lpApt = self.getVariableValue('Lp' + id_loop + 'APoint')
 				var lpBpt = self.getVariableValue('Lp' + id_loop + 'BPoint')
 
 				self.log('debug', 'Loop ID: ' + id_loop + ' A: ' + lpApt + ' B: ' + lpBpt + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
@@ -2731,7 +2763,7 @@ module.exports = function (self) {
 			options: [
 				
 			],
-			callback: async (stopB) => {				
+			callback: async (stopB) => {
 				const cmd = 'G211 M0'
 				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
 				const cmd2 = 'G212 M0'
@@ -2754,7 +2786,7 @@ module.exports = function (self) {
 			options: [
 				
 			],
-			callback: async (zero) => {				
+			callback: async (zero) => {
 				const cmd = 'G201'
 				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
 				
@@ -2780,7 +2812,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: [DIRECTION_ID[0], DIRECTION_ID[1]],
+					choices: DIRECTION_ID
 				},
 			],
 			callback: async (pst) => {
@@ -2987,7 +3019,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 			],
 			callback: async (jogSpeed) => {
@@ -3071,7 +3106,10 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
 				},
 			],
 			callback: async (actionJogSmart) => {

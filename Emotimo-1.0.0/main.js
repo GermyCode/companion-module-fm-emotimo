@@ -48,12 +48,7 @@ class eMotimoModuleInstance extends InstanceBase {
 			this.socket.destroy()
 			delete this.socket
 		}
-
-		//These aren't visible to user declare in variable.js instead
-		// this.presetRunTimes = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50];
-		// this.presetRampTimes = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
-		// this.presetStatus = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
+		
 		this.config = config
 
 		this.config.host = this.config.host || ''
@@ -142,21 +137,21 @@ class eMotimoModuleInstance extends InstanceBase {
 				choices: MODELS,
 				minChoicesForSearch: 5,
 			},
-			// {
-			// 	type: 'static-text',
-			// 	id: 'intervalInfo',
-			// 	width: 12,
-			// 	label: 'Update Interval',
-			// 	value:
-			// 		'Please enter the amount of time in milliseconds to request new information from the camera. Set to 0 to disable.',
-			// },
-			// {
-			// 	type: 'textinput',
-			// 	id: 'interval',
-			// 	label: 'Update Interval',
-			// 	width: 3,
-			// 	default: 5000,
-			// },
+			{
+				type: 'static-text',
+				id: 'intervalInfo',
+				width: 12,
+				label: 'Update Interval',
+				value:
+					'Please enter the amount of time in milliseconds to request new information from the camera. Set to 0 to disable.',
+			},
+			{
+				type: 'textinput',
+				id: 'interval',
+				label: 'Update Interval',
+				width: 3,
+				default: 5000,
+			},
 			{
 				type: 'static-text',
 				id: 'dummy2',
@@ -219,103 +214,107 @@ class eMotimoModuleInstance extends InstanceBase {
 			case 'Preset Set':
 				var data = tokens[1].split(' ')
 				this.log('debug', "ID:" + data[0] + ":" + data[1]); //Data[0] is empty there is a space here
-				switch (data[1]) {
-					case '0':
-						this.setVariableValues({ Pst0Stat: 1 })
-						break
-					case '1':
-						this.setVariableValues({ Pst1Stat: 1 })
-						break
-					case '2':
-						this.setVariableValues({ Pst2Stat: 1 })
-						break
-					case '3':
-						this.setVariableValues({ Pst3Stat: 1 })
-						break
-					case '4':
-						this.setVariableValues({ Pst4Stat: 1 })
-						break
-					case '5':
-						this.setVariableValues({ Pst5Stat: 1 })
-						break
-					case '6':
-						this.setVariableValues({ Pst6Stat: 1 })
-						break
-					case '7':
-						this.setVariableValues({ Pst7Stat: 1 })
-						break
-					case '8':
-						this.setVariableValues({ Pst8Stat: 1 })
-						break
-					case '9':
-						this.setVariableValues({ Pst9Stat: 1 })
-						break
-					case '10':
-						this.setVariableValues({ Pst10Stat: 1 })
-						break
-					case '11':
-						this.setVariableValues({ Pst11Stat: 1 })
-						break
-					case '12':
-						this.setVariableValues({ Pst12Stat: 1 })
-						break
-					case '13':
-						this.setVariableValues({ Pst13Stat: 1 })
-						break
-					case '14':
-						this.setVariableValues({ Pst14Stat: 1 })
-						break
-					case '15':
-						this.setVariableValues({ Pst15Stat: 1 })
-						break
-					case '16':
-						this.setVariableValues({ Pst16Stat: 1 })
-						break
-					case '17':
-						this.setVariableValues({ Pst17Stat: 1 })
-						break
-					case '18':
-						this.setVariableValues({ Pst18Stat: 1 })
-						break
-					case '19':
-						this.setVariableValues({ Pst19Stat: 1 })
-						break
-					case '20':
-						this.setVariableValues({ Pst20Stat: 1 })
-						break
-					case '21':
-						this.setVariableValues({ Pst21Stat: 1 })
-						break
-					case '22':
-						this.setVariableValues({ Pst22Stat: 1 })
-						break
-					case '23':
-						this.setVariableValues({ Pst23Stat: 1 })
-						break
-					case '24':
-						this.setVariableValues({ Pst24Stat: 1 })
-						break
-					case '25':
-						this.setVariableValues({ Pst25Stat: 1 })
-						break
-					case '26':
-						this.setVariableValues({ Pst26Stat: 1 })
-						break
-					case '27':
-						this.setVariableValues({ Pst27Stat: 1 })
-						break
-					case '28':
-						this.setVariableValues({ Pst28Stat: 1 })
-						break
-					case '29':
-						this.setVariableValues({ Pst29Stat: 1 })
-						break
-					case '30':
-						this.setVariableValues({ Pst30Stat: 1 })
-						break
-					default:
-						break
+				const presetId = data[1]
+				if (!isNaN(presetId) && presetId >= 0) {
+					this.setVariableValues({ [`Pst${presetId}Stat`]: 1 })
 				}
+				// switch (data[1]) {
+				// 	case '0':
+				// 		this.setVariableValues({ Pst0Stat: 1 })
+				// 		break
+				// 	case '1':
+				// 		this.setVariableValues({ Pst1Stat: 1 })
+				// 		break
+				// 	case '2':
+				// 		this.setVariableValues({ Pst2Stat: 1 })
+				// 		break
+				// 	case '3':
+				// 		this.setVariableValues({ Pst3Stat: 1 })
+				// 		break
+				// 	case '4':
+				// 		this.setVariableValues({ Pst4Stat: 1 })
+				// 		break
+				// 	case '5':
+				// 		this.setVariableValues({ Pst5Stat: 1 })
+				// 		break
+				// 	case '6':
+				// 		this.setVariableValues({ Pst6Stat: 1 })
+				// 		break
+				// 	case '7':
+				// 		this.setVariableValues({ Pst7Stat: 1 })
+				// 		break
+				// 	case '8':
+				// 		this.setVariableValues({ Pst8Stat: 1 })
+				// 		break
+				// 	case '9':
+				// 		this.setVariableValues({ Pst9Stat: 1 })
+				// 		break
+				// 	case '10':
+				// 		this.setVariableValues({ Pst10Stat: 1 })
+				// 		break
+				// 	case '11':
+				// 		this.setVariableValues({ Pst11Stat: 1 })
+				// 		break
+				// 	case '12':
+				// 		this.setVariableValues({ Pst12Stat: 1 })
+				// 		break
+				// 	case '13':
+				// 		this.setVariableValues({ Pst13Stat: 1 })
+				// 		break
+				// 	case '14':
+				// 		this.setVariableValues({ Pst14Stat: 1 })
+				// 		break
+				// 	case '15':
+				// 		this.setVariableValues({ Pst15Stat: 1 })
+				// 		break
+				// 	case '16':
+				// 		this.setVariableValues({ Pst16Stat: 1 })
+				// 		break
+				// 	case '17':
+				// 		this.setVariableValues({ Pst17Stat: 1 })
+				// 		break
+				// 	case '18':
+				// 		this.setVariableValues({ Pst18Stat: 1 })
+				// 		break
+				// 	case '19':
+				// 		this.setVariableValues({ Pst19Stat: 1 })
+				// 		break
+				// 	case '20':
+				// 		this.setVariableValues({ Pst20Stat: 1 })
+				// 		break
+				// 	case '21':
+				// 		this.setVariableValues({ Pst21Stat: 1 })
+				// 		break
+				// 	case '22':
+				// 		this.setVariableValues({ Pst22Stat: 1 })
+				// 		break
+				// 	case '23':
+				// 		this.setVariableValues({ Pst23Stat: 1 })
+				// 		break
+				// 	case '24':
+				// 		this.setVariableValues({ Pst24Stat: 1 })
+				// 		break
+				// 	case '25':
+				// 		this.setVariableValues({ Pst25Stat: 1 })
+				// 		break
+				// 	case '26':
+				// 		this.setVariableValues({ Pst26Stat: 1 })
+				// 		break
+				// 	case '27':
+				// 		this.setVariableValues({ Pst27Stat: 1 })
+				// 		break
+				// 	case '28':
+				// 		this.setVariableValues({ Pst28Stat: 1 })
+				// 		break
+				// 	case '29':
+				// 		this.setVariableValues({ Pst29Stat: 1 })
+				// 		break
+				// 	case '30':
+				// 		this.setVariableValues({ Pst30Stat: 1 })
+				// 		break
+				// 	default:
+				// 		break
+				// }
 				this.checkFeedbacks("SetPreset")
 				this.checkFeedbacks("SetPresetSmart")
 				break
@@ -533,12 +532,17 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.handleTCPResponse(data)
 			})
 
+			// clear old heartbeat
+			if (this.heartbeatInterval) {
+				clearInterval(this.heartbeatInterval)
+			}
+
 			this.log('debug', "Heartbeat Initialized");
 			this.heartbeatInterval = setInterval(() => {
 				var cmd = 'G500\n';
 				// var cmd = '\x45\x4D\x07\x00\x00\xC1\xA4';
 				this.sendEmotimoAPICommand(cmd);
-			}, 10000)
+			}, this.config.interval)
 		} else {
 			this.updateStatus(InstanceStatus.BadConfig)
 		}
@@ -597,132 +601,12 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ RollCruiseSpeed: 0 })
 		this.setVariableValues({ FocusCruiseSpeed: 0 })
 		this.setVariableValues({ Pst0Stat: 0 })
-		this.setVariableValues({ Pst1Stat: 0 })
-		this.setVariableValues({ Pst2Stat: 0 })
-		this.setVariableValues({ Pst3Stat: 0 })
-		this.setVariableValues({ Pst4Stat: 0 })
-		this.setVariableValues({ Pst5Stat: 0 })
-		this.setVariableValues({ Pst6Stat: 0 })
-		this.setVariableValues({ Pst7Stat: 0 })
-		this.setVariableValues({ Pst8Stat: 0 })
-		this.setVariableValues({ Pst9Stat: 0 })
-		this.setVariableValues({ Pst10Stat: 0 })
-		this.setVariableValues({ Pst11Stat: 0 })
-		this.setVariableValues({ Pst12Stat: 0 })
-		this.setVariableValues({ Pst13Stat: 0 })
-		this.setVariableValues({ Pst14Stat: 0 })
-		this.setVariableValues({ Pst15Stat: 0 })
-		this.setVariableValues({ Pst16Stat: 0 })
-		this.setVariableValues({ Pst17Stat: 0 })
-		this.setVariableValues({ Pst18Stat: 0 })
-		this.setVariableValues({ Pst19Stat: 0 })
-		this.setVariableValues({ Pst20Stat: 0 })
-		this.setVariableValues({ Pst21Stat: 0 })
-		this.setVariableValues({ Pst22Stat: 0 })
-		this.setVariableValues({ Pst23Stat: 0 })
-		this.setVariableValues({ Pst24Stat: 0 })
-		this.setVariableValues({ Pst25Stat: 0 })
-		this.setVariableValues({ Pst26Stat: 0 })
-		this.setVariableValues({ Pst27Stat: 0 })
-		this.setVariableValues({ Pst28Stat: 0 })
-		this.setVariableValues({ Pst29Stat: 0 })
-		this.setVariableValues({ Pst30Stat: 0 })
 		this.setVariableValues({ Pst0RunT: 50 })
-		this.setVariableValues({ Pst1RunT: 50 })
-		this.setVariableValues({ Pst2RunT: 50 })
-		this.setVariableValues({ Pst3RunT: 50 })
-		this.setVariableValues({ Pst4RunT: 50 })
-		this.setVariableValues({ Pst5RunT: 50 })
-		this.setVariableValues({ Pst6RunT: 50 })
-		this.setVariableValues({ Pst7RunT: 50 })
-		this.setVariableValues({ Pst8RunT: 50 })
-		this.setVariableValues({ Pst9RunT: 50 })
-		this.setVariableValues({ Pst10RunT: 50 })
-		this.setVariableValues({ Pst11RunT: 50 })
-		this.setVariableValues({ Pst12RunT: 50 })
-		this.setVariableValues({ Pst13RunT: 50 })
-		this.setVariableValues({ Pst14RunT: 50 })
-		this.setVariableValues({ Pst15RunT: 50 })
-		this.setVariableValues({ Pst16RunT: 50 })
-		this.setVariableValues({ Pst17RunT: 50 })
-		this.setVariableValues({ Pst18RunT: 50 })
-		this.setVariableValues({ Pst19RunT: 50 })
-		this.setVariableValues({ Pst20RunT: 50 })
-		this.setVariableValues({ Pst21RunT: 50 })
-		this.setVariableValues({ Pst22RunT: 50 })
-		this.setVariableValues({ Pst23RunT: 50 })
-		this.setVariableValues({ Pst24RunT: 50 })
-		this.setVariableValues({ Pst25RunT: 50 })
-		this.setVariableValues({ Pst26RunT: 50 })
-		this.setVariableValues({ Pst27RunT: 50 })
-		this.setVariableValues({ Pst28RunT: 50 })
-		this.setVariableValues({ Pst29RunT: 50 })
-		this.setVariableValues({ Pst30RunT: 50 })
 		this.setVariableValues({ Pst0RampT: 10 })
-		this.setVariableValues({ Pst1RampT: 10 })
-		this.setVariableValues({ Pst2RampT: 10 })
-		this.setVariableValues({ Pst3RampT: 10 })
-		this.setVariableValues({ Pst4RampT: 10 })
-		this.setVariableValues({ Pst5RampT: 10 })
-		this.setVariableValues({ Pst6RampT: 10 })
-		this.setVariableValues({ Pst7RampT: 10 })
-		this.setVariableValues({ Pst8RampT: 10 })
-		this.setVariableValues({ Pst9RampT: 10 })
-		this.setVariableValues({ Pst10RampT: 10 })
-		this.setVariableValues({ Pst11RampT: 10 })
-		this.setVariableValues({ Pst12RampT: 10 })
-		this.setVariableValues({ Pst13RampT: 10 })
-		this.setVariableValues({ Pst14RampT: 10 })
-		this.setVariableValues({ Pst15RampT: 10 })
-		this.setVariableValues({ Pst16RampT: 10 })
-		this.setVariableValues({ Pst17RampT: 10 })
-		this.setVariableValues({ Pst18RampT: 10 })
-		this.setVariableValues({ Pst19RampT: 10 })
-		this.setVariableValues({ Pst20RampT: 10 })
-		this.setVariableValues({ Pst21RampT: 10 })
-		this.setVariableValues({ Pst22RampT: 10 })
-		this.setVariableValues({ Pst23RampT: 10 })
-		this.setVariableValues({ Pst24RampT: 10 })
-		this.setVariableValues({ Pst25RampT: 10 })
-		this.setVariableValues({ Pst26RampT: 10 })
-		this.setVariableValues({ Pst27RampT: 10 })
-		this.setVariableValues({ Pst28RampT: 10 })
-		this.setVariableValues({ Pst29RampT: 10 })
-		this.setVariableValues({ Pst30RampT: 10 })
 		this.setVariableValues({ Lp0RunT: 50 })
-		this.setVariableValues({ Lp1RunT: 50 })
-		this.setVariableValues({ Lp2RunT: 50 })
-		this.setVariableValues({ Lp3RunT: 50 })
-		this.setVariableValues({ Lp4RunT: 50 })
-		this.setVariableValues({ Lp5RunT: 50 })
-		this.setVariableValues({ Lp6RunT: 50 })
-		this.setVariableValues({ Lp7RunT: 50 })
-		this.setVariableValues({ Lp8RunT: 50 })
 		this.setVariableValues({ Lp0RampT: 10 })
-		this.setVariableValues({ Lp1RampT: 10 })
-		this.setVariableValues({ Lp2RampT: 10 })
-		this.setVariableValues({ Lp3RampT: 10 })
-		this.setVariableValues({ Lp4RampT: 10 })
-		this.setVariableValues({ Lp5RampT: 10 })
-		this.setVariableValues({ Lp6RampT: 10 })
-		this.setVariableValues({ Lp7RampT: 10 })
-		this.setVariableValues({ Lp8RampT: 10 })
 		this.setVariableValues({ Lp0APoint: 0 })
-		this.setVariableValues({ Lp1APoint: 0 })
-		this.setVariableValues({ Lp2APoint: 0 })
-		this.setVariableValues({ Lp3APoint: 0 })
-		this.setVariableValues({ Lp4APoint: 0 })
-		this.setVariableValues({ Lp5APoint: 0 })
-		this.setVariableValues({ Lp6APoint: 0 })
-		this.setVariableValues({ Lp7APoint: 0 })
 		this.setVariableValues({ Lp0BPoint: 0 })
-		this.setVariableValues({ Lp1BPoint: 0 })
-		this.setVariableValues({ Lp2BPoint: 0 })
-		this.setVariableValues({ Lp3BPoint: 0 })
-		this.setVariableValues({ Lp4BPoint: 0 })
-		this.setVariableValues({ Lp5BPoint: 0 })
-		this.setVariableValues({ Lp6BPoint: 0 })
-		this.setVariableValues({ Lp7BPoint: 0 })
 		this.setVariableValues({ LpActive: -1 })
 		this.setVariableValues({ PanStopA: 0 })
 		this.setVariableValues({ PanStopB: 0 })

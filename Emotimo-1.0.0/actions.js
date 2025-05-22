@@ -1,3 +1,5 @@
+const { variableList } = require('./variables')
+
 const CHOICES_END = [
 	{ id: '', label: 'None' },
 	{ id: '\n', label: 'LF - \\n (Common UNIX/Mac)' },
@@ -1635,11 +1637,32 @@ module.exports = function (self) {
 			callback: async (pst) => {
 				var preset = self.getVariableValue('CurrentPstSet')
 				preset += pst.options.direction
-				
-				if (preset > 30) {
-					preset = 30;
-				} else if (preset < 0) {
+
+				if (preset < 0) {
 					preset = 0;
+				}
+
+				var exists = false
+				for (const item of variableList) {
+					self.log('debug', 'Here: ' + item.variableId)
+					if (item.variableId === `Pst${preset}RunT`) {
+						self.log('debug', 'There!')
+						exists = true
+						break
+					}
+				}
+				if (!exists) {
+					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
+
+					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
+					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
+					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+
+					self.setVariableDefinitions(variableList)
+
+					self.setVariableValues({ [`Pst${preset}RunT`]: 50 })
+					self.setVariableValues({ [`Pst${preset}RampT`]: 10 })
+					self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
 				}
 
 				var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')

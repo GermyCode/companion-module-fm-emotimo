@@ -1402,7 +1402,7 @@ module.exports = function (self) {
 //  ***   Smart Presets   ***
 //=============================
 
-    // Sets the run time based on increments of 1
+    // Sets the run time based on increments
 		setPresetRunTimeSmart: {
 			name: 'Smart Set Preset Run Time',
 			options: [
@@ -1466,7 +1466,7 @@ module.exports = function (self) {
 			}
 		},
 
-		// Sets the ramp time based on increments of 1
+		// Sets the ramp time based on increments
 		setPresetRampTimeSmart: {
 			name: 'Smart Set Preset Ramp Time',
 			options: [

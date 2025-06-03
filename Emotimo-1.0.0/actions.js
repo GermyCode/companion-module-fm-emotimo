@@ -1134,14 +1134,173 @@ module.exports = function (self) {
 
 
 
-//================================
-//  ***   SMART STUFFS IDK   ***
-//================================
+//============================
+//  ***   SMART STUFFS   ***
+//============================
+
+		gotoCoords: {
+			name: 'Goto Coordinates',
+			options: [
+				{
+					id: 'motorid',
+					type: 'dropdown',
+					label: 'Motor:',
+					default: 1,
+					choices: MOTOR_ID
+				},
+				{
+					id: 'coords',
+					type: 'textinput',
+					label: 'Value',
+					default: '0',
+					useVariables: true,
+				},
+				{
+					id: 'runtime',
+					type: 'textinput',
+					label: 'Run Time (Seconds)',
+					default: '5.0',
+					useVariables: true,
+				},
+				{
+					id: 'ramptime',
+					type: 'textinput',
+					label: 'Ramp Time (Seconds)',
+					default: '0.5',
+					useVariables: true,
+				},
+			],
+			callback: async (gotoCoords) => {
+				const resolvedCoordsValue = await self.parseVariablesInString(gotoCoords.options.coords)
+				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
+				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
+
+				const cmd = 'G11 M'
+				const sendBuf = Buffer.from(cmd + gotoCoords.options.motorid + ' P' + resolvedCoordsValue + ' T' + resolvedRunValue + ' A' + resolvedRampValue + '\n', 'latin1')
+
+				if (self.config.prot == 'tcp') {
+					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+					if (self.socket !== undefined && self.socket.isConnected) {
+						self.socket.send(sendBuf)
+					} else {
+						self.log('debug', 'Socket not connected :(')
+					}
+				}
+			}
+		},
+
+		savePstCoords: {
+			name: 'Save Preset By Coordinates',
+			options: [
+				{
+					id: 'preset',
+					type: 'number',
+					label: 'Preset ID',
+					default: 0,
+					min: 0, 
+					max: 127
+				},
+				{
+					type: 'static-text',
+					label: 'info',
+					value: 'Leave blank if you dont want to store a value'
+				},
+				{
+					id: 'pCoords',
+					type: 'textinput',
+					label: 'Pan Coords',
+					useVariables: true,
+				},
+				{
+					id: 'tCoords',
+					type: 'textinput',
+					label: 'Tilt Coords',
+					useVariables: true,
+				},
+				{
+					id: 'sCoords',
+					type: 'textinput',
+					label: 'Slide Coords',
+					useVariables: true,
+				},
+				{
+					id: 'zCoords',
+					type: 'textinput',
+					label: 'Zoom Coords',
+					useVariables: true,
+				},
+				{
+					id: 'runtime',
+					type: 'textinput',
+					label: 'Run Time (Seconds)',
+					default: '5.0',
+					useVariables: true,
+				},
+				{
+					id: 'ramptime',
+					type: 'textinput',
+					label: 'Ramp Time (Seconds)',
+					default: '0.5',
+					useVariables: true,
+				},
+			],
+			callback: async (gotoCoords) => {
+				const preset = gotoCoords.options.preset
+				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
+				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
+				const resolvedPanValue = await self.parseVariablesInString(gotoCoords.options.pCoords)
+				const resolvedTiltValue = await self.parseVariablesInString(gotoCoords.options.tCoords)
+				const resolvedSlideValue = await self.parseVariablesInString(gotoCoords.options.sCoords)
+				const resolvedZoomValue = await self.parseVariablesInString(gotoCoords.options.zCoords)
+
+				var cmd = 'G21 P' + preset
+				if (resolvedRunValue) {
+					cmd += ' T' + resolvedRunValue
+					var varID = 'Pst'+preset+'RunT'
+					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRunValue*10 )
+					self.setVariableValues({ [varID]: resolvedRunValue*10 })
+					if (preset === self.getVariableValue('CurrentPstSet')) {
+						self.setVariableValues({ CurrentPstSetRun: resolvedRunValue*10 })
+					}
+				}
+				if (resolvedRampValue) {
+					cmd += ' A' + resolvedRampValue
+					var varID = 'Pst'+preset+'RampT'
+					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRampValue*10 )
+					self.setVariableValues({ [varID]: resolvedRampValue*10 })
+					if (preset === self.getVariableValue('CurrentPstSet')) {
+						self.setVariableValues({ CurrentPstSetRamp: resolvedRampValue*10 })
+					}
+				}
+				if (resolvedPanValue) {
+					cmd += ' X' + resolvedPanValue
+				}
+				if (resolvedTiltValue) {
+					cmd += ' Y' + resolvedTiltValue
+				}
+				if (resolvedSlideValue) {
+					cmd += ' Z' + resolvedSlideValue
+				}
+				if (resolvedZoomValue) {
+					cmd += ' W' + resolvedZoomValue
+				}
+				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
+
+				if (self.config.prot == 'tcp') {
+					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+					if (self.socket !== undefined && self.socket.isConnected) {
+						self.socket.send(sendBuf)
+					} else {
+						self.log('debug', 'Socket not connected :(')
+					}
+				}
+			}
+		},
 
 
-//========================================
-//  ***   mine mine mine mine mine   ***
-//========================================
+
+
+
 
 		// Sets the run time based on an inputted value
 		setPresetRunTimeByValue: {
@@ -1661,6 +1820,8 @@ module.exports = function (self) {
 					type: 'number',
 					label: 'Goto Preset ID',
 					default: 0,
+					min: 0,
+					max: 127,
 					isVisible: (options) => options.direction === 'goto'
 				}
 			],
@@ -1674,6 +1835,8 @@ module.exports = function (self) {
 
 				if (preset < 0) {
 					preset = 0;
+				} else if (preset > 127) { 
+					preset = 127;
 				}
 
 				var exists = false

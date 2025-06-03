@@ -1153,45 +1153,60 @@ module.exports = function (self) {
 					label: 'All or Current Preset',
 					default: 1,
 					choices: [
-						{ id: 1, label: 'Preset' },
+						{ id: 0, label: 'Custom Preset' },
+						{ id: 1, label: 'Smart Preset' },
 						{ id: 2, label: 'All' },
 					],
 				},
+				{
+					id: 'pstid',
+					type: 'number',
+					label: 'Preset ID',
+					min: 0,
+					default: 0,
+					isVisible: (options) => options.count === 0,
+				},
 				{ // input value for the run time
 					id: 'setvalue',
-					type: 'number',
+					type: 'textinput',
 					label: 'Value',
 					min: 10,
 					max: 600,
-					default: 50,
+					default: '50',
+					useVariables: true,
 				},
 			],
 			callback: async (runTime) => {
 				// set variables
 				var runtemp = 0
 				var ramptemp = 0
-				var preset = self.getVariableValue('CurrentPstSet')
+				if (runTime.options.count === 0) {
+					var preset = runTime.options.pstid
+				}	else {
+					var preset = self.getVariableValue('CurrentPstSet')
+				}
+				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
 				// stores the inputed run value and gets ramp value from variables
-				runtemp = runTime.options.setvalue
+				// runtemp = runTime.options.setvalue
 				ramptemp = self.getVariableValue('CurrentPstSetRamp')
 				// checks to make sure inputted values are in an acceptiable range
-				if (runtemp > 600) {
-					runtemp = 600;
-				} else if (runtemp < 10) {
-					runtemp = 10;
+				if (resolvedValue > 600) {
+					resolvedValue = 600;
+				} else if (resolvedValue < 10) {
+					resolvedValue = 10;
 				}
-				self.setVariableValues({ CurrentPstSetRun: runtemp })
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+				self.setVariableValues({ CurrentPstSetRun: resolvedValue })
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + resolvedValue + ' RampT: ' + ramptemp)
 				// setup variables for api call
 				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + preset + ' T' + resolvedValue / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
 
 				if (runTime.options.count === 2) { // if all presets
 					var pstnum = 0;
 					while (pstnum <= 30) { // loop through all presets setting them to the inputted value
 						var varID = 'Pst'+pstnum+'RunT'
-						self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-						self.setVariableValues({ [varID]: runtemp })
+						self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
+						self.setVariableValues({ [varID]: resolvedValue })
 						// api call
 						if (self.config.prot == 'tcp') {
 							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -1205,10 +1220,24 @@ module.exports = function (self) {
 						await new Promise(r => setTimeout(r, 200));
 						pstnum++
 					}
-				} else { // if preset is selected to only change selected preset
+				} else if (runTime.options.count === 1) { // if preset is selected to only change selected preset
 					var varID = 'Pst'+preset+'RunT'
-					self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-					self.setVariableValues({ [varID]: runtemp })
+					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
+					self.setVariableValues({ [varID]: resolvedValue })
+					// api call
+					if (self.config.prot == 'tcp') {
+						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+						if (self.socket !== undefined && self.socket.isConnected) {
+							self.socket.send(sendBuf)
+						} else {
+							self.log('debug', 'Socket not connected :(')
+						}
+					}
+				}
+				else {
+					var varID = 'Pst'+preset+'RunT'
+					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
+					self.setVariableValues({ [varID]: resolvedValue })
 					// api call
 					if (self.config.prot == 'tcp') {
 						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -1232,44 +1261,59 @@ module.exports = function (self) {
 					label: 'All or Current Preset',
           default: 1,
           choices: [
-            { id: 1, label: 'Preset' },
+						{ id: 0, label: 'Custom Preset' },
+            { id: 1, label: 'Smart Preset' },
             { id: 2, label: 'All' },
           ],
         },
+				{
+					id: 'pstid',
+					type: 'number',
+					label: 'Preset ID',
+					min: 0,
+					default: 0,
+					isVisible: (options) => options.count === 0,
+				},
         { // input value for the ramp time
           id: 'setvalue',
-					type: 'number',
+					type: 'textinput',
 					label: 'Value',
           min: 1,
 		    	max: 250,
-          default: 10,
+          default: '10',
+					useVariables: true,
         },
 			],
 			callback: async (rampTime) => {
         // set variables
 				var ramptemp = 0
 				var runtemp = self.getVariableValue('CurrentPstSetRun')
-				var preset = self.getVariableValue('CurrentPstSet')
-				ramptemp = rampTime.options.setvalue
+				if (runTime.options.count === 0) {
+					var preset = runTime.options.pstid
+				}	else {
+					var preset = self.getVariableValue('CurrentPstSet')
+				}
+				// ramptemp = rampTime.options.setvalue
+				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
 
         // checks to make sure inputted values are in an acceptiable range
-				if (ramptemp > 250) {
-					ramptemp = 250;
-				} else if (ramptemp < 1) {
-					ramptemp = 1;
+				if (resolvedValue > 250) {
+					resolvedValue = 250;
+				} else if (resolvedValue < 1) {
+					resolvedValue = 1;
 				}
-        self.setVariableValues({ CurrentPstSetRamp: ramptemp })
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+        self.setVariableValues({ CurrentPstSetRamp: resolvedValue })
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + resolvedValue)
         // setup variables for api call
         const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + resolvedValue / 10 + '\n', 'latin1')
 
         if (rampTime.options.count === 2) { // all presets
           var pstnum = 0;
           while (pstnum <= 30) { // loop through all presets setting them to the inputted value
             var varID = 'Pst'+pstnum+'RampT'
-            self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-            self.setVariableValues({ [varID]: ramptemp })
+            self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
+            self.setVariableValues({ [varID]: resolvedValue })
             // api call
             if (self.config.prot == 'tcp') {
               self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -1286,8 +1330,8 @@ module.exports = function (self) {
           }
         } else { // if preset is selected to only change selected preset
           var varID = 'Pst'+preset+'RampT'
-          self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-          self.setVariableValues({ [varID]: ramptemp })
+          self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
+          self.setVariableValues({ [varID]: resolvedValue })
           // api call
           if (self.config.prot == 'tcp') {
             self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())

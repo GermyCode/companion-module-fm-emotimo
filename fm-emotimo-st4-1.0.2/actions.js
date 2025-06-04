@@ -2226,7 +2226,7 @@ module.exports = function (self) {
 
 						if (self.socket !== undefined && self.socket.isConnected) {
 							self.socket.send(sendBuf)
-							setTimeout(self.socket.send(sendBuf2), 100)
+							setTimeout(() => self.socket.send(sendBuf2), 100);
 						} else {
 							self.log('debug', 'Socket not connected :(')
 						}

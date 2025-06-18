@@ -880,10 +880,21 @@ module.exports = function (self) {
 			],
 			callback: async (setPreset) => {
 				// console.log('Hello world!', event.options.num)
+				var preset = setPreset.options.num
+				var panpos = self.getVariableValue('PPos')
+				var tiltpos = self.getVariableValue('TPos')
+				var m3pos = self.getVariableValue('SPos')
+				var m4pos = self.getVariableValue('MPos')
+
+				self.setVariableValues({ [`Pst${preset}PanPos`]: panpos })
+				self.setVariableValues({ [`Pst${preset}TiltPos`]: tiltpos })
+				self.setVariableValues({ [`Pst${preset}M3Pos`]: m3pos })
+				self.setVariableValues({ [`Pst${preset}M4Pos`]: m4pos })
+
 				const cmd = 'G21 P'
 
 
-				const sendBuf = Buffer.from(cmd + setPreset.options.num + ' T' + self.presetRunTimes[setPreset.options.num] / 10 + ' A' + self.presetRampTimes[setPreset.options.num] / 10 + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + preset + ' T' + self.presetRunTimes[setPreset.options.num] / 10 + ' A' + self.presetRampTimes[setPreset.options.num] / 10 + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -1193,12 +1204,23 @@ module.exports = function (self) {
 			name: 'Save Preset By Coordinates',
 			options: [
 				{
+					id: 'smart',
+					type:'dropdown',
+					label: 'Smart or select preset id',
+					choices: [
+						{ id: 0, label: 'Smart' },
+						{ id: 1, label: 'Preset ID' }
+					],
+					default: 0
+				},
+				{
 					id: 'preset',
 					type: 'number',
 					label: 'Preset ID',
 					default: 0,
 					min: 0, 
-					max: 127
+					max: 127,
+					isVisible: (options) => options.smart === 1,
 				},
 				{
 					type: 'static-text',
@@ -1232,20 +1254,24 @@ module.exports = function (self) {
 				{
 					id: 'runtime',
 					type: 'textinput',
-					label: 'Run Time (Seconds)',
-					default: '5.0',
+					label: 'Run Time',
+					default: '50',
 					useVariables: true,
 				},
 				{
 					id: 'ramptime',
 					type: 'textinput',
-					label: 'Ramp Time (Seconds)',
-					default: '0.5',
+					label: 'Ramp Time',
+					default: '10',
 					useVariables: true,
 				},
 			],
 			callback: async (gotoCoords) => {
-				const preset = gotoCoords.options.preset
+				if (gotoCoords.options.smart == 0) {
+					var preset = self.getVariableValue('CurrentPstSet')
+				} else {
+					var preset = gotoCoords.options.preset
+				}
 				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
 				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
 				const resolvedPanValue = await self.parseVariablesInString(gotoCoords.options.pCoords)
@@ -1255,34 +1281,46 @@ module.exports = function (self) {
 
 				var cmd = 'G21 P' + preset
 				if (resolvedRunValue) {
-					cmd += ' T' + resolvedRunValue
+					cmd += ' T' + resolvedRunValue / 10
 					var varID = 'Pst'+preset+'RunT'
-					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRunValue*10 )
-					self.setVariableValues({ [varID]: resolvedRunValue*10 })
+					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRunValue )
+					self.setVariableValues({ [varID]: resolvedRunValue })
 					if (preset === self.getVariableValue('CurrentPstSet')) {
-						self.setVariableValues({ CurrentPstSetRun: resolvedRunValue*10 })
+						self.setVariableValues({ CurrentPstSetRun: resolvedRunValue })
 					}
 				}
 				if (resolvedRampValue) {
-					cmd += ' A' + resolvedRampValue
+					cmd += ' A' + resolvedRampValue / 10
 					var varID = 'Pst'+preset+'RampT'
-					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRampValue*10 )
-					self.setVariableValues({ [varID]: resolvedRampValue*10 })
+					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRampValue )
+					self.setVariableValues({ [varID]: resolvedRampValue })
 					if (preset === self.getVariableValue('CurrentPstSet')) {
-						self.setVariableValues({ CurrentPstSetRamp: resolvedRampValue*10 })
+						self.setVariableValues({ CurrentPstSetRamp: resolvedRampValue })
 					}
 				}
 				if (resolvedPanValue) {
 					cmd += ' X' + resolvedPanValue
+					// if (preset !== self.getVariableValue('CurrentPstSet')) {
+					// 	self.setVariableValues({ Pst0PanPos: resolvedPanValue })
+					// }
 				}
 				if (resolvedTiltValue) {
 					cmd += ' Y' + resolvedTiltValue
+					// if (preset !== self.getVariableValue('CurrentPstSet')) {
+					// 	self.setVariableValues({ Pst0TiltPos: resolvedTiltValue })
+					// }
 				}
 				if (resolvedSlideValue) {
 					cmd += ' Z' + resolvedSlideValue
+					// if (preset !== self.getVariableValue('CurrentPstSet')) {
+					// 	self.setVariableValues({ Pst0M3Pos: resolvedSlideValue })
+					// }
 				}
 				if (resolvedZoomValue) {
 					cmd += ' W' + resolvedZoomValue
+					// if (preset !== self.getVariableValue('CurrentPstSet')) {
+					// 	self.setVariableValues({ Pst0M4Pos: resolvedZoomValue })
+					// }
 				}
 				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
 
@@ -1855,6 +1893,10 @@ module.exports = function (self) {
 					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
 					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
 					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
+					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
+					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
+					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
 
 					self.setVariableDefinitions(variableList)
 
@@ -1865,12 +1907,20 @@ module.exports = function (self) {
 
 				var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
 				var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
+				var panpos = self.getVariableValue('Pst' + preset + 'PanPos')
+				var tiltpos = self.getVariableValue('Pst' + preset + 'TiltPos')
+				var m3pos = self.getVariableValue('Pst' + preset + 'M3Pos')
+				var m4pos = self.getVariableValue('Pst' + preset + 'M4Pos')
 
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp + 'PanPos' + panpos + 'TiltPos' + tiltpos + 'M3Pos' + m3pos + 'M4Pos' + m4pos)
 
 				self.setVariableValues({ CurrentPstSet: preset })
 				self.setVariableValues({ CurrentPstSetRun: runtemp })
 				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
+				self.setVariableValues({ CurrentPstPanPos: panpos })
+				self.setVariableValues({ CurrentPstTiltPos: tiltpos })
+				self.setVariableValues({ CurrentPstM3Pos: m3pos })
+				self.setVariableValues({ CurrentPstM4Pos: m4pos })
 
 				self.checkFeedbacks("SetPresetSmart")
 			}
@@ -1886,6 +1936,21 @@ module.exports = function (self) {
 				var runtemp = self.getVariableValue('CurrentPstSetRun')
 				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
 				var preset = self.getVariableValue('CurrentPstSet')
+
+				var panpos = self.getVariableValue('PPos')
+				var tiltpos = self.getVariableValue('TPos')
+				var m3pos = self.getVariableValue('SPos')
+				var m4pos = self.getVariableValue('MPos')
+
+				self.setVariableValues({ [`Pst${preset}PanPos`]: panpos })
+				self.setVariableValues({ [`Pst${preset}TiltPos`]: tiltpos })
+				self.setVariableValues({ [`Pst${preset}M3Pos`]: m3pos })
+				self.setVariableValues({ [`Pst${preset}M4Pos`]: m4pos })
+
+				self.setVariableValues({ CurrentPstPanPos: panpos })
+				self.setVariableValues({ CurrentPstTiltPos: tiltpos })
+				self.setVariableValues({ CurrentPstM3Pos: m3pos })
+				self.setVariableValues({ CurrentPstM4Pos: m4pos })
 
 				const cmd = 'G21 P'
 

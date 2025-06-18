@@ -3,6 +3,7 @@ const UpgradeScripts = require('./upgrades')
 const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
+const { variableList } = require('./variables')
 // const UpdatePresets = require('./presets')
 
 const presets = require('./presets')
@@ -65,6 +66,9 @@ class eMotimoModuleInstance extends InstanceBase {
 
 		this.init_emotimo_variables() //Moved this all to variables.js
 		this.initPresets()
+
+		// Give socket time to establish
+		setTimeout(() => this.fetchAllPresets(), 1000)
 	}
 
 	// // Return config fields for web config
@@ -143,7 +147,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				width: 12,
 				label: 'Update Interval',
 				value:
-					'Please enter the amount of time in milliseconds to request new information from the camera. Set to 0 to disable.',
+					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable.',
 			},
 			{
 				type: 'textinput',
@@ -204,21 +208,32 @@ class eMotimoModuleInstance extends InstanceBase {
 		
 			if (match) {
 				const [, preset, pan, tilt, m3, m4, run, ramp] = match.map(Number)
-				const prefix = `Pst${preset}`
-		
+				
 				// Check if it's an "active" preset
 				const isActive = pan !== 0 || tilt !== 0 || m3 !== 0 || m4 !== 0 || run !== 50 || ramp !== 10
-		
+
 				if (isActive) {
+					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
+					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
+					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
+					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
+					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
+					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
+
+					this.setVariableDefinitions(variableList)
+
 					this.setVariableValues({
-						[`${prefix}Stat`]: 1,
-						[`${prefix}Pan`]: pan,
-						[`${prefix}Tilt`]: tilt,
-						[`${prefix}M3`]: m3,
-						[`${prefix}M4`]: m4,
-						[`${prefix}RunT`]: run,
-						[`${prefix}RampT`]: ramp,
+						[`Pst${preset}Stat`]: 1,
+						[`Pst${preset}PanPos`]: pan,
+						[`Pst${preset}TiltPos`]: tilt,
+						[`Pst${preset}M3Pos`]: m3,
+						[`Pst${preset}M4Pos`]: m4,
+						[`Pst${preset}RunT`]: run,
+						[`Pst${preset}RampT`]: ramp,
 					})
+					this.checkFeedbacks("SetPreset")
+					this.checkFeedbacks("SetPresetSmart")
 				}
 			}
 		}
@@ -227,6 +242,13 @@ class eMotimoModuleInstance extends InstanceBase {
 				case 'Positions':
 					var data = tokens[1].split(',')
 					// this.log('debug', "Position Update:" + data[0] + ":" + data[1]); //Data[0] has movement flags led by a space data[1] is Pan Position
+					if (parseInt(data[0]) !== 0) {
+						if (this.getVariableValue('IsMoving') !== 1) {
+							this.setVariableValues({ IsMoving: 1 })
+						}
+					} else if (this.getVariableValue('IsMoving') !== 0) {
+						this.setVariableValues({ IsMoving: 0 })
+					}
 					this.setVariableValues({ PPos: Number(data[1])})
 					this.setVariableValues({ TPos: Number(data[2])})
 					this.setVariableValues({ SPos: Number(data[3])})
@@ -445,7 +467,7 @@ class eMotimoModuleInstance extends InstanceBase {
 			})
 
 			this.socket.on('data', (data) => {
-				this.log('debug', data.toString());
+				this.log('debug', 'raw data: ' + data.toString());
 				if (this.config.saveresponse) {
 					let dataResponse = data
 
@@ -462,22 +484,6 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.handleTCPResponse(data)
 			})
 
-			// gets presets from emotimo
-			for (let i = 0; i < 128; i++) {
-				setTimeout(() => {
-					const cmd = `G752 P${i}`
-					this.log('debug', cmd)
-					const sendBuf = Buffer.from(cmd, 'latin1')
-					if (this.socket && this.socket.isConnected) {
-						this.socket.once('data', (data) => {
-							this.log('debug', data.toString())
-							this.handleTCPResponse(data)
-						})
-						this.socket.send(sendBuf)
-					}
-				}, i * 50) // 50ms delay per preset
-			}
-
 			// clear old heartbeat
 			if (this.heartbeatInterval) {
 				clearInterval(this.heartbeatInterval)
@@ -489,6 +495,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				// var cmd = '\x45\x4D\x07\x00\x00\xC1\xA4';
 				this.sendEmotimoAPICommand(cmd);
 			}, this.config.interval)
+
 		} else {
 			this.updateStatus(InstanceStatus.BadConfig)
 		}
@@ -595,7 +602,55 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ RollInversion: -1 })
 		this.setVariableValues({ FocusInversion: 1 })
 		this.setVariableValues({ CurrentMtrInversion: 'Normal' })
-		this.setVariableValues({ LastPstID: 0 })
+		this.setVariableValues({ LastPstID: -1 })
+	}
+
+	fetchAllPresets() {
+		let i = 0
+
+		const sendNext = () => {
+			if (i >= 128) {
+				this.log('debug', 'Finished fetching all presets')
+				return
+			}
+
+			const cmd = `G752 P${i}\n`
+			const sendBuf = Buffer.from(cmd, 'latin1')
+			this.log('debug', `Sending: ${cmd.trim()}`)
+	
+			if (this.socket && this.socket.isConnected) {
+				this.socket.once('data', (data) => {
+					const str = data.toString().trim()
+
+					// Check for default (empty) preset
+					if (str === `Preset ${i}: X0 Y0 Z0 W0 F0 I0 C0 RunTime: 50 RampTime: 10`) {
+						this.log('debug', `Preset ${i} is empty. Finished fetching all set presets.`)
+						// this.updateFeedbacks()
+						var preset = this.getVariableValue('CurrentPstSet')
+						var panpos = this.getVariableValue('Pst' + preset + 'PanPos')
+						var tiltpos = this.getVariableValue('Pst' + preset + 'TiltPos')
+						var m3pos = this.getVariableValue('Pst' + preset + 'M3Pos')
+						var m4pos = this.getVariableValue('Pst' + preset + 'M4Pos')
+						this.setVariableValues({ CurrentPstPanPos: panpos })
+						this.setVariableValues({ CurrentPstTiltPos: tiltpos })
+						this.setVariableValues({ CurrentPstM3Pos: m3pos })
+						this.setVariableValues({ CurrentPstM4Pos: m4pos })
+						return
+					}
+
+					// Continue processing
+					this.handleTCPResponse(data)
+	
+					i++
+					setTimeout(sendNext, 100)
+				})
+				this.socket.send(sendBuf)
+			} else {
+				this.log('warn', 'Socket not connected')
+			}
+		}
+
+		sendNext()
 	}
 }
 

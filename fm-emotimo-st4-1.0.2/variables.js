@@ -57,10 +57,10 @@ const variableList = [
 	{ name: 'CurrentLoopRunTime', variableId: 'CurrentLpRun'},
 	{ name: 'CurrentLoopRampTime', variableId: 'CurrentLpRamp'},
 	{ name: 'Preset0Status', variableId: 'Pst0Stat'},
-	{ name: 'Preset0Pan', variableId: 'Pst0Pan'},
-	{ name: 'Preset0Tilt', variableId: 'Pst0Tilt'},
-	{ name: 'Preset0M3', variableId: 'Pst0M3'},
-	{ name: 'Preset0M4', variableId: 'Pst0M4'},
+	{ name: 'Preset0PanPos', variableId: 'Pst0PanPos'},
+	{ name: 'Preset0TiltPos', variableId: 'Pst0TiltPos'},
+	{ name: 'Preset0M3Pos', variableId: 'Pst0M3Pos'},
+	{ name: 'Preset0M4Pos', variableId: 'Pst0M4Pos'},
 	{ name: 'Preset0RunT', variableId: 'Pst0RunT'},
 	{ name: 'Preset0RampT', variableId: 'Pst0RampT'},
 	{ name: 'Loop0RunT', variableId: 'Lp0RunT'},
@@ -88,7 +88,11 @@ const variableList = [
 	{ name: 'RSFocusStopB', variableId: 'RSFocusStopB'},
 	{ name: 'Last TCP Response', variableId: 'tcp_response' },
 	{ name: 'Last Recalled Preset ID', variableId: 'LastPstID'},
-	{ name: 'Preset 0 Info', variableId: 'Pts0Info'},
+	{ name: 'CurrentPresetPanPos', variableId: 'CurrentPstPanPos'},
+	{ name: 'CurrentPresetTiltPos', variableId: 'CurrentPstTiltPos'},
+	{ name: 'CurrentPresetM3Pos', variableId: 'CurrentPstM3Pos'},
+	{ name: 'CurrentPresetM4Pos', variableId: 'CurrentPstM4Pos'},
+	{ name: 'Is Moving', variableId: 'IsMoving'},
 ]
 
 module.exports = async function (self) {self.setVariableDefinitions(variableList)}

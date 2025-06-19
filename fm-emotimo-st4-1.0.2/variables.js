@@ -93,6 +93,7 @@ const variableList = [
 	{ name: 'CurrentPresetM3Pos', variableId: 'CurrentPstM3Pos'},
 	{ name: 'CurrentPresetM4Pos', variableId: 'CurrentPstM4Pos'},
 	{ name: 'Is Moving', variableId: 'IsMoving'},
+	{ name: 'Set Presets', variableId: 'SetPsts'},
 ]
 
 module.exports = async function (self) {self.setVariableDefinitions(variableList)}

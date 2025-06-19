@@ -89,7 +89,7 @@ module.exports = async function (self) {
 				// console.log(presetStr);
 				var state = self.getVariableValue(presetStr)
 				if(state) {
-					console.log(presetStr);
+					// console.log(presetStr);
 					return true
 				} else {
 					return false

@@ -49,12 +49,13 @@ class eMotimoModuleInstance extends InstanceBase {
 			this.socket.destroy()
 			delete this.socket
 		}
-		
+
 		this.config = config
 
 		this.config.host = this.config.host || ''
 		this.config.port = this.config.port || 5000
 		this.config.model = this.config.model || 'ST4'
+		this.config.startupPstAmount = this.config.startupPstAmount || 30
 		this.config.interval = this.config.interval || 5000
 		this.config.prot = 'tcp'
 
@@ -143,11 +144,25 @@ class eMotimoModuleInstance extends InstanceBase {
 			},
 			{
 				type: 'static-text',
+				id: 'startupPstAmountInfo',
+				width: 12,
+				label: 'Startup Preset Fetch',
+				value: 'Fetches the first X presets on startup. If the positions are all 0, then it doesn\'t store it.',
+			},
+			{
+				type: 'textinput',
+				id: 'startupPstAmount',
+				label: 'Fetch amount',
+				width: 3,
+				default: 30,
+			},
+			{
+				type: 'static-text',
 				id: 'intervalInfo',
 				width: 12,
 				label: 'Update Interval',
 				value:
-					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable.',
+					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable. Recomended 2000ms to get acurate positions.',
 			},
 			{
 				type: 'textinput',
@@ -232,6 +247,26 @@ class eMotimoModuleInstance extends InstanceBase {
 						[`Pst${preset}RunT`]: run,
 						[`Pst${preset}RampT`]: ramp,
 					})
+					if (preset === this.getVariableValue('CurrentPstSet')) {
+						this.setVariableValues({ 'CurrentPstSetRun': run })
+						this.setVariableValues({ 'CurrentPstSetRamp': ramp })
+					}
+
+					let setpstsRaw = this.getVariableValue('SetPsts')
+					let setpsts = []
+
+					try {
+						setpsts = JSON.parse(setpstsRaw) || []
+					} catch (e) {
+						setpsts = []
+					}
+
+					// Only add if not already present
+					if (!setpsts.includes(preset)) {
+						setpsts.push(preset)
+						this.setVariableValues({ SetPsts: JSON.stringify(setpsts) })
+					}
+
 					this.checkFeedbacks("SetPreset")
 					this.checkFeedbacks("SetPresetSmart")
 				}
@@ -264,6 +299,38 @@ class eMotimoModuleInstance extends InstanceBase {
 					const presetId = data[1]
 					if (!isNaN(presetId) && presetId >= 0) {
 						this.setVariableValues({ [`Pst${presetId}Stat`]: 1 })
+
+						let setpstsRaw = this.getVariableValue('SetPsts')
+						let setpsts = []
+
+						try {
+							setpsts = JSON.parse(setpstsRaw) || []
+						} catch (e) {
+							setpsts = []
+						}
+
+						// Only add if not already present
+						if (!setpsts.includes(presetId)) {
+							setpsts.push(presetId)
+							this.setVariableValues({ SetPsts: JSON.stringify(setpsts) })
+						}
+
+						var panpos = this.getVariableValue('PPos')
+						var tiltpos = this.getVariableValue('TPos')
+						var m3pos = this.getVariableValue('SPos')
+						var m4pos = this.getVariableValue('MPos')
+
+						this.setVariableValues({ [`Pst${presetId}PanPos`]: panpos })
+						this.setVariableValues({ [`Pst${presetId}TiltPos`]: tiltpos })
+						this.setVariableValues({ [`Pst${presetId}M3Pos`]: m3pos })
+						this.setVariableValues({ [`Pst${presetId}M4Pos`]: m4pos })
+
+						if (presetId === this.getVariableValue('CurrentPstSet')) {
+							this.setVariableValues({ CurrentPstPanPos: panpos })
+							this.setVariableValues({ CurrentPstTiltPos: tiltpos })
+							this.setVariableValues({ CurrentPstM3Pos: m3pos })
+							this.setVariableValues({ CurrentPstM4Pos: m4pos })
+						}
 					}
 					this.checkFeedbacks("SetPreset")
 					this.checkFeedbacks("SetPresetSmart")
@@ -467,7 +534,7 @@ class eMotimoModuleInstance extends InstanceBase {
 			})
 
 			this.socket.on('data', (data) => {
-				this.log('debug', 'raw data: ' + data.toString());
+				this.log('debug', 'Response: ' + data.toString());
 				if (this.config.saveresponse) {
 					let dataResponse = data
 
@@ -624,8 +691,9 @@ class eMotimoModuleInstance extends InstanceBase {
 
 					// Check for default (empty) preset
 					if (str === `Preset ${i}: X0 Y0 Z0 W0 F0 I0 C0 RunTime: 50 RampTime: 10`) {
-						this.log('debug', `Preset ${i} is empty. Finished fetching all set presets.`)
-						// this.updateFeedbacks()
+						if (i <= this.config.startupPstAmount ) {
+							this.log('debug', `Preset ${i} is empty.`)
+						}
 						var preset = this.getVariableValue('CurrentPstSet')
 						var panpos = this.getVariableValue('Pst' + preset + 'PanPos')
 						var tiltpos = this.getVariableValue('Pst' + preset + 'TiltPos')
@@ -635,7 +703,10 @@ class eMotimoModuleInstance extends InstanceBase {
 						this.setVariableValues({ CurrentPstTiltPos: tiltpos })
 						this.setVariableValues({ CurrentPstM3Pos: m3pos })
 						this.setVariableValues({ CurrentPstM4Pos: m4pos })
-						return
+						if (i >= this.config.startupPstAmount) {
+							this.log('debug', `Finished fetching startup presets.`)
+							return
+						}
 					}
 
 					// Continue processing

@@ -94,6 +94,7 @@ const variableList = [
 	{ name: 'CurrentPresetM4Pos', variableId: 'CurrentPstM4Pos'},
 	{ name: 'Is Moving', variableId: 'IsMoving'},
 	{ name: 'Set Presets', variableId: 'SetPsts'},
+	{ name: 'Current Motor Profile', variableId: 'CurrentMtrProf'},
 ]
 
 module.exports = async function (self) {self.setVariableDefinitions(variableList)}

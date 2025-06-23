@@ -58,16 +58,23 @@ const MOTOR_SPEED = [
 
 ]
 
+const MOTOR_PROFILES = [
+	{ id: 0, label: 'Quiet/Fast' },
+	{ id: 1, label: 'Quiet/Medium' },
+	{ id: 2, label: 'Quiet/Slow' },
+	{ id: 3, label: 'Timelapse' },
+	{ id: 4, label: 'Fastest' },
+	{ id: 5, label: 'User Defined 1' },
+	{ id: 6, label: 'User Defined 2' },
+	{ id: 7, label: 'Inertia Wheels' },
+]
+
 var PRESET_ID = [
 	{ id: 0, label: 'Pst0' },
 ]
 
 var LOOP_ID = [
 	{ id: 0, label: 'Lp0' },
-]
-
-var SET_PRESETS = [
-	{}
 ]
 
 const VIRTUAL_BUTTON = [
@@ -680,44 +687,58 @@ module.exports = function (self) {
 					default: 1,
 					choices: [
 						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
+						{ id: 'amount', label: 'Amount' },
+						{ id: 'set', label: 'Set Value' }
 					]
 				},
 				{
 					type: 'number',
 					label: 'Amount ( - for less)',
 					id: 'amountValue',
-					min: -250,
-		    	max: 250,
+					min: -100,
+		    	max: 100,
           default: 5,
 					isVisible: (options) => options.direction === 'amount',
+				},
+				{
+					type: 'number',
+					label: 'Set Value',
+					id: 'setValue',
+					min: 0,
+		    	max: 100,
+          default: 100,
+					isVisible: (options) => options.direction === 'set',
 				},
 			],
 			callback: async (jogSpeed) => {
 				var temp = 0
 
-				if (jogSpeed.options.id_mot == 1) {
-					temp = self.getVariableValue('PanSpeedLimit')
-				} else if (jogSpeed.options.id_mot == 2) {
-					temp = self.getVariableValue('TiltSpeedLimit')
-				} else if (jogSpeed.options.id_mot == 3) {
-					temp = self.getVariableValue('M3SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 4) {
-					temp = self.getVariableValue('M4SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 5) {
-					temp = self.getVariableValue('TN1SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 6) {
-					temp = self.getVariableValue('TN2SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 7) {
-					temp = self.getVariableValue('TN3SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 8) {
-					temp = self.getVariableValue('RollSpeedLimit')
-				}
-
-				if (jogSpeed.options.direction === 'amount') {
-					temp += jogSpeed.options.amountValue
+				if (jogSpeed.options.direction === 'set') {
+					temp = jogSpeed.options.setValue
 				} else {
-					temp += jogSpeed.options.direction
+					if (jogSpeed.options.id_mot == 1) {
+						temp = self.getVariableValue('PanSpeedLimit')
+					} else if (jogSpeed.options.id_mot == 2) {
+						temp = self.getVariableValue('TiltSpeedLimit')
+					} else if (jogSpeed.options.id_mot == 3) {
+						temp = self.getVariableValue('M3SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 4) {
+						temp = self.getVariableValue('M4SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 5) {
+						temp = self.getVariableValue('TN1SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 6) {
+						temp = self.getVariableValue('TN2SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 7) {
+						temp = self.getVariableValue('TN3SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 8) {
+						temp = self.getVariableValue('RollSpeedLimit')
+					}
+
+					if (jogSpeed.options.direction === 'amount') {
+						temp += jogSpeed.options.amountValue
+					} else {
+						temp += jogSpeed.options.direction
+					}
 				}
 
 				if (temp > 100) {
@@ -1146,6 +1167,37 @@ module.exports = function (self) {
 			}
 		},
 
+		setMotorProfile: {
+			name: 'Set Motor Profile',
+			options: [
+				{
+					id: 'prodileid',
+					type: 'dropdown',
+					label: 'Profile: Default: User 1',
+					default: 5,
+					choices: MOTOR_PROFILES,
+				}
+			],
+			callback: async (motorProfile) => {
+				const selProf = motorProfile.options.prodileid
+				self.setVariableValues({ CurrentMtrProf: selProf})
+
+				const cmd = 'G102 P'
+
+				const sendBuf = Buffer.from(cmd + selProf + '\n', 'latin1')
+
+				if (self.config.prot == 'tcp') {
+					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+
+					if (self.socket !== undefined && self.socket.isConnected) {
+						self.socket.send(sendBuf)
+					} else {
+						self.log('debug', 'Socket not connected :(')
+					}
+				}
+			}
+		},
+
 
 
 
@@ -1406,7 +1458,7 @@ module.exports = function (self) {
 				{
 					type: 'static-text',
 					label: 'info',
-					value: 'Leave blank to not mess with it'
+					value: 'Leave blank to keep current value.'
 				},
 				{
 					id: 'pCoords',
@@ -1731,103 +1783,6 @@ module.exports = function (self) {
 						self.log('debug', 'Socket not connected :(')
 					}
 				}
-			}
-		},
-
-		setJogSpeedLimitByValue: {
-			name: 'Set Motor Jog Speed By Value',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 1,
-					choices: MOTOR_ID,
-				},
-				{
-					type: 'number',
-					label: 'Amount',
-					id: 'amountValue',
-					min: 0,
-		    	max: 100,
-          default: 100,
-				},
-			],
-			callback: async (jogSpeed) => {
-				var temp = jogSpeed.options.amountValue
-
-				if (temp > 100) {
-					temp = 100;
-				} else if (temp < 0) {
-					temp = 0;
-				}
-
-				self.log('debug', 'Motor ID: ' + jogSpeed.options.id_mot + ' Speed: ' + temp)
-
-				if (jogSpeed.options.id_mot == 1) {
-					self.setVariableValues({ PanSpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 2) {
-					self.setVariableValues({ TiltSpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 3) {
-					self.setVariableValues({ M3SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 4) {
-					self.setVariableValues({ M4SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 5) {
-					self.setVariableValues({ TN1SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 6) {
-					self.setVariableValues({ TN2SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 7) {
-					self.setVariableValues({ TN3SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 8) {
-					self.setVariableValues({ RollSpeedLimit: temp })
-				}
-			}
-		},
-		setJogSpeedLimitSmartByValue: {
-			name: 'Set Motor Jog Speed Smart By Value',
-			options: [
-				{
-					type: 'number',
-					label: 'Amount',
-					id: 'amountValue',
-					min: 0,
-		    	max: 100,
-          default: 100,
-				},
-			],
-			callback: async (jogSpeed) => {
-				var motor = self.getVariableValue('CurrentMtrSet')
-				var motorSpeed = jogSpeed.options.amountValue
-
-				if (motorSpeed > 100) {
-					motorSpeed = 100;
-				} else if (motorSpeed < 0) {
-					motorSpeed = 0;
-				}
-
-				self.log('debug', 'Motor ID: ' + motor + ' Speed: ' + motorSpeed)
-
-				if (motor == 1) {
-					self.setVariableValues({ PanSpeedLimit: motorSpeed })
-				} else if (motor == 2) {
-					self.setVariableValues({ TiltSpeedLimit: motorSpeed })
-				} else if (motor == 3) {
-					self.setVariableValues({ M3SpeedLimit: motorSpeed })
-				} else if (motor == 4) {
-					self.setVariableValues({ M4SpeedLimit: motorSpeed })
-				} else if (motor == 5) {
-					self.setVariableValues({ TN1SpeedLimit: motorSpeed })
-				} else if (motor == 6) {
-					self.setVariableValues({ TN2SpeedLimit: motorSpeed })
-				} else if (motor == 7) {
-					self.setVariableValues({ TN3SpeedLimit: motorSpeed })
-				} else if (motor == 8) {
-					self.setVariableValues({ RollSpeedLimit: motorSpeed })
-				} else if (motor == 9) {
-					self.setVariableValues({ FocusSpeedLimit: motorSpeed })
-				}
-
-				self.setVariableValues({ CurrentMtrSpeed: motorSpeed })
 			}
 		},
 
@@ -2457,6 +2412,7 @@ module.exports = function (self) {
 				self.log('debug', 'Active Loop: ' + loopActive)
 				if (loopActive == -1) {
 					self.setVariableValues({ LpActive: LpRecall.options.id_loop })
+					self.setVariableValues({ LastPstID: -1})
 					self.checkFeedbacks("LoopStatus")
 					const cmd = 'G25 L' + LpRecall.options.id_loop + ' A' + tempA + ' B' + tempB + ' C500 D500'
 					const sendBuf = Buffer.from(cmd + '\n', 'latin1')
@@ -3460,6 +3416,7 @@ module.exports = function (self) {
 				}
 			}
 		},
+
 		setJogSpeedLimitSmart: {
 			name: 'Set Motor Jog Speed Smart',
 			options: [
@@ -3470,15 +3427,42 @@ module.exports = function (self) {
 					default: 1,
 					choices: [
 						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
+						{ id: 'amount', label: 'Amount' },
+						{ id: 'set', label: 'Set Value' }
 					]
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -100,
+		    	max: 100,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
+				{
+					type: 'number',
+					label: 'Set Value',
+					id: 'setValue',
+					min: 0,
+		    	max: 100,
+          default: 100,
+					isVisible: (options) => options.direction === 'set',
 				},
 			],
 			callback: async (jogSpeed) => {
 				var motor = self.getVariableValue('CurrentMtrSet')
 				var motorSpeed = self.getVariableValue('CurrentMtrSpeed')
 
-				motorSpeed += jogSpeed.options.direction
+				if (jogSpeed.options.direction === 'set') {
+					motorSpeed = jogSpeed.options.setValue
+				} else {
+					if (jogSpeed.options.direction === 'amount') {
+						motorSpeed += jogSpeed.options.amountValue
+					} else {
+						motorSpeed += jogSpeed.options.direction
+					}
+				}
 
 				if (motorSpeed > 100) {
 					motorSpeed = 100;

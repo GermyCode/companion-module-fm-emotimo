@@ -670,6 +670,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ FocusInversion: 1 })
 		this.setVariableValues({ CurrentMtrInversion: 'Normal' })
 		this.setVariableValues({ LastPstID: -1 })
+		this.setVariableValues({ CurrentMtrProf: -1 })
 	}
 
 	fetchAllPresets() {

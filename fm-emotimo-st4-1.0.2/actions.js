@@ -12,8 +12,8 @@ const CHOICES_END = [
 const MOTOR_ID = [
 	{ id: 1, label: 'Pan' },
 	{ id: 2, label: 'Tilt' },
-	{ id: 3, label: 'Slide' },
-	{ id: 4, label: 'TurnTable' },
+	{ id: 3, label: 'M3/Slide' },
+	{ id: 4, label: 'M4/Zoom' },
 	{ id: 5, label: 'TN 1' },
 	{ id: 6, label: 'TN 2' },
 	{ id: 7, label: 'TN 3' },
@@ -25,8 +25,8 @@ const MOTOR_ID_UNSET = [ //This is used to have a null value so we can pull the 
 	{ id: 0, label: 'Unset' },
 	{ id: 1, label: 'Pan' },
 	{ id: 2, label: 'Tilt' },
-	{ id: 3, label: 'Slide' },
-	{ id: 4, label: 'TurnTable' },
+	{ id: 3, label: 'M3/Slide' },
+	{ id: 4, label: 'M4/Zoom' },
 	{ id: 5, label: 'TN 1' },
 	{ id: 6, label: 'TN 2' },
 	{ id: 7, label: 'TN 3' },
@@ -56,6 +56,17 @@ const MOTOR_SPEED = [
 	{ id: 50000, label: 'Fast' },
 	{ id: 100000, label: 'Fastest' },
 
+]
+
+const MOTOR_PROFILES = [
+	{ id: 0, label: 'Quiet/Fast' },
+	{ id: 1, label: 'Quiet/Medium' },
+	{ id: 2, label: 'Quiet/Slow' },
+	{ id: 3, label: 'Timelapse' },
+	{ id: 4, label: 'Fastest' },
+	{ id: 5, label: 'User Defined 1' },
+	{ id: 6, label: 'User Defined 2' },
+	{ id: 7, label: 'Inertia Wheels' },
 ]
 
 var PRESET_ID = [
@@ -676,44 +687,58 @@ module.exports = function (self) {
 					default: 1,
 					choices: [
 						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
+						{ id: 'amount', label: 'Amount' },
+						{ id: 'set', label: 'Set Value' }
 					]
 				},
 				{
 					type: 'number',
 					label: 'Amount ( - for less)',
 					id: 'amountValue',
-					min: -250,
-		    	max: 250,
+					min: -100,
+		    	max: 100,
           default: 5,
 					isVisible: (options) => options.direction === 'amount',
+				},
+				{
+					type: 'number',
+					label: 'Set Value',
+					id: 'setValue',
+					min: 0,
+		    	max: 100,
+          default: 100,
+					isVisible: (options) => options.direction === 'set',
 				},
 			],
 			callback: async (jogSpeed) => {
 				var temp = 0
 
-				if (jogSpeed.options.id_mot == 1) {
-					temp = self.getVariableValue('PanSpeedLimit')
-				} else if (jogSpeed.options.id_mot == 2) {
-					temp = self.getVariableValue('TiltSpeedLimit')
-				} else if (jogSpeed.options.id_mot == 3) {
-					temp = self.getVariableValue('M3SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 4) {
-					temp = self.getVariableValue('M4SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 5) {
-					temp = self.getVariableValue('TN1SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 6) {
-					temp = self.getVariableValue('TN2SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 7) {
-					temp = self.getVariableValue('TN3SpeedLimit')
-				} else if (jogSpeed.options.id_mot == 8) {
-					temp = self.getVariableValue('RollSpeedLimit')
-				}
-
-				if (jogSpeed.options.direction === 'amount') {
-					temp += jogSpeed.options.amountValue
+				if (jogSpeed.options.direction === 'set') {
+					temp = jogSpeed.options.setValue
 				} else {
-					temp += jogSpeed.options.direction
+					if (jogSpeed.options.id_mot == 1) {
+						temp = self.getVariableValue('PanSpeedLimit')
+					} else if (jogSpeed.options.id_mot == 2) {
+						temp = self.getVariableValue('TiltSpeedLimit')
+					} else if (jogSpeed.options.id_mot == 3) {
+						temp = self.getVariableValue('M3SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 4) {
+						temp = self.getVariableValue('M4SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 5) {
+						temp = self.getVariableValue('TN1SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 6) {
+						temp = self.getVariableValue('TN2SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 7) {
+						temp = self.getVariableValue('TN3SpeedLimit')
+					} else if (jogSpeed.options.id_mot == 8) {
+						temp = self.getVariableValue('RollSpeedLimit')
+					}
+
+					if (jogSpeed.options.direction === 'amount') {
+						temp += jogSpeed.options.amountValue
+					} else {
+						temp += jogSpeed.options.direction
+					}
 				}
 
 				if (temp > 100) {
@@ -848,6 +873,7 @@ module.exports = function (self) {
 			],
 			callback: async (haltMotors) => {
 				// console.log('Hello world!', event.options.num)
+				self.setVariableValues({ 'LastPstID': -1 })
 				const cmd = 'G911'
 
 
@@ -880,10 +906,20 @@ module.exports = function (self) {
 			],
 			callback: async (setPreset) => {
 				// console.log('Hello world!', event.options.num)
+				var preset = setPreset.options.num
+				var panpos = self.getVariableValue('PPos')
+				var tiltpos = self.getVariableValue('TPos')
+				var m3pos = self.getVariableValue('SPos')
+				var m4pos = self.getVariableValue('MPos')
+
+				self.setVariableValues({ [`Pst${preset}PanPos`]: panpos })
+				self.setVariableValues({ [`Pst${preset}TiltPos`]: tiltpos })
+				self.setVariableValues({ [`Pst${preset}M3Pos`]: m3pos })
+				self.setVariableValues({ [`Pst${preset}M4Pos`]: m4pos })
+
 				const cmd = 'G21 P'
 
-
-				const sendBuf = Buffer.from(cmd + setPreset.options.num + ' T' + self.presetRunTimes[setPreset.options.num] / 10 + ' A' + self.presetRampTimes[setPreset.options.num] / 10 + '\n', 'latin1')
+				const sendBuf = Buffer.from(cmd + preset + ' T' + self.presetRunTimes[setPreset.options.num] / 10 + ' A' + self.presetRampTimes[setPreset.options.num] / 10 + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -1131,6 +1167,37 @@ module.exports = function (self) {
 			}
 		},
 
+		setMotorProfile: {
+			name: 'Set Motor Profile',
+			options: [
+				{
+					id: 'prodileid',
+					type: 'dropdown',
+					label: 'Profile: Default: User 1',
+					default: 5,
+					choices: MOTOR_PROFILES,
+				}
+			],
+			callback: async (motorProfile) => {
+				const selProf = motorProfile.options.prodileid
+				self.setVariableValues({ CurrentMtrProf: selProf})
+
+				const cmd = 'G102 P'
+
+				const sendBuf = Buffer.from(cmd + selProf + '\n', 'latin1')
+
+				if (self.config.prot == 'tcp') {
+					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+
+					if (self.socket !== undefined && self.socket.isConnected) {
+						self.socket.send(sendBuf)
+					} else {
+						self.log('debug', 'Socket not connected :(')
+					}
+				}
+			}
+		},
+
 
 
 
@@ -1193,17 +1260,28 @@ module.exports = function (self) {
 			name: 'Save Preset By Coordinates',
 			options: [
 				{
+					id: 'smart',
+					type:'dropdown',
+					label: 'Smart or select preset id',
+					choices: [
+						{ id: 0, label: 'Smart' },
+						{ id: 1, label: 'Preset ID' }
+					],
+					default: 0
+				},
+				{
 					id: 'preset',
 					type: 'number',
 					label: 'Preset ID',
 					default: 0,
 					min: 0, 
-					max: 127
+					max: 127,
+					isVisible: (options) => options.smart === 1,
 				},
 				{
 					type: 'static-text',
 					label: 'info',
-					value: 'Leave blank if you dont want to store a value'
+					value: 'Leave blank to store current motor position'
 				},
 				{
 					id: 'pCoords',
@@ -1232,59 +1310,131 @@ module.exports = function (self) {
 				{
 					id: 'runtime',
 					type: 'textinput',
-					label: 'Run Time (Seconds)',
-					default: '5.0',
+					label: 'Run Time',
+					default: '50',
+					min: 10,
+					max: 600,
 					useVariables: true,
 				},
 				{
 					id: 'ramptime',
 					type: 'textinput',
-					label: 'Ramp Time (Seconds)',
-					default: '0.5',
+					label: 'Ramp Time',
+					default: '10',
+					min:5,
+					max:300,
 					useVariables: true,
 				},
 			],
-			callback: async (gotoCoords) => {
-				const preset = gotoCoords.options.preset
-				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
-				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
-				const resolvedPanValue = await self.parseVariablesInString(gotoCoords.options.pCoords)
-				const resolvedTiltValue = await self.parseVariablesInString(gotoCoords.options.tCoords)
-				const resolvedSlideValue = await self.parseVariablesInString(gotoCoords.options.sCoords)
-				const resolvedZoomValue = await self.parseVariablesInString(gotoCoords.options.zCoords)
+			callback: async (savePstCoords) => {
+				if (savePstCoords.options.smart == 0) {
+					var preset = self.getVariableValue('CurrentPstSet')
+				} else {
+					var preset = savePstCoords.options.preset
+				}
+				// If a variable gets inputted, get that value, otherwise it takes the inputted value
+				var resolvedRunValue = await self.parseVariablesInString(savePstCoords.options.runtime)
+				var resolvedRampValue = await self.parseVariablesInString(savePstCoords.options.ramptime)
+				var resolvedPanValue = await self.parseVariablesInString(savePstCoords.options.pCoords)
+				var resolvedTiltValue = await self.parseVariablesInString(savePstCoords.options.tCoords)
+				var resolvedSlideValue = await self.parseVariablesInString(savePstCoords.options.sCoords)
+				var resolvedZoomValue = await self.parseVariablesInString(savePstCoords.options.zCoords)
+				
+				// find if the variables/preset already exists
+				var exists = false
+				for (const item of variableList) {
+					if (item.variableId === `Pst${preset}Stat`) {
+						exists = true
+						break
+					}
+				}
+				if (!exists) {
+					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
 
+					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
+					self.updateActions()
+
+					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
+					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
+					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
+					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
+					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
+					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
+
+					self.setVariableDefinitions(variableList)
+				}
+
+				// G21 needs all axis to have a value in order to store a custom location
 				var cmd = 'G21 P' + preset
-				if (resolvedRunValue) {
-					cmd += ' T' + resolvedRunValue
-					var varID = 'Pst'+preset+'RunT'
-					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRunValue*10 )
-					self.setVariableValues({ [varID]: resolvedRunValue*10 })
-					if (preset === self.getVariableValue('CurrentPstSet')) {
-						self.setVariableValues({ CurrentPstSetRun: resolvedRunValue*10 })
-					}
+				var cmd2 = ' F0 I0 C0'
+
+				// Pan
+				if (!resolvedPanValue) { // if blank, get the current position instead
+					resolvedPanValue = self.getVariableValue('MPos')
 				}
-				if (resolvedRampValue) {
-					cmd += ' A' + resolvedRampValue
-					var varID = 'Pst'+preset+'RampT'
-					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedRampValue*10 )
-					self.setVariableValues({ [varID]: resolvedRampValue*10 })
-					if (preset === self.getVariableValue('CurrentPstSet')) {
-						self.setVariableValues({ CurrentPstSetRamp: resolvedRampValue*10 })
-					}
+				cmd += ' X' + resolvedPanValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstPanPos: resolvedPanValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}PanPos`]: resolvedPanValue })
 				}
-				if (resolvedPanValue) {
-					cmd += ' X' + resolvedPanValue
+				// Tilt
+				if (!resolvedTiltValue) { // if blank, get the current position instead
+					resolvedTiltValue = self.getVariableValue('MPos')
 				}
-				if (resolvedTiltValue) {
-					cmd += ' Y' + resolvedTiltValue
+				cmd += ' Y' + resolvedTiltValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstTiltPos: resolvedTiltValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}TiltPos`]: resolvedTiltValue })
 				}
-				if (resolvedSlideValue) {
-					cmd += ' Z' + resolvedSlideValue
+				// Slide
+				if (!resolvedSlideValue) { // if blank, get the current position instead
+					resolvedSlideValue = self.getVariableValue('MPos')
 				}
-				if (resolvedZoomValue) {
-					cmd += ' W' + resolvedZoomValue
+				cmd += ' Z' + resolvedSlideValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstM3Pos: resolvedSlideValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}M3Pos`]: resolvedSlideValue })
 				}
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
+				//Zoom
+				if (!resolvedZoomValue) { // if blank, get the current position instead
+					resolvedZoomValue = self.getVariableValue('MPos')
+				}
+				cmd += ' W' + resolvedZoomValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstM4Pos: resolvedZoomValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}M4Pos`]: resolvedZoomValue })
+				}
+
+				if (!resolvedRunValue) { // if blank, set a default value instead
+					resolvedRunValue = 50
+				}
+				cmd2 += ' T' + resolvedRunValue / 10
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRun: resolvedRunValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}RunT`]: resolvedRunValue })
+				}
+
+				if (!resolvedRampValue) { // if blank, set a default value instead
+					resolvedRampValue = 10
+				}
+				cmd2 += ' A' + resolvedRampValue / 10
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRun: resolvedRampValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue })
+				}
+
+				self.setVariableValues({ [`Pst${preset}RunT`]: resolvedRunValue})
+				self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue})
+				self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
+
+				const sendBuf = Buffer.from(cmd + cmd2 + '\n', 'latin1')
 
 				if (self.config.prot == 'tcp') {
 					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
@@ -1293,6 +1443,116 @@ module.exports = function (self) {
 					} else {
 						self.log('debug', 'Socket not connected :(')
 					}
+				}
+			}
+		},
+
+		setMotorPosition: {
+			name: 'Set Motor Position',
+			options: [
+				{
+					type: 'static-text',
+					label: 'WARNING',
+					value: 'Sets the internal motor position to a value, does NOT move the motor'
+				},
+				{
+					type: 'static-text',
+					label: 'info',
+					value: 'Leave blank to keep current value.'
+				},
+				{
+					id: 'pCoords',
+					type: 'textinput',
+					label: 'Pan Coords',
+					useVariables: true,
+				},
+				{
+					id: 'tCoords',
+					type: 'textinput',
+					label: 'Tilt Coords',
+					useVariables: true,
+				},
+				{
+					id: 'sCoords',
+					type: 'textinput',
+					label: 'Slide Coords',
+					useVariables: true,
+				},
+				{
+					id: 'zCoords',
+					type: 'textinput',
+					label: 'Zoom Coords',
+					useVariables: true,
+				},
+			],
+			callback: async (setMotorPos) => {
+				const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+				// If a variable gets inputted, get that value, otherwise it takes the inputted value
+				var resolvedPanValue = await self.parseVariablesInString(setMotorPos.options.pCoords)
+				var resolvedTiltValue = await self.parseVariablesInString(setMotorPos.options.tCoords)
+				var resolvedSlideValue = await self.parseVariablesInString(setMotorPos.options.sCoords)
+				var resolvedZoomValue = await self.parseVariablesInString(setMotorPos.options.zCoords)
+				let sendBuf
+
+				// Pan
+				if (resolvedPanValue) { // if not blank, do things
+					self.log('debug', `Setting motor PAN to position ${resolvedPanValue}`)
+					self.setVariableValues({ 'PPos': resolvedPanValue })
+					sendBuf = Buffer.from(`G200 M1 P${resolvedPanValue}\n`, 'latin1')
+					if (self.config.prot == 'tcp') {
+						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+						if (self.socket !== undefined && self.socket.isConnected) {
+							self.socket.send(sendBuf)
+						} else {
+							self.log('debug', 'Socket not connected :(')
+						}
+					}
+					await wait(200) // waits 200ms before continuing
+				}
+				// Tilt
+				if (resolvedTiltValue) { // if not blank, do things
+					self.log('debug', `Setting motor Tilt to position ${resolvedTiltValue}`)
+					self.setVariableValues({ 'TPos': resolvedTiltValue })
+					sendBuf = Buffer.from(`G200 M2 P${resolvedTiltValue}\n`, 'latin1')
+					if (self.config.prot == 'tcp') {
+						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+						if (self.socket !== undefined && self.socket.isConnected) {
+							self.socket.send(sendBuf)
+						} else {
+							self.log('debug', 'Socket not connected :(')
+						}
+					}
+					await wait(200) // waits 200ms before continuing
+				}
+				// Slide
+				if (resolvedSlideValue) { // if not blank, do things
+					self.log('debug', `Setting motor M3/Slide to position ${resolvedSlideValue}`)
+					self.setVariableValues({ 'SPos': resolvedSlideValue })
+					sendBuf = Buffer.from(`G200 M3 P${resolvedSlideValue}\n`, 'latin1')
+					if (self.config.prot == 'tcp') {
+						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+						if (self.socket !== undefined && self.socket.isConnected) {
+							self.socket.send(sendBuf)
+						} else {
+							self.log('debug', 'Socket not connected :(')
+						}
+					}
+					await wait(200) // waits 200ms before continuing
+				}
+				//Zoom
+				if (resolvedZoomValue) { // if not blank, do things
+					self.log('debug', `Setting motor M4/Zoom to position ${resolvedZoomValue}`)
+					self.setVariableValues({ 'MPos': resolvedZoomValue })
+					sendBuf = Buffer.from(`G200 M4 P${resolvedZoomValue}\n`, 'latin1')
+					if (self.config.prot == 'tcp') {
+						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+						if (self.socket !== undefined && self.socket.isConnected) {
+							self.socket.send(sendBuf)
+						} else {
+							self.log('debug', 'Socket not connected :(')
+						}
+					}
+					await wait(200) // waits 200ms before continuing
 				}
 			}
 		},
@@ -1312,7 +1572,7 @@ module.exports = function (self) {
 					label: 'All or Current Preset',
 					default: 1,
 					choices: [
-						{ id: 0, label: 'Custom Preset' },
+						{ id: 0, label: 'Select Preset' },
 						{ id: 1, label: 'Smart Preset' },
 						{ id: 2, label: 'All' },
 					],
@@ -1336,75 +1596,79 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (runTime) => {
-				// set variables
-				var runtemp = 0
-				var ramptemp = 0
-				if (runTime.options.count === 0) {
-					var preset = runTime.options.pstid
-				}	else {
-					var preset = self.getVariableValue('CurrentPstSet')
-				}
 				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
-				// stores the inputed run value and gets ramp value from variables
-				// runtemp = runTime.options.setvalue
-				ramptemp = self.getVariableValue('CurrentPstSetRamp')
+				let ramptemp
+				let preset
+				if (runTime.options.count === 0) {
+					preset = runTime.options.pstid
+					ramptemp = self.getVariableValue(`Pst${preset}RampT`)
+				} else {
+					preset = self.getVariableValue('CurrentPstSet')
+					ramptemp = self.getVariableValue('CurrentPstSetRamp')
+				}
+			
+				let runtime = Number(resolvedValue)
 				// checks to make sure inputted values are in an acceptiable range
-				if (resolvedValue > 600) {
-					resolvedValue = 600;
-				} else if (resolvedValue < 10) {
-					resolvedValue = 10;
-				}
-				self.setVariableValues({ CurrentPstSetRun: resolvedValue })
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + resolvedValue + ' RampT: ' + ramptemp)
-				// setup variables for api call
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + resolvedValue / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
+				if (runtime > 600) runtime = 600
+				else if (runtime < 10) runtime = 10
+			
+				self.setVariableValues({ CurrentPstSetRun: runtime })
+			
+				const baseCmd = 'G21 N1 P'
+				const rampT = ramptemp / 10
+				const runT = runtime / 10
+			
+				// === If count is 2, apply to all presets in SetPsts ===
+				if (runTime.options.count === 2) {
+					const setListRaw = self.getVariableValue('SetPsts')
+					let setList = []
 
-				if (runTime.options.count === 2) { // if all presets
-					var pstnum = 0;
-					while (pstnum <= 30) { // loop through all presets setting them to the inputted value
-						var varID = 'Pst'+pstnum+'RunT'
-						self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
-						self.setVariableValues({ [varID]: resolvedValue })
-						// api call
-						if (self.config.prot == 'tcp') {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-							if (self.socket !== undefined && self.socket.isConnected) {
-								self.socket.send(sendBuf)
-							} else {
-								self.log('debug', 'Socket not connected :(')
-							}
-						}
-						// this is to wait so all of the api calls arent all at the same time, in ms
-						await new Promise(r => setTimeout(r, 200));
-						pstnum++
+					try {
+						setList = JSON.parse(setListRaw)
+					} catch (e) {
+						self.log('debug', 'Invalid JSON in SetPsts: ' + setListRaw)
 					}
-				} else if (runTime.options.count === 1) { // if preset is selected to only change selected preset
-					var varID = 'Pst'+preset+'RunT'
-					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
-					self.setVariableValues({ [varID]: resolvedValue })
-					// api call
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						if (self.socket !== undefined && self.socket.isConnected) {
+			
+					for (const p of setList) {
+						if (self.getVariableValue(`Pst${p}RunT`) === runtime) {
+							self.log('debug', `Preset ${p} already at Run: ${runtime}, skipping.`)
+							continue
+						}
+						self.log('debug', 'p: ' + p)
+						const ramptime = self.getVariableValue(`Pst${p}RampT`)
+						self.log('debug', `Preset ID: ${p} RunT: ${runtime} RampT: ${ramptime}`)
+						self.setVariableValues({ [`Pst${p}RunT`]: runtime })
+
+						const cmd = `${baseCmd}${p} T${runT} A` + ramptime/10 + '\n'
+						const sendBuf = Buffer.from(cmd, 'latin1')
+			
+						if (self.config.prot === 'tcp' && self.socket?.isConnected) {
+							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
 							self.socket.send(sendBuf)
 						} else {
 							self.log('debug', 'Socket not connected :(')
 						}
+			
+						await new Promise((r) => setTimeout(r, 200))
 					}
 				}
+				// === Only one preset selected (manual or current set) ===
 				else {
-					var varID = 'Pst'+preset+'RunT'
-					self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
-					self.setVariableValues({ [varID]: resolvedValue })
-					// api call
-					if (self.config.prot == 'tcp') {
+					if (self.getVariableValue(`Pst${preset}RunT`) === runtime) {
+						self.log('debug', `Preset ${preset} already at Run: ${runtime}, skipping.`)
+						return
+					}
+					self.log('debug', `Preset ID: ${preset} RunT: ${runtime} RampT: ${ramptemp}`)
+					self.setVariableValues({ [`Pst${preset}RunT`]: runtime })
+			
+					const cmd = `${baseCmd}${preset} T${runT} A${rampT}\n`
+					const sendBuf = Buffer.from(cmd, 'latin1')
+			
+					if (self.config.prot === 'tcp' && self.socket?.isConnected) {
 						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
+						self.socket.send(sendBuf)
+					} else {
+						self.log('debug', 'Socket not connected :(')
 					}
 				}
 			}
@@ -1420,7 +1684,7 @@ module.exports = function (self) {
 					label: 'All or Current Preset',
           default: 1,
           choices: [
-						{ id: 0, label: 'Custom Preset' },
+						{ id: 0, label: 'Select Preset' },
             { id: 1, label: 'Smart Preset' },
             { id: 2, label: 'All' },
           ],
@@ -1444,160 +1708,81 @@ module.exports = function (self) {
         },
 			],
 			callback: async (rampTime) => {
-        // set variables
-				var ramptemp = 0
-				var runtemp = self.getVariableValue('CurrentPstSetRun')
-				if (runTime.options.count === 0) {
-					var preset = runTime.options.pstid
-				}	else {
-					var preset = self.getVariableValue('CurrentPstSet')
+				const resolvedValue = await self.parseVariablesInString(rampTime.options.setvalue)
+				let runtemp
+				let preset
+				if (rampTime.options.count === 0) {
+					preset = rampTime.options.pstid
+					runtemp = self.getVariableValue(`Pst${preset}RunT`)
+				} else {
+					preset = self.getVariableValue('CurrentPstSet')
+					runtemp = self.getVariableValue('CurrentPstSetRun')
 				}
-				// ramptemp = rampTime.options.setvalue
-				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
+			
+				let ramptime = Number(resolvedValue)
+				// checks to make sure inputted values are in an acceptiable range
+				if (ramptime > 600) ramptime = 600
+				else if (ramptime < 10) ramptime = 10
+			
+				self.setVariableValues({ CurrentPstSetRamp: ramptime })
+			
+				const baseCmd = 'G21 N1 P'
+				const rampT = ramptime / 10
+				const runT = runtemp / 10
+			
+				// === If count is 2, apply to all presets in SetPsts ===
+				if (rampTime.options.count === 2) {
+					const setListRaw = self.getVariableValue('SetPsts')
+					let setList = []
+			
+					try {
+						setList = JSON.parse(setListRaw)
+					} catch (e) {
+						self.log('debug', 'Invalid JSON in SetPsts: ' + setListRaw)
+					}
+			
+					for (const p of setList) {
+						if (self.getVariableValue(`Pst${p}RampT`) === ramptime) {
+							self.log('debug', `Preset ${p} already at Ramp: ${ramptime}, skipping.`)
+							continue
+						}
+						self.log('debug', 'p: ' + p)
+						const runtime = self.getVariableValue(`Pst${p}RunT`)
+						self.log('debug', `Preset ID: ${p} RunT: ${runtime} RampT: ${ramptime}`)
+						self.setVariableValues({ [`Pst${p}RampT`]: ramptime })
 
-        // checks to make sure inputted values are in an acceptiable range
-				if (resolvedValue > 250) {
-					resolvedValue = 250;
-				} else if (resolvedValue < 1) {
-					resolvedValue = 1;
+						const cmd = `${baseCmd}${p} T` + runtime/10 + ` A${rampT}\n`
+						const sendBuf = Buffer.from(cmd, 'latin1')
+			
+						if (self.config.prot === 'tcp' && self.socket?.isConnected) {
+							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+							self.socket.send(sendBuf)
+						} else {
+							self.log('debug', 'Socket not connected :(')
+						}
+			
+						await new Promise((r) => setTimeout(r, 200))
+					}
 				}
-        self.setVariableValues({ CurrentPstSetRamp: resolvedValue })
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + resolvedValue)
-        // setup variables for api call
-        const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + resolvedValue / 10 + '\n', 'latin1')
-
-        if (rampTime.options.count === 2) { // all presets
-          var pstnum = 0;
-          while (pstnum <= 30) { // loop through all presets setting them to the inputted value
-            var varID = 'Pst'+pstnum+'RampT'
-            self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
-            self.setVariableValues({ [varID]: resolvedValue })
-            // api call
-            if (self.config.prot == 'tcp') {
-              self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-              if (self.socket !== undefined && self.socket.isConnected) {
-                self.socket.send(sendBuf)
-              } else {
-                self.log('debug', 'Socket not connected :(')
-              }
-            }
-            // this is to wait so all of the api calls arent all at the same time, in ms
-            await new Promise(r => setTimeout(r, 200));
-            pstnum++
-          }
-        } else { // if preset is selected to only change selected preset
-          var varID = 'Pst'+preset+'RampT'
-          self.log('debug', 'Variable ID: ' + varID + ' to ' + resolvedValue)
-          self.setVariableValues({ [varID]: resolvedValue })
-          // api call
-          if (self.config.prot == 'tcp') {
-            self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-            if (self.socket !== undefined && self.socket.isConnected) {
-              self.socket.send(sendBuf)
-            } else {
-              self.log('debug', 'Socket not connected :(')
-            }
-          }
-        }
-			}
-		},
-
-		setJogSpeedLimitByValue: {
-			name: 'Set Motor Jog Speed By Value',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 1,
-					choices: MOTOR_ID,
-				},
-				{
-					type: 'number',
-					label: 'Amount',
-					id: 'amountValue',
-					min: 0,
-		    	max: 100,
-          default: 100,
-				},
-			],
-			callback: async (jogSpeed) => {
-				var temp = jogSpeed.options.amountValue
-
-				if (temp > 100) {
-					temp = 100;
-				} else if (temp < 0) {
-					temp = 0;
+				// === Only one preset selected (manual or current set) ===
+				else {
+					if (self.getVariableValue(`Pst${preset}RampT`) === ramptime) {
+						self.log('debug', `Preset ${preset} already at Ramp: ${ramptime}, skipping.`)
+						return
+					}
+					self.log('debug', `Preset ID: ${preset} RunT: ${runtime} RampT: ${ramptemp}`)
+					self.setVariableValues({ [`Pst${preset}RampT`]: ramptemp })
+			
+					const cmd = `${baseCmd}${preset} T${runT} A${rampT}\n`
+					const sendBuf = Buffer.from(cmd, 'latin1')
+			
+					if (self.config.prot === 'tcp' && self.socket?.isConnected) {
+						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+						self.socket.send(sendBuf)
+					} else {
+						self.log('debug', 'Socket not connected :(')
+					}
 				}
-
-				self.log('debug', 'Motor ID: ' + jogSpeed.options.id_mot + ' Speed: ' + temp)
-
-				if (jogSpeed.options.id_mot == 1) {
-					self.setVariableValues({ PanSpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 2) {
-					self.setVariableValues({ TiltSpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 3) {
-					self.setVariableValues({ M3SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 4) {
-					self.setVariableValues({ M4SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 5) {
-					self.setVariableValues({ TN1SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 6) {
-					self.setVariableValues({ TN2SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 7) {
-					self.setVariableValues({ TN3SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 8) {
-					self.setVariableValues({ RollSpeedLimit: temp })
-				}
-			}
-		},
-		setJogSpeedLimitSmartByValue: {
-			name: 'Set Motor Jog Speed Smart By Value',
-			options: [
-				{
-					type: 'number',
-					label: 'Amount',
-					id: 'amountValue',
-					min: 0,
-		    	max: 100,
-          default: 100,
-				},
-			],
-			callback: async (jogSpeed) => {
-				var motor = self.getVariableValue('CurrentMtrSet')
-				var motorSpeed = jogSpeed.options.amountValue
-
-				if (motorSpeed > 100) {
-					motorSpeed = 100;
-				} else if (motorSpeed < 0) {
-					motorSpeed = 0;
-				}
-
-				self.log('debug', 'Motor ID: ' + motor + ' Speed: ' + motorSpeed)
-
-				if (motor == 1) {
-					self.setVariableValues({ PanSpeedLimit: motorSpeed })
-				} else if (motor == 2) {
-					self.setVariableValues({ TiltSpeedLimit: motorSpeed })
-				} else if (motor == 3) {
-					self.setVariableValues({ M3SpeedLimit: motorSpeed })
-				} else if (motor == 4) {
-					self.setVariableValues({ M4SpeedLimit: motorSpeed })
-				} else if (motor == 5) {
-					self.setVariableValues({ TN1SpeedLimit: motorSpeed })
-				} else if (motor == 6) {
-					self.setVariableValues({ TN2SpeedLimit: motorSpeed })
-				} else if (motor == 7) {
-					self.setVariableValues({ TN3SpeedLimit: motorSpeed })
-				} else if (motor == 8) {
-					self.setVariableValues({ RollSpeedLimit: motorSpeed })
-				} else if (motor == 9) {
-					self.setVariableValues({ FocusSpeedLimit: motorSpeed })
-				}
-
-				self.setVariableValues({ CurrentMtrSpeed: motorSpeed })
 			}
 		},
 
@@ -1855,6 +2040,10 @@ module.exports = function (self) {
 					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
 					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
 					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
+					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
+					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
+					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
 
 					self.setVariableDefinitions(variableList)
 
@@ -1863,14 +2052,22 @@ module.exports = function (self) {
 					self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
 				}
 
-				var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
-				var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
+				var ramptemp = self.getVariableValue(`Pst${preset}RampT`)
+				var runtemp = self.getVariableValue(`Pst${preset}RunT`)
+				var panpos = self.getVariableValue(`Pst${preset}PanPos`)
+				var tiltpos = self.getVariableValue(`Pst${preset}TiltPos`)
+				var m3pos = self.getVariableValue(`Pst${preset}M3Pos`)
+				var m4pos = self.getVariableValue(`Pst${preset}M4Pos`)
 
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp + ' PanPos: ' + panpos + ' TiltPos: ' + tiltpos + ' M3Pos: ' + m3pos + ' M4Pos: ' + m4pos)
 
 				self.setVariableValues({ CurrentPstSet: preset })
 				self.setVariableValues({ CurrentPstSetRun: runtemp })
 				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
+				self.setVariableValues({ CurrentPstPanPos: panpos })
+				self.setVariableValues({ CurrentPstTiltPos: tiltpos })
+				self.setVariableValues({ CurrentPstM3Pos: m3pos })
+				self.setVariableValues({ CurrentPstM4Pos: m4pos })
 
 				self.checkFeedbacks("SetPresetSmart")
 			}
@@ -2215,6 +2412,7 @@ module.exports = function (self) {
 				self.log('debug', 'Active Loop: ' + loopActive)
 				if (loopActive == -1) {
 					self.setVariableValues({ LpActive: LpRecall.options.id_loop })
+					self.setVariableValues({ LastPstID: -1})
 					self.checkFeedbacks("LoopStatus")
 					const cmd = 'G25 L' + LpRecall.options.id_loop + ' A' + tempA + ' B' + tempB + ' C500 D500'
 					const sendBuf = Buffer.from(cmd + '\n', 'latin1')
@@ -3218,6 +3416,7 @@ module.exports = function (self) {
 				}
 			}
 		},
+
 		setJogSpeedLimitSmart: {
 			name: 'Set Motor Jog Speed Smart',
 			options: [
@@ -3228,15 +3427,42 @@ module.exports = function (self) {
 					default: 1,
 					choices: [
 						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
+						{ id: 'amount', label: 'Amount' },
+						{ id: 'set', label: 'Set Value' }
 					]
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -100,
+		    	max: 100,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
+				{
+					type: 'number',
+					label: 'Set Value',
+					id: 'setValue',
+					min: 0,
+		    	max: 100,
+          default: 100,
+					isVisible: (options) => options.direction === 'set',
 				},
 			],
 			callback: async (jogSpeed) => {
 				var motor = self.getVariableValue('CurrentMtrSet')
 				var motorSpeed = self.getVariableValue('CurrentMtrSpeed')
 
-				motorSpeed += jogSpeed.options.direction
+				if (jogSpeed.options.direction === 'set') {
+					motorSpeed = jogSpeed.options.setValue
+				} else {
+					if (jogSpeed.options.direction === 'amount') {
+						motorSpeed += jogSpeed.options.amountValue
+					} else {
+						motorSpeed += jogSpeed.options.direction
+					}
+				}
 
 				if (motorSpeed > 100) {
 					motorSpeed = 100;

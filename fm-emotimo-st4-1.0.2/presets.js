@@ -2416,12 +2416,12 @@ module.exports = {
                 ]
             },
 
-            presets.MotTurnTableNeg = {
+            presets.MotM4Neg = {
                 category: 'Motors',
                 type: 'button',
-                name: 'TurnTable Neg',
+                name: 'M4 Neg',
                 style: {
-                    text: 'TT Neg\\n',
+                    text: 'M4/Zoom Neg\\n',
                     size: '18',
                     color: '16777215',
                     bgcolor: combineRgb(0, 0, 0),
@@ -2466,12 +2466,12 @@ module.exports = {
                     }
                 ]
             },
-            presets.MotTurnTablePos = {
+            presets.MotM4Pos = {
                 category: 'Motors',
                 type: 'button',
-                name: 'TurnTable Pos',
+                name: 'M4 Pos',
                 style: {
-                    text: 'TT Pos\\n',
+                    text: 'M4/Zoom Pos\\n',
                     size: '18',
                     color: '16777215',
                     bgcolor: combineRgb(0, 0, 0),

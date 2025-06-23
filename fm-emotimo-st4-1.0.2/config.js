@@ -1,5 +1,3 @@
-// import { Regex } from '@companion-module/base'
-
 const { MODELS } = require('./models.js')
 
 module.exports = {
@@ -11,7 +9,7 @@ module.exports = {
 				width: 12,
 				label: 'Information',
 				value:
-					"This module controls ST4, ST4.3 and SA2",
+					"This module controls the ST4, ST4.3 and SA2.6",
 			},
 			{
 				type: 'textinput',
@@ -54,21 +52,35 @@ module.exports = {
 				choices: MODELS,
 				minChoicesForSearch: 5,
 			},
-			// {
-			// 	type: 'static-text',
-			// 	id: 'intervalInfo',
-			// 	width: 12,
-			// 	label: 'Update Interval',
-			// 	value:
-			// 		'Please enter the amount of time in milliseconds to request new information from the camera. Set to 0 to disable.',
-			// },
-			// {
-			// 	type: 'textinput',
-			// 	id: 'interval',
-			// 	label: 'Update Interval',
-			// 	width: 3,
-			// 	default: 5000,
-			// },
+			{
+				type: 'static-text',
+				id: 'startupPstAmountInfo',
+				width: 12,
+				label: 'Startup Preset Fetch',
+				value: 'Fetches the first X presets on startup. If the positions are all 0, then it doesn\'t store it.',
+			},
+			{
+				type: 'textinput',
+				id: 'startupPstAmount',
+				label: 'Fetch amount',
+				width: 3,
+				default: 30,
+			},
+			{
+				type: 'static-text',
+				id: 'intervalInfo',
+				width: 12,
+				label: 'Update Interval',
+				value:
+					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable. Recomended 2000ms to get acurate positions.',
+			},
+			{
+				type: 'textinput',
+				id: 'interval',
+				label: 'Update Interval',
+				width: 3,
+				default: 5000,
+			},
 			{
 				type: 'static-text',
 				id: 'dummy2',

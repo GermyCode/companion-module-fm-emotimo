@@ -57,7 +57,7 @@ module.exports = async function (self) {
 					label: 'Preset Number',
 					default: 0,
 					min: 0,
-					max: 30,
+					max: 128,
 				},
 			],
 			callback: (feedback) => {
@@ -65,7 +65,6 @@ module.exports = async function (self) {
 				// console.log(presetStr);
 				var state = self.getVariableValue(presetStr)
 				if(state) {
-					console.log(presetStr);
 					return true
 				} else {
 					return false
@@ -73,7 +72,7 @@ module.exports = async function (self) {
 			},
 		},
 		SetPresetSmart: {
-			name: 'Set Preset',
+			name: 'Set Preset Smart',
 			type: 'boolean',
 			label: 'Channel State',
 			defaultStyle: {
@@ -90,7 +89,7 @@ module.exports = async function (self) {
 				// console.log(presetStr);
 				var state = self.getVariableValue(presetStr)
 				if(state) {
-					console.log(presetStr);
+					// console.log(presetStr);
 					return true
 				} else {
 					return false

@@ -2529,8 +2529,8 @@ module.exports = function (self) {
 					type: 'number',
 					label: 'Amount ( - for less)',
 					id: 'amountValue',
-					min: -250,
-		    	max: 250,
+					min: -300,
+		    	max: 300,
           default: 5,
 					isVisible: (options) => options.direction === 'amount',
 				},
@@ -2548,8 +2548,8 @@ module.exports = function (self) {
 					ramptemp += rampTime.options.direction
 				}
 				
-				if (ramptemp > 250) {
-					ramptemp = 250;
+				if (ramptemp > 300) {
+					ramptemp = 300;
 				} else if (ramptemp < 1) {
 					ramptemp = 1;
 				}
@@ -2616,7 +2616,18 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+		    	max: 127,
+					isVisible: (options) => options.direction === 'pst',
 				},
 			],
 			callback: async (dir) => {
@@ -2626,10 +2637,14 @@ module.exports = function (self) {
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				lpAPt += dir.options.direction
+				if (dir.options.direction === 'pst') {
+					lpAPt = dir.options.psetid
+				} else {
+					lpAPt += dir.options.direction
+				}
 
-				if (lpAPt > 29) {
-					lpAPt = 29;
+				if (lpAPt > 127) {
+					lpAPt = 127;
 				} else if (lpAPt < 0) {
 					lpAPt = 0;
 				}
@@ -2664,7 +2679,18 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+		    	max: 127,
+					isVisible: (options) => options.direction === 'pst',
 				},
 			],
 			callback: async (dir) => {
@@ -2674,10 +2700,14 @@ module.exports = function (self) {
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				lpBPt += dir.options.direction
+				if (dir.options.direction === 'pst') {
+					lpBPt = dir.options.psetid
+				} else {
+					lpBPt += dir.options.direction
+				}
 
-				if (lpBPt > 29) {
-					lpBPt = 29;
+				if (lpBPt > 127) {
+					lpBPt = 127;
 				} else if (lpBPt < 0) {
 					lpBPt = 0;
 				}
@@ -2777,7 +2807,9 @@ module.exports = function (self) {
 					id_loop += loop.options.direction
 				}
 
-				if (id_loop < 0) {
+				if (id_loop > 7) {
+					id_loop = 7;
+				} else if (id_loop < 0) {
 					id_loop = 0;
 				}
 

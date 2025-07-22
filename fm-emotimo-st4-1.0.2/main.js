@@ -343,6 +343,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				case 'Stop All Initiated':
 					this.setVariableValues({ LpActive: -1 })
 					this.checkFeedbacks("LoopStatus")
+					this.setVariableValues({ LastPstID: -1 })
 					break
 				case 'Reset Stops':
 					var data = tokens[1]

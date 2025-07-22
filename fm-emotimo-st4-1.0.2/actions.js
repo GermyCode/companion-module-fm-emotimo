@@ -2283,16 +2283,32 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+		    	max: 127,
+					default: 0,
+					isVisible: (options) => options.direction === 'pst',
 				},
 			],
 			callback: async (LpAPt) => {
 				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
 
-				pointTemp += LpAPt.options.direction
+				if (dir.options.direction === 'pst') {
+					pointTemp = LpAPt.options.psetid
+				} else {
+					pointTemp += LpAPt.options.direction
+				}
 
-				if (pointTemp > 29) {
-					pointTemp = 29;
+				if (pointTemp > 127) {
+					pointTemp = 127;
 				} else if (pointTemp < 0) {
 					pointTemp = 0;
 				}
@@ -2317,16 +2333,32 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+		    	max: 127,
+					default: 0,
+					isVisible: (options) => options.direction === 'pst',
 				},
 			],
 			callback: async (LpBPt) => {
 				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
 
-				pointTemp += LpBPt.options.direction
+				if (dir.options.direction === 'pst') {
+					pointTemp = LpBPt.options.psetid
+				} else {
+					pointTemp += LpBPt.options.direction
+				}
 
-				if (pointTemp > 29) {
-					pointTemp = 29;
+				if (pointTemp > 127) {
+					pointTemp = 127;
 				} else if (pointTemp < 0) {
 					pointTemp = 0;
 				}

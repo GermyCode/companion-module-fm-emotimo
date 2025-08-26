@@ -571,9 +571,9 @@ class eMotimoModuleInstance extends InstanceBase {
 
 			this.log('debug', "Heartbeat Initialized");
 			this.heartbeatInterval = setInterval(() => {
-				var cmd = 'G500\n';
 				// var cmd = '\x45\x4D\x07\x00\x00\xC1\xA4';
-				this.sendEmotimoAPICommand(cmd);
+				this.sendEmotimoAPICommand('G500');
+				setTimeout(() => this.sendEmotimoAPICommand('G999'), 100);
 			}, this.config.interval)
 
 		} else {
@@ -726,7 +726,7 @@ class eMotimoModuleInstance extends InstanceBase {
 					setTimeout(sendNext, 100)
 				})
 				this.log('debug', `Sending: G752 P${i}`)
-				self.sendEmotimoAPICommand(`G752 P${i}`)
+				this.sendEmotimoAPICommand(`G752 P${i}`)
 			} else {
 				this.log('warn', 'Socket not connected')
 			}

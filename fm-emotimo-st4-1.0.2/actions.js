@@ -111,37 +111,7 @@ module.exports = function (self) {
 				}
 			],
 			callback: async (actionJog) => {
-				const cmd = 'G300 M'
-				const cmd2 = ' V'
-				const cmd3 = '\n'
-
-				if (cmd != '') {
-					/*
-					 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-					 * sending a string assumes 'utf8' encoding
-					 * which then escapes character values over 0x7F
-					 * and destroys the 'binary' content
-					 */
-					const sendBuf = Buffer.from(cmd + actionJog.options.id_mot + cmd2 + actionJog.options.id_speed + cmd3, 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
-						}
-					}
-				}
+				self.sendEmotimoAPICommand('G300 M' + actionJog.options.id_mot + ' V' + actionJog.options.id_speed)
 			},
 		},
 		jogMotorSmart: {
@@ -163,79 +133,47 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (actionJogSmart) => {
-				const cmd = 'G301 M'
-				const cmd2 = ' V'
-				const cmd3 = '\n'
 				var motorSpeed = 0
 				var motorInversion = 1
 				var temp = 0
 
-				if (cmd != '') {
-
-					if (actionJogSmart.options.id_mot == 1) {
-						temp = self.getVariableValue('PanSpeedLimit')
-						motorInversion = self.getVariableValue('PanInversion')
-					} else if (actionJogSmart.options.id_mot == 2) {
-						temp = self.getVariableValue('TiltSpeedLimit')
-						motorInversion = self.getVariableValue('TiltInversion')
-					} else if (actionJogSmart.options.id_mot == 3) {
-						temp = self.getVariableValue('M3SpeedLimit')
-						motorInversion = self.getVariableValue('M3Inversion')
-					} else if (actionJogSmart.options.id_mot == 4) {
-						temp = self.getVariableValue('M4SpeedLimit')
-						motorInversion = self.getVariableValue('M4Inversion')
-					} else if (actionJogSmart.options.id_mot == 5) {
-						temp = self.getVariableValue('TN1SpeedLimit')
-						motorInversion = self.getVariableValue('TN1Inversion')
-					} else if (actionJogSmart.options.id_mot == 6) {
-						temp = self.getVariableValue('TN2SpeedLimit')
-						motorInversion = self.getVariableValue('TN2Inversion')
-					} else if (actionJogSmart.options.id_mot == 7) {
-						temp = self.getVariableValue('TN3SpeedLimit')
-						motorInversion = self.getVariableValue('TN3Inversion')
-					} else if (actionJogSmart.options.id_mot == 8) {
-						temp = self.getVariableValue('RollSpeedLimit')
-						motorInversion = self.getVariableValue('RollInversion')
-					} else if (actionJogSmart.options.id_mot == 9) {
-						temp = self.getVariableValue('FocusSpeedLimit')
-						motorInversion = self.getVariableValue('FocusInversion')
-					}
-
-					if (actionJogSmart.options.id_mot < 5 || actionJogSmart.options.id_mot == 8) {
-						motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 500.0
-					} else {
-						motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 100.0
-					}
-
-					self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
-
-					/*
-					 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-					 * sending a string assumes 'utf8' encoding
-					 * which then escapes character values over 0x7F
-					 * and destroys the 'binary' content
-					 * new for committestbri
-					 */
-					const sendBuf = Buffer.from(cmd + actionJogSmart.options.id_mot + cmd2 + motorSpeed + cmd3, 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
-						}
-					}
+				if (actionJogSmart.options.id_mot == 1) {
+					temp = self.getVariableValue('PanSpeedLimit')
+					motorInversion = self.getVariableValue('PanInversion')
+				} else if (actionJogSmart.options.id_mot == 2) {
+					temp = self.getVariableValue('TiltSpeedLimit')
+					motorInversion = self.getVariableValue('TiltInversion')
+				} else if (actionJogSmart.options.id_mot == 3) {
+					temp = self.getVariableValue('M3SpeedLimit')
+					motorInversion = self.getVariableValue('M3Inversion')
+				} else if (actionJogSmart.options.id_mot == 4) {
+					temp = self.getVariableValue('M4SpeedLimit')
+					motorInversion = self.getVariableValue('M4Inversion')
+				} else if (actionJogSmart.options.id_mot == 5) {
+					temp = self.getVariableValue('TN1SpeedLimit')
+					motorInversion = self.getVariableValue('TN1Inversion')
+				} else if (actionJogSmart.options.id_mot == 6) {
+					temp = self.getVariableValue('TN2SpeedLimit')
+					motorInversion = self.getVariableValue('TN2Inversion')
+				} else if (actionJogSmart.options.id_mot == 7) {
+					temp = self.getVariableValue('TN3SpeedLimit')
+					motorInversion = self.getVariableValue('TN3Inversion')
+				} else if (actionJogSmart.options.id_mot == 8) {
+					temp = self.getVariableValue('RollSpeedLimit')
+					motorInversion = self.getVariableValue('RollInversion')
+				} else if (actionJogSmart.options.id_mot == 9) {
+					temp = self.getVariableValue('FocusSpeedLimit')
+					motorInversion = self.getVariableValue('FocusInversion')
 				}
+
+				if (actionJogSmart.options.id_mot < 5 || actionJogSmart.options.id_mot == 8) {
+					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 500.0
+				} else {
+					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 100.0
+				}
+
+				self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
+				self.sendEmotimoAPICommand('G301 M' + actionJogSmart.options.id_mot + ' V' + motorSpeed)
 			},
 		},
 		setCruiseSpeed: {
@@ -257,120 +195,89 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (actionJogSmart) => {
-				const cmd = 'G301 M'
-				const cmd2 = ' V'
-				const cmd3 = '\n'
 				var motorSpeed = 0
 				var motorInversion = 1
 				var rawMotorSpeed = 0
 				var temp = 0
 
-				if (cmd != '') {
-
-					if (actionJogSmart.options.id_mot == 1) {
-						temp = self.getVariableValue('PanSpeedLimit')
-						rawMotorSpeed = self.getVariableValue('PanCruiseSpeed')
-						motorInversion = self.getVariableValue('PanInversion')
-					} else if (actionJogSmart.options.id_mot == 2) {
-						temp = self.getVariableValue('TiltSpeedLimit')
-						rawMotorSpeed = self.getVariableValue('TiltCruiseSpeed')
-						motorInversion = self.getVariableValue('TiltInversion')
-					} else if (actionJogSmart.options.id_mot == 3) {
-						temp = self.getVariableValue('M3SpeedLimit')
-						rawMotorSpeed = self.getVariableValue('M3CruiseSpeed')
-						motorInversion = self.getVariableValue('M3Inversion')
-					} else if (actionJogSmart.options.id_mot == 4) {
-						temp = self.getVariableValue('M4SpeedLimit')
-						rawMotorSpeed = self.getVariableValue('M4CruiseSpeed')
-						motorInversion = self.getVariableValue('M4Inversion')
-					} else if (actionJogSmart.options.id_mot == 5) {
-						temp = self.getVariableValue('TN1SpeedLimit')
-						rawMotorSpeed = self.getVariableValue('TN1CruiseSpeed')
-						motorInversion = self.getVariableValue('TN1Inversion')
-					} else if (actionJogSmart.options.id_mot == 6) {
-						temp = self.getVariableValue('TN2SpeedLimit')
-						rawMotorSpeed = self.getVariableValue('TN2CruiseSpeed')
-						motorInversion = self.getVariableValue('TN2Inversion')
-					} else if (actionJogSmart.options.id_mot == 7) {
-						temp = self.getVariableValue('TN3SpeedLimit')
-						rawMotorSpeed = self.getVariableValue('TN3CruiseSpeed')
-						motorInversion = self.getVariableValue('TN3Inversion')
-					} else if (actionJogSmart.options.id_mot == 8) {
-						temp = self.getVariableValue('RollSpeedLimit')
-						rawMotorSpeed = self.getVariableValue('RollCruiseSpeed')
-						motorInversion = self.getVariableValue('RollInversion')
-					} else if (actionJogSmart.options.id_mot == 9) {
-						temp = self.getVariableValue('FocusSpeedLimit')
-						rawMotorSpeed = self.getVariableValue('FocusCruiseSpeed')
-						motorInversion = self.getVariableValue('FocusInversion')
-					}
-
-					if (actionJogSmart.options.id_mot < 5 || actionJogSmart.options.id_mot == 8) {
-						rawMotorSpeed += actionJogSmart.options.direction * 25
-						if (rawMotorSpeed > 500) {
-							rawMotorSpeed = 500
-						} else if (rawMotorSpeed < -500) {
-							rawMotorSpeed = -500
-						} 
-						motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
-					} else {
-						rawMotorSpeed += actionJogSmart.options.direction * 5
-						if (rawMotorSpeed > 100) {
-							rawMotorSpeed = 100
-						} else if (rawMotorSpeed < -100) {
-							rawMotorSpeed = -100
-						} 
-						motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
-					}
-
-					if (actionJogSmart.options.id_mot == 1) {
-						self.setVariableValues({ PanCruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 2) {
-						self.setVariableValues({ TiltCruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 3) {
-						self.setVariableValues({ M3CruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 4) {
-						self.setVariableValues({ M4CruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 5) {
-						self.setVariableValues({ TN1CruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 6) {
-						self.setVariableValues({ TN2CruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 7) {
-						self.setVariableValues({ TN3CruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 8) {
-						self.setVariableValues({ RollCruiseSpeed: rawMotorSpeed })
-					} else if (actionJogSmart.options.id_mot == 9) {
-						self.setVariableValues({ FocusCruiseSpeed: rawMotorSpeed })
-					}
-
-					self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
-
-					/*
-					 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-					 * sending a string assumes 'utf8' encoding
-					 * which then escapes character values over 0x7F
-					 * and destroys the 'binary' content
-					 */
-					const sendBuf = Buffer.from(cmd + actionJogSmart.options.id_mot + cmd2 + motorSpeed + cmd3, 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
-						}
-					}
+				if (actionJogSmart.options.id_mot == 1) {
+					temp = self.getVariableValue('PanSpeedLimit')
+					rawMotorSpeed = self.getVariableValue('PanCruiseSpeed')
+					motorInversion = self.getVariableValue('PanInversion')
+				} else if (actionJogSmart.options.id_mot == 2) {
+					temp = self.getVariableValue('TiltSpeedLimit')
+					rawMotorSpeed = self.getVariableValue('TiltCruiseSpeed')
+					motorInversion = self.getVariableValue('TiltInversion')
+				} else if (actionJogSmart.options.id_mot == 3) {
+					temp = self.getVariableValue('M3SpeedLimit')
+					rawMotorSpeed = self.getVariableValue('M3CruiseSpeed')
+					motorInversion = self.getVariableValue('M3Inversion')
+				} else if (actionJogSmart.options.id_mot == 4) {
+					temp = self.getVariableValue('M4SpeedLimit')
+					rawMotorSpeed = self.getVariableValue('M4CruiseSpeed')
+					motorInversion = self.getVariableValue('M4Inversion')
+				} else if (actionJogSmart.options.id_mot == 5) {
+					temp = self.getVariableValue('TN1SpeedLimit')
+					rawMotorSpeed = self.getVariableValue('TN1CruiseSpeed')
+					motorInversion = self.getVariableValue('TN1Inversion')
+				} else if (actionJogSmart.options.id_mot == 6) {
+					temp = self.getVariableValue('TN2SpeedLimit')
+					rawMotorSpeed = self.getVariableValue('TN2CruiseSpeed')
+					motorInversion = self.getVariableValue('TN2Inversion')
+				} else if (actionJogSmart.options.id_mot == 7) {
+					temp = self.getVariableValue('TN3SpeedLimit')
+					rawMotorSpeed = self.getVariableValue('TN3CruiseSpeed')
+					motorInversion = self.getVariableValue('TN3Inversion')
+				} else if (actionJogSmart.options.id_mot == 8) {
+					temp = self.getVariableValue('RollSpeedLimit')
+					rawMotorSpeed = self.getVariableValue('RollCruiseSpeed')
+					motorInversion = self.getVariableValue('RollInversion')
+				} else if (actionJogSmart.options.id_mot == 9) {
+					temp = self.getVariableValue('FocusSpeedLimit')
+					rawMotorSpeed = self.getVariableValue('FocusCruiseSpeed')
+					motorInversion = self.getVariableValue('FocusInversion')
 				}
+
+				if (actionJogSmart.options.id_mot < 5 || actionJogSmart.options.id_mot == 8) {
+					rawMotorSpeed += actionJogSmart.options.direction * 25
+					if (rawMotorSpeed > 500) {
+						rawMotorSpeed = 500
+					} else if (rawMotorSpeed < -500) {
+						rawMotorSpeed = -500
+					} 
+					motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
+				} else {
+					rawMotorSpeed += actionJogSmart.options.direction * 5
+					if (rawMotorSpeed > 100) {
+						rawMotorSpeed = 100
+					} else if (rawMotorSpeed < -100) {
+						rawMotorSpeed = -100
+					} 
+					motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
+				}
+
+				if (actionJogSmart.options.id_mot == 1) {
+					self.setVariableValues({ PanCruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 2) {
+					self.setVariableValues({ TiltCruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 3) {
+					self.setVariableValues({ M3CruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 4) {
+					self.setVariableValues({ M4CruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 5) {
+					self.setVariableValues({ TN1CruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 6) {
+					self.setVariableValues({ TN2CruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 7) {
+					self.setVariableValues({ TN3CruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 8) {
+					self.setVariableValues({ RollCruiseSpeed: rawMotorSpeed })
+				} else if (actionJogSmart.options.id_mot == 9) {
+					self.setVariableValues({ FocusCruiseSpeed: rawMotorSpeed })
+				}
+
+				self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
+				self.sendEmotimoAPICommand('G301 M' + actionJogSmart.options.id_mot + ' V' + motorSpeed)
 			},
 		},
 		tnpositionDrive: {
@@ -392,9 +299,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (setMotorPosition) => {
-				const cmd = 'G302 M'
-				const cmd2 = ' P'
-				const cmd3 = '\n'
+				
 				var temp = 0
 				var increment = 0
 
@@ -427,38 +332,7 @@ module.exports = function (self) {
 						self.setVariableValues({ ZPos: temp })
 					}
 
-					/*
-					 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-					 * sending a string assumes 'utf8' encoding
-					 * which then escapes character values over 0x7F
-					 * and destroys the 'binary' content
-					 */
-					const sendBuf = Buffer.from(cmd + setMotorPosition.options.id_mot + cmd2 + temp + cmd3, 'latin1')
-
-					clearInterval(self.heartbeatInterval)
-					self.heartbeatInterval = setInterval(() => {
-						var cmd = 'G500\n';
-						// var cmd = '\x45\x4D\x07\x00\x00\xC1\xA4';
-						self.sendEmotimoAPICommand(cmd);
-					}, 10000)
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
-						}
-					}
+					self.sendEmotimoAPICommand('G302 M' + setMotorPosition.options.id_mot + ' P' + temp)
 				}
 			},
 		},
@@ -481,8 +355,6 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (setMotorPosition) => {
-				const cmd = 'G0 '
-				const cmd2 = '\n'
 				var cmdParam ='X'
 				var temp = 0
 				var increment = 0
@@ -525,9 +397,6 @@ module.exports = function (self) {
 					temp += (setMotorPosition.options.direction * increment);
 					// self.log('debug', 'Motor ID' + setMotorPosition.options.id_mot + 'Position' + temp)
 
-
-
-
 					if (setMotorPosition.options.id_mot == 1) {
 						self.setVariableValues({ PPos: temp })
 					} else if (setMotorPosition.options.id_mot == 2) {
@@ -546,38 +415,7 @@ module.exports = function (self) {
 						self.setVariableValues({ RPos: temp })
 					}
 
-					/*
-					 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-					 * sending a string assumes 'utf8' encoding
-					 * which then escapes character values over 0x7F
-					 * and destroys the 'binary' content
-					 */
-					const sendBuf = Buffer.from(cmd + cmdParam + temp + cmd2, 'latin1')
-
-					clearInterval(self.heartbeatInterval)
-					self.heartbeatInterval = setInterval(() => {
-						var cmd = 'G500\n';
-						// var cmd = '\x45\x4D\x07\x00\x00\xC1\xA4';
-						self.sendEmotimoAPICommand(cmd);
-					}, 10000)
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
-						}
-					}
+					self.sendEmotimoAPICommand('G0 ' + cmdParam + temp)
 				}
 			},
 		},
@@ -667,7 +505,6 @@ module.exports = function (self) {
 				} else if (toggleIncrement.options.id_mot == 8) {
 					self.setVariableValues({ RStep: temp })
 				}
-
 			}
 		},
 		setJogSpeedLimit: {
@@ -780,7 +617,6 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (resetSpeed) => {
-
 				if (resetSpeed.options.id_mot == 1) {
 					self.setVariableValues({ PanSpeedLimit: 100 })
 				} else if (resetSpeed.options.id_mot == 2) {
@@ -813,10 +649,6 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (resetSpeed) => {
-				const cmd = 'G301 M'
-				const cmd2 = ' V0'
-				const cmd3 = '\n'
-
 				if (resetSpeed.options.id_mot == 1) {
 					self.setVariableValues({ PanCruiseSpeed: 0 })
 				} else if (resetSpeed.options.id_mot == 2) {
@@ -837,33 +669,7 @@ module.exports = function (self) {
 					self.setVariableValues({ FocusCruiseSpeed: 0 })
 				}
 
-
-				/*
-				 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-				 * sending a string assumes 'utf8' encoding
-				 * which then escapes character values over 0x7F
-				 * and destroys the 'binary' content
-				 */
-				const sendBuf = Buffer.from(cmd + resetSpeed.options.id_mot + cmd2 + cmd3, 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
-
-				if (self.config.prot == 'udp') {
-					if (self.udp !== undefined) {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						self.udp.send(sendBuf)
-					}
-				}
-
+				self.sendEmotimoAPICommand('G301 M' + resetSpeed.options.id_mot + ' V0')
 			}
 		},
 		stopMotors: {
@@ -872,22 +678,8 @@ module.exports = function (self) {
 
 			],
 			callback: async (haltMotors) => {
-				// console.log('Hello world!', event.options.num)
 				self.setVariableValues({ 'LastPstID': -1 })
-				const cmd = 'G911'
-
-
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G911')
 			},
 		},
 
@@ -917,19 +709,7 @@ module.exports = function (self) {
 				self.setVariableValues({ [`Pst${preset}M3Pos`]: m3pos })
 				self.setVariableValues({ [`Pst${preset}M4Pos`]: m4pos })
 
-				const cmd = 'G21 P'
-
-				const sendBuf = Buffer.from(cmd + preset + ' T' + self.presetRunTimes[setPreset.options.num] / 10 + ' A' + self.presetRampTimes[setPreset.options.num] / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 P' + preset + ' T' + self.presetRunTimes[setPreset.options.num] / 10 + ' A' + self.presetRampTimes[setPreset.options.num] / 10)
 			},
 		},
 		recallPset: {
@@ -946,19 +726,9 @@ module.exports = function (self) {
 			],
 			callback: async (recallPreset) => {
 				// console.log('Hello world!', event.options.num)
-				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + recallPreset.options.num + '\n', 'latin1')
+				const cmd = 'G20 P' + recallPreset.options.num
 				self.setVariableValues({ LastPstID: recallPreset.options.num })
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand(cmd)
 			},
 		},
 		setPresetRunTime: {
@@ -1013,18 +783,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
 				self.setVariableValues({ [varID]: runtemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + runTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + runTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 		setPresetRampTime: {
@@ -1079,18 +838,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
 				self.setVariableValues({ [varID]: ramptemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + rampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + rampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 		resetPresetRunTime: {
@@ -1116,18 +864,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
 				self.setVariableValues({ [varID]: runtemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + resetPresetRunTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + resetPresetRunTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 		resetPresetRampTime: {
@@ -1152,18 +889,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
 				self.setVariableValues({ [varID]: ramptemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + resetPresetRampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + resetPresetRampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 
@@ -1182,19 +908,7 @@ module.exports = function (self) {
 				const selProf = motorProfile.options.prodileid
 				self.setVariableValues({ CurrentMtrProf: selProf})
 
-				const cmd = 'G102 P'
-
-				const sendBuf = Buffer.from(cmd + selProf + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G102 P' + selProf)
 			}
 		},
 
@@ -1242,17 +956,7 @@ module.exports = function (self) {
 				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
 				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
 
-				const cmd = 'G11 M'
-				const sendBuf = Buffer.from(cmd + gotoCoords.options.motorid + ' P' + resolvedCoordsValue + ' T' + resolvedRunValue + ' A' + resolvedRampValue + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G11 M' + gotoCoords.options.motorid + ' P' + resolvedCoordsValue + ' T' + resolvedRunValue + ' A' + resolvedRampValue)
 			}
 		},
 
@@ -1434,16 +1138,7 @@ module.exports = function (self) {
 				self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue})
 				self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
 
-				const sendBuf = Buffer.from(cmd + cmd2 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand(cmd + cmd2)
 			}
 		},
 
@@ -1498,68 +1193,32 @@ module.exports = function (self) {
 				if (resolvedPanValue) { // if not blank, do things
 					self.log('debug', `Setting motor PAN to position ${resolvedPanValue}`)
 					self.setVariableValues({ 'PPos': resolvedPanValue })
-					sendBuf = Buffer.from(`G200 M1 P${resolvedPanValue}\n`, 'latin1')
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand(`G200 M1 P${resolvedPanValue}`)
 					await wait(200) // waits 200ms before continuing
 				}
 				// Tilt
 				if (resolvedTiltValue) { // if not blank, do things
 					self.log('debug', `Setting motor Tilt to position ${resolvedTiltValue}`)
 					self.setVariableValues({ 'TPos': resolvedTiltValue })
-					sendBuf = Buffer.from(`G200 M2 P${resolvedTiltValue}\n`, 'latin1')
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand(`G200 M2 P${resolvedTiltValue}`)
 					await wait(200) // waits 200ms before continuing
 				}
 				// Slide
 				if (resolvedSlideValue) { // if not blank, do things
 					self.log('debug', `Setting motor M3/Slide to position ${resolvedSlideValue}`)
 					self.setVariableValues({ 'SPos': resolvedSlideValue })
-					sendBuf = Buffer.from(`G200 M3 P${resolvedSlideValue}\n`, 'latin1')
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand(`G200 M3 P${resolvedSlideValue}`)
 					await wait(200) // waits 200ms before continuing
 				}
 				//Zoom
 				if (resolvedZoomValue) { // if not blank, do things
 					self.log('debug', `Setting motor M4/Zoom to position ${resolvedZoomValue}`)
 					self.setVariableValues({ 'MPos': resolvedZoomValue })
-					sendBuf = Buffer.from(`G200 M4 P${resolvedZoomValue}\n`, 'latin1')
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand(`G200 M4 P${resolvedZoomValue}`)
 					await wait(200) // waits 200ms before continuing
 				}
 			}
 		},
-
-
-
-
 
 
 		// Sets the run time based on an inputted value
@@ -1578,11 +1237,11 @@ module.exports = function (self) {
 					],
 				},
 				{
+					type: 'dropdown',
 					id: 'pstid',
-					type: 'number',
 					label: 'Preset ID',
-					min: 0,
 					default: 0,
+					choices: LOOP_ID,
 					isVisible: (options) => options.count === 0,
 				},
 				{ // input value for the run time
@@ -1614,7 +1273,6 @@ module.exports = function (self) {
 			
 				self.setVariableValues({ CurrentPstSetRun: runtime })
 			
-				const baseCmd = 'G21 N1 P'
 				const rampT = ramptemp / 10
 				const runT = runtime / 10
 			
@@ -1639,16 +1297,7 @@ module.exports = function (self) {
 						self.log('debug', `Preset ID: ${p} RunT: ${runtime} RampT: ${ramptime}`)
 						self.setVariableValues({ [`Pst${p}RunT`]: runtime })
 
-						const cmd = `${baseCmd}${p} T${runT} A` + ramptime/10 + '\n'
-						const sendBuf = Buffer.from(cmd, 'latin1')
-			
-						if (self.config.prot === 'tcp' && self.socket?.isConnected) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-			
+						self.sendEmotimoAPICommand(`G21 N1 P${p} T${runT} A` + ramptime/10)
 						await new Promise((r) => setTimeout(r, 200))
 					}
 				}
@@ -1660,16 +1309,8 @@ module.exports = function (self) {
 					}
 					self.log('debug', `Preset ID: ${preset} RunT: ${runtime} RampT: ${ramptemp}`)
 					self.setVariableValues({ [`Pst${preset}RunT`]: runtime })
-			
-					const cmd = `${baseCmd}${preset} T${runT} A${rampT}\n`
-					const sendBuf = Buffer.from(cmd, 'latin1')
-			
-					if (self.config.prot === 'tcp' && self.socket?.isConnected) {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
+
+					self.sendEmotimoAPICommand(`G21 N1 P${preset} T${runT} A${rampT}`)
 				}
 			}
 		},
@@ -1690,11 +1331,11 @@ module.exports = function (self) {
           ],
         },
 				{
+					type: 'dropdown',
 					id: 'pstid',
-					type: 'number',
 					label: 'Preset ID',
-					min: 0,
 					default: 0,
+					choices: LOOP_ID,
 					isVisible: (options) => options.count === 0,
 				},
         { // input value for the ramp time
@@ -1726,7 +1367,7 @@ module.exports = function (self) {
 			
 				self.setVariableValues({ CurrentPstSetRamp: ramptime })
 			
-				const baseCmd = 'G21 N1 P'
+				const baseCmd = ''
 				const rampT = ramptime / 10
 				const runT = runtemp / 10
 			
@@ -1751,16 +1392,7 @@ module.exports = function (self) {
 						self.log('debug', `Preset ID: ${p} RunT: ${runtime} RampT: ${ramptime}`)
 						self.setVariableValues({ [`Pst${p}RampT`]: ramptime })
 
-						const cmd = `${baseCmd}${p} T` + runtime/10 + ` A${rampT}\n`
-						const sendBuf = Buffer.from(cmd, 'latin1')
-			
-						if (self.config.prot === 'tcp' && self.socket?.isConnected) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-			
+						self.sendEmotimoAPICommand(`G21 N1 P${p} T` + runtime/10 + ` A${rampT}`)
 						await new Promise((r) => setTimeout(r, 200))
 					}
 				}
@@ -1772,16 +1404,177 @@ module.exports = function (self) {
 					}
 					self.log('debug', `Preset ID: ${preset} RunT: ${runtime} RampT: ${ramptemp}`)
 					self.setVariableValues({ [`Pst${preset}RampT`]: ramptemp })
+
+					self.sendEmotimoAPICommand(`G21 N1 P${preset} T${runT} A${rampT}`)
+				}
+			}
+		},
+
+		setLoopRunTimeByValue: {
+			name: 'Set Loop Run Time By Value',
+			options: [
+				{ // select to change all loops or just selected one
+					id: 'count',
+					type: 'dropdown',
+					label: 'All or Current Loop',
+					default: 1,
+					choices: [
+						{ id: 0, label: 'Select Loop' },
+						{ id: 1, label: 'Smart Loop' },
+						{ id: 2, label: 'All' },
+					],
+				},
+				{
+					type: 'dropdown',
+					id: 'lpid',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+					isVisible: (options) => options.count === 0,
+				},
+				{ // input value for the run time
+					id: 'setvalue',
+					type: 'textinput',
+					label: 'Value',
+					min: 10,
+					max: 600,
+					default: '50',
+					useVariables: true,
+				},
+			],
+			callback: async (runTime) => {
+				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
+				let loop
+				if (runTime.options.count === 0) {
+					loop = runTime.options.lpid
+				} else {
+					loop = self.getVariableValue('CurrentLpSet')
+				}
+
+				let runtime = Number(resolvedValue)
+				// checks to make sure inputted values are in an acceptiable range
+				if (runtime > 600) runtime = 600
+				else if (runtime < 10) runtime = 10
+
+				// === If count is 2, apply to all loops in SetLps ===
+				if (runTime.options.count === 2) {
+					const setListRaw = self.getVariableValue('SetLps')
+					let setList = []
 			
-					const cmd = `${baseCmd}${preset} T${runT} A${rampT}\n`
-					const sendBuf = Buffer.from(cmd, 'latin1')
-			
-					if (self.config.prot === 'tcp' && self.socket?.isConnected) {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
+					try {
+						setList = JSON.parse(setListRaw)
+					} catch (e) {
+						self.log('debug', 'Invalid JSON in SetPsts: ' + setListRaw)
 					}
+
+					for (const p of setList) {
+						if (self.getVariableValue(`Lp${p}RunT`) === runtime) {
+							self.log('debug', `Loop ${p} already at Run: ${runtime}, skipping.`)
+							continue
+						}
+						self.log('debug', `Loop ID: ${p} RunT: ${runtime}`)
+						self.setVariableValues({ CurrentLpRun: runtime })
+						self.setVariableValues({ [`Lp${p}RunT`]: runtime })
+
+						await new Promise((r) => setTimeout(r, 200))
+					}
+				}
+				// === Only one loop selected (manual or current set) ===
+				else {
+					if (self.getVariableValue(`Lp${loop}RunT`) === runtime) {
+						self.log('debug', `Loop ${loop} already at Run: ${runtime}, skipping.`)
+						return
+					}
+					self.log('debug', `Loop ID: ${loop} RunT: ${runtime}`)
+					if (self.getVariableValue('CurrentLpSet') === loop) {
+						self.setVariableValues({ CurrentLpRun: runtime })
+					}
+					self.setVariableValues({ [`Lp${loop}RunT`]: runtime })
+				}
+			}
+		},
+
+		// Sets the ramp time based on an inputted value
+		setLoopRampTimeByValue: {
+			name: 'Set Loop Ramp Time By Value',
+			options: [
+				{ // select to change all presets or just selected one
+					id: 'count',
+					type: 'dropdown',
+					label: 'All or Current Loop',
+					default: 1,
+					choices: [
+						{ id: 0, label: 'Select Loop' },
+						{ id: 1, label: 'Smart Loop' },
+						{ id: 2, label: 'All' },
+					],
+				},
+				{
+					type: 'dropdown',
+					id: 'lpid',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+					isVisible: (options) => options.count === 0,
+				},
+				{ // input value for the ramp time
+					id: 'setvalue',
+					type: 'textinput',
+					label: 'Value',
+					min: 1,
+		    	max: 250,
+					default: '10',
+					useVariables: true,
+				},
+			],
+			callback: async (rampTime) => {
+				const resolvedValue = await self.parseVariablesInString(rampTime.options.setvalue)
+				let loop
+				if (rampTime.options.count === 0) {
+					loop = rampTime.options.lpid
+				} else {
+					loop = self.getVariableValue('CurrentLpSet')
+				}
+			
+				let ramptime = Number(resolvedValue)
+				// checks to make sure inputted values are in an acceptiable range
+				if (ramptime > 600) ramptime = 600
+				else if (ramptime < 10) ramptime = 10
+
+				// === If count is 2, apply to all loops in SetLps ===
+				if (rampTime.options.count === 2) {
+					const setListRaw = self.getVariableValue('SetLps')
+					let setList = []
+			
+					try {
+						setList = JSON.parse(setListRaw)
+					} catch (e) {
+						self.log('debug', 'Invalid JSON in SetLps: ' + setListRaw)
+					}
+
+					for (const p of setList) {
+						if (self.getVariableValue(`Lp${p}RampT`) === ramptime) {
+							self.log('debug', `Loop ${p} already at Ramp: ${ramptime}, skipping.`)
+							continue
+						}
+						self.log('debug', `Loop ID: ${p} RampT: ${ramptime}`)
+						self.setVariableValues({ CurrentLpRamp: ramptime })
+						self.setVariableValues({ [`Lp${p}RampT`]: ramptime })
+
+						await new Promise((r) => setTimeout(r, 200))
+					}
+				}
+				// === Only one loop selected (manual or current set) ===
+				else {
+					if (self.getVariableValue(`Lp${loop}RampT`) === ramptime) {
+						self.log('debug', `Loop ${loop} already at Ramp: ${ramptime}, skipping.`)
+						return
+					}
+					self.log('debug', `Loop ID: ${loop} RampT: ${ramptime}`)
+					if (self.getVariableValue('CurrentLpSet') == loop) {
+						self.setVariableValues({ CurrentLpRamp: ramptime })
+					}
+					self.setVariableValues({ [`Lp${loop}RampT`]: ramptime })
 				}
 			}
 		},
@@ -1839,18 +1632,7 @@ module.exports = function (self) {
 
 				self.setVariableValues({ CurrentPstSetRun: runtemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 
@@ -1903,18 +1685,7 @@ module.exports = function (self) {
 
 				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 
@@ -1938,18 +1709,7 @@ module.exports = function (self) {
 
 				self.setVariableValues({ CurrentPstSetRun: runtemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 
@@ -1972,22 +1732,11 @@ module.exports = function (self) {
 
 				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
 
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			}
 		},
 
-    // Goes to the next or previous preset number
+		// Goes to the next or previous preset number
 		setPresetID: {
 			name: 'Set Preset ID',
 			options: [
@@ -2084,19 +1833,7 @@ module.exports = function (self) {
 				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
 				var preset = self.getVariableValue('CurrentPstSet')
 
-				const cmd = 'G21 P'
-
-				const sendBuf = Buffer.from(cmd + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
 			},
 		},
 
@@ -2110,18 +1847,7 @@ module.exports = function (self) {
 				var preset = self.getVariableValue('CurrentPstSet')
 				self.setVariableValues({ LastPstID: preset })
 
-				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + preset + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G20 P' + preset)
 			},
 		},
 
@@ -2381,19 +2107,7 @@ module.exports = function (self) {
 			],
 			callback: async (LpAPt) => {
 				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
-
-				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + pointTemp + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G20 P' + pointTemp)
 			}
 		},
 		recallBPoint: {
@@ -2409,20 +2123,7 @@ module.exports = function (self) {
 			],
 			callback: async (LpBPt) => {
 				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
-
-				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + pointTemp + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
-
+				self.sendEmotimoAPICommand('G20 P' + pointTemp)
 			}
 		},
 		recallLoop: {
@@ -2446,39 +2147,16 @@ module.exports = function (self) {
 					self.setVariableValues({ LpActive: LpRecall.options.id_loop })
 					self.setVariableValues({ LastPstID: -1})
 					self.checkFeedbacks("LoopStatus")
-					const cmd = 'G25 L' + LpRecall.options.id_loop + ' A' + tempA + ' B' + tempB + ' C500 D500'
-					const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-					const cmd2 = 'G24 L' + LpRecall.options.id_loop + ' N0'
-					const sendBuf2 = Buffer.from(cmd2 + '\n', 'latin1')
 
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-							setTimeout(() => self.socket.send(sendBuf2), 100);
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand('G25 L' + LpRecall.options.id_loop + ' A' + tempA + ' B' + tempB + ' C500 D500')
+					setTimeout(() => self.sendEmotimoAPICommand('G24 L' + LpRecall.options.id_loop + ' N0'), 100);
 				} else {
 					self.setVariableValues({ LpActive: -1 })
-					const cmd = 'G24'
-					const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand('G24')
 				}
 			}
 		},
-		
+
 		//Smart Loops
 		setLoopRunTimeSmart: {
 			name: 'Smart Set Loop Run Time',
@@ -2530,18 +2208,7 @@ module.exports = function (self) {
 
 				self.setVariableValues({ CurrentLpRun: runtemp })
 
-				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
 			}
 		},
 		setLoopRampTimeSmart: {
@@ -2594,18 +2261,7 @@ module.exports = function (self) {
 
 				self.setVariableValues({ CurrentLpRamp: ramptemp })
 
-				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
 			}
 		},
 		resetLoopRunTimeSmart: {
@@ -2690,18 +2346,7 @@ module.exports = function (self) {
 				
 				self.setVariableValues({ CurrentLpA: lpAPt })
 
-				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
 			}
 		},
 		setLoopBPointSmart: {
@@ -2754,18 +2399,7 @@ module.exports = function (self) {
 				
 				self.setVariableValues({ CurrentLpB: lpBPt })
 
-				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
 			}
 		},
 		recallAPointSmart: {
@@ -2775,19 +2409,7 @@ module.exports = function (self) {
 			],
 			callback: async (LpAPt) => {
 				var temp = self.getVariableValue('CurrentLpA')
-
-				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + temp + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G20 P' + temp)
 			}
 		},
 		recallBPointSmart: {
@@ -2797,19 +2419,7 @@ module.exports = function (self) {
 			],
 			callback: async (LpAPt) => {
 				var temp = self.getVariableValue('CurrentLpB')
-
-				const cmd = 'G20 P'
-				const sendBuf = Buffer.from(cmd + temp + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G20 P' + temp)
 			}
 		},
 		setLoopID: {
@@ -2859,6 +2469,20 @@ module.exports = function (self) {
 					self.log('debug', `Loop ${id_loop} does not exist yet. Adding now`)
 
 					LOOP_ID.push({ id: id_loop, label: `Lp${id_loop}` })
+					let setLpsRaw = self.getVariableValue('SetLps')
+					let setlps = []
+
+					try {
+						setlps = JSON.parse(setLpsRaw) || []
+					} catch (e) {
+						setlps = []
+					}
+
+					// Only add if not already present
+					if (!setlps.includes(id_loop)) {
+						setlps.push(id_loop)
+						self.setVariableValues({ SetLps: JSON.stringify(setlps) })
+					}
 					self.updateActions()
 
 					variableList.push({ name: `Loop${id_loop}RunT`, variableId: `Lp${id_loop}RunT` })
@@ -2902,18 +2526,7 @@ module.exports = function (self) {
 				var lpAPt = self.getVariableValue('CurrentLpA')
 				var lpBPt = self.getVariableValue('CurrentLpB')
 
-				const cmd = 'G25 L'
-				const sendBuf = Buffer.from(cmd + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500' + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
 			},
 		},
 		recallLpSmart: {
@@ -2928,35 +2541,13 @@ module.exports = function (self) {
 				if (loopActive == -1) {
 					self.setVariableValues({ LpActive: loop })
 					self.checkFeedbacks("LoopStatus")
-					const cmd = 'G24 L'
 
-					const sendBuf = Buffer.from(cmd + loop + '\n', 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand('G24 L' + loop)
 				} else {
 					self.setVariableValues({ LpActive: -1 })
 					self.checkFeedbacks("LoopStatus")
-					const cmd = 'G24'
 
-					const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
+					self.sendEmotimoAPICommand('G24')
 				}
 			},
 		},
@@ -2974,18 +2565,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (centerRS) => {
-				const cmd = 'G202'
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G202')
 			}
 		},
 		calibrateAllTN: {
@@ -2993,18 +2573,7 @@ module.exports = function (self) {
 			options: [
 			],
 			callback: async (centerRS) => {
-				const cmd = 'G812 C0'
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G812 C0')
 			}
 		},
 		calibrateTNMotor: {
@@ -3019,18 +2588,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (calTN) => {
-				const cmd = 'G812 C0 M' + (calTN.options.id_mot-4)
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G812 C0 M' + (calTN.options.id_mot-4))
 			}
 		},
 		
@@ -3046,19 +2604,8 @@ module.exports = function (self) {
 					choices: MOTOR_ID,
 				},
 			],
-			callback: async (stopA) => {		
-				const cmd = 'G213 M' + stopA.options.id_mot
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+			callback: async (stopA) => {
+				self.sendEmotimoAPICommand('G213 M' + stopA.options.id_mot)
 			}
 		},
 		setStopB: {
@@ -3073,18 +2620,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (stopB) => {
-				const cmd = 'G214 M' + stopB.options.id_mot
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G214 M' + stopB.options.id_mot)
 			}
 		},
 		recallStopA: {
@@ -3099,24 +2635,12 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (recStopA) => {
-				const cmd = 'G217 M'
 				var motorID = recStopA.options.id_mot
 
 				if (motorID == 0) {
 					motorID = self.getVariableValue('CurrentMtrSet')
 				}
-
-				const sendBuf = Buffer.from(cmd + motorID  + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G217 M' + motorID)
 			}
 		},
 		recallStopB: {
@@ -3131,24 +2655,12 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (recStopB) => {
-				const cmd = 'G218 M'
 				var motorID = recStopB.options.id_mot
 
 				if (motorID == 0) {
 					motorID = self.getVariableValue('CurrentMtrSet')
 				}
-
-				const sendBuf = Buffer.from(cmd + motorID  + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G218 M' + motorID)
 			}
 		},
 		clearStopA: {
@@ -3163,18 +2675,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (stopA) => {
-				const cmd = 'G211 M' + stopA.options.id_mot
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G211 M' + stopA.options.id_mot)
 			}
 		},
 		clearStopB: {
@@ -3189,18 +2690,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (stopB) => {
-				const cmd = 'G212 M' + stopB.options.id_mot
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G212 M' + stopB.options.id_mot)
 			}
 		},
 		clearStopByAxis: {
@@ -3214,19 +2704,8 @@ module.exports = function (self) {
 					choices: MOTOR_ID,
 				},
 			],
-			callback: async (stopB) => {				
-				const cmd = 'G219 M' + stopB.options.id_mot
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+			callback: async (stopB) => {
+				self.sendEmotimoAPICommand('G219 M' + stopB.options.id_mot)
 			}
 		},
 		clearAllStops: {
@@ -3235,21 +2714,8 @@ module.exports = function (self) {
 				
 			],
 			callback: async (stopB) => {
-				const cmd = 'G211 M0'
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-				const cmd2 = 'G212 M0'
-				const sendBuf2 = Buffer.from(cmd2 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-						setTimeout(self.socket.send(sendBuf2), 10)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G211 M0')
+				setTimeout(self.sendEmotimoAPICommand('G212 M0'), 10)
 			}
 		},
 		zeroMotors: {
@@ -3258,19 +2724,7 @@ module.exports = function (self) {
 				
 			],
 			callback: async (zero) => {
-				const cmd = 'G201'
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-				
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G201')
 			}
 		},
 
@@ -3384,18 +2838,7 @@ module.exports = function (self) {
 			],
 			callback: async (stopA) => {		
 				var motor = self.getVariableValue('CurrentMtrSet')
-				const cmd = 'G213 M' + motor
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G213 M' + motor)
 			}
 		},
 		setStopBSmart: {
@@ -3405,18 +2848,7 @@ module.exports = function (self) {
 			],
 			callback: async (stopB) => {
 				var motor = self.getVariableValue('CurrentMtrSet')
-				const cmd = 'G214 M' + motor
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G214 M' + motor)
 			}
 		},
 		clearStopASmart: {
@@ -3426,18 +2858,7 @@ module.exports = function (self) {
 			],
 			callback: async (stopA) => {
 				var motor = self.getVariableValue('CurrentMtrSet')
-				const cmd = 'G211 M' + motor
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G211 M' + motor)
 			}
 		},
 		clearStopBSmart: {
@@ -3447,18 +2868,7 @@ module.exports = function (self) {
 			],
 			callback: async (stopB) => {
 				var motor = self.getVariableValue('CurrentMtrSet')
-				const cmd = 'G212 M' + motor
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G212 M' + motor)
 			}
 		},
 		clearStopByAxisSmart: {
@@ -3468,18 +2878,7 @@ module.exports = function (self) {
 			],
 			callback: async (stopB) => {				
 				var motor = self.getVariableValue('CurrentMtrSet')
-				const cmd = 'G219 M' + motor
-				const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G219 M' + motor)
 			}
 		},
 
@@ -3612,80 +3011,50 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (actionJogSmart) => {
-				const cmd = 'G301 M'
-				const cmd2 = ' V'
-				const cmd3 = '\n'
 				var motorSpeed = 0
 				var motorInversion = 1
 				var temp = 0
 
 				var motor = self.getVariableValue('CurrentMtrSet')
 
-				if (cmd != '') {
-
-					if (motor == 1) {
-						temp = self.getVariableValue('PanSpeedLimit')
-						motorInversion = self.getVariableValue('PanInversion')
-					} else if (motor == 2) {
-						temp = self.getVariableValue('TiltSpeedLimit')
-						motorInversion = self.getVariableValue('TiltInversion')
-					} else if (motor == 3) {
-						temp = self.getVariableValue('M3SpeedLimit')
-						motorInversion = self.getVariableValue('M3Inversion')
-					} else if (motor == 4) {
-						temp = self.getVariableValue('M4SpeedLimit')
-						motorInversion = self.getVariableValue('M4Inversion')
-					} else if (motor == 5) {
-						temp = self.getVariableValue('TN1SpeedLimit')
-						motorInversion = self.getVariableValue('TN1Inversion')
-					} else if (motor == 6) {
-						temp = self.getVariableValue('TN2SpeedLimit')
-						motorInversion = self.getVariableValue('TN2Inversion')
-					} else if (motor == 7) {
-						temp = self.getVariableValue('TN3SpeedLimit')
-						motorInversion = self.getVariableValue('TN3Inversion')
-					} else if (motor == 8) {
-						temp = self.getVariableValue('RollSpeedLimit')
-						motorInversion = self.getVariableValue('RollInversion')
-					} else if (motor == 9) {
-						temp = self.getVariableValue('FocusSpeedLimit')
-						motorInversion = self.getVariableValue('FocusInversion')
-					}
-
-					if (motor < 5 || motor == 8) {
-						motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 500.0
-					} else {
-						motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 100.0
-					}
-
-					self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
-
-					/*
-					 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-					 * sending a string assumes 'utf8' encoding
-					 * which then escapes character values over 0x7F
-					 * and destroys the 'binary' content
-					 */
-					const sendBuf = Buffer.from(cmd + motor + cmd2 + motorSpeed + cmd3, 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
-						}
-					}
+				if (motor == 1) {
+					temp = self.getVariableValue('PanSpeedLimit')
+					motorInversion = self.getVariableValue('PanInversion')
+				} else if (motor == 2) {
+					temp = self.getVariableValue('TiltSpeedLimit')
+					motorInversion = self.getVariableValue('TiltInversion')
+				} else if (motor == 3) {
+					temp = self.getVariableValue('M3SpeedLimit')
+					motorInversion = self.getVariableValue('M3Inversion')
+				} else if (motor == 4) {
+					temp = self.getVariableValue('M4SpeedLimit')
+					motorInversion = self.getVariableValue('M4Inversion')
+				} else if (motor == 5) {
+					temp = self.getVariableValue('TN1SpeedLimit')
+					motorInversion = self.getVariableValue('TN1Inversion')
+				} else if (motor == 6) {
+					temp = self.getVariableValue('TN2SpeedLimit')
+					motorInversion = self.getVariableValue('TN2Inversion')
+				} else if (motor == 7) {
+					temp = self.getVariableValue('TN3SpeedLimit')
+					motorInversion = self.getVariableValue('TN3Inversion')
+				} else if (motor == 8) {
+					temp = self.getVariableValue('RollSpeedLimit')
+					motorInversion = self.getVariableValue('RollInversion')
+				} else if (motor == 9) {
+					temp = self.getVariableValue('FocusSpeedLimit')
+					motorInversion = self.getVariableValue('FocusInversion')
 				}
+
+				if (motor < 5 || motor == 8) {
+					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 500.0
+				} else {
+					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 100.0
+				}
+
+				self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
+
+				self.sendEmotimoAPICommand('G301 M' + motor + ' V' + motorSpeed)
 			},
 		},
 		stopCurrentMotor: {
@@ -3694,41 +3063,8 @@ module.exports = function (self) {
 				
 			],
 			callback: async (actionJogSmart) => {
-				const cmd = 'G301 M'
-				const cmd2 = ' V0'
-				const cmd3 = '\n'
-				var motorSpeed = 0
-				var temp = 0
-
 				var motor = self.getVariableValue('CurrentMtrSet')
-
-				if (cmd != '') {
-					/*
-					 * create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-					 * sending a string assumes 'utf8' encoding
-					 * which then escapes character values over 0x7F
-					 * and destroys the 'binary' content
-					 */
-					const sendBuf = Buffer.from(cmd + motor + cmd2 + cmd3, 'latin1')
-
-					if (self.config.prot == 'tcp') {
-						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-						if (self.socket !== undefined && self.socket.isConnected) {
-							self.socket.send(sendBuf)
-						} else {
-							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
-						}
-					}
-				}
+				self.sendEmotimoAPICommand('G301 M' + motor + ' V0')
 			},
 		},
 		invertCurrentAxis: {
@@ -3789,60 +3125,6 @@ module.exports = function (self) {
 				self.setVariableValues({ CurrentMtrInversion: motorInvertName})
 			},
 		},
-		//These are already general commands without a motor ID
-		// recallStopA: {
-		// 	name: 'Recall Stop A Smart',
-		// 	options: [
-		// 		{
-		// 			type: 'dropdown',
-		// 			id: 'id_mot',
-		// 			label: 'Motor ID',
-		// 			default: 1,
-		// 			choices: MOTOR_ID,
-		// 		},
-		// 	],
-		// 	callback: async (recStopA) => {
-		// 		const cmd = 'G217'
-		// 		const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-		// 		if (self.config.prot == 'tcp') {
-		// 			self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-		// 			if (self.socket !== undefined && self.socket.isConnected) {
-		// 				self.socket.send(sendBuf)
-		// 			} else {
-		// 				self.log('debug', 'Socket not connected :(')
-		// 			}
-		// 		}
-		// 	}
-		// },
-		// recallStopB: {
-		// 	name: 'Recall Stop B Smart',
-		// 	options: [
-		// 		{
-		// 			type: 'dropdown',
-		// 			id: 'id_mot',
-		// 			label: 'Motor ID',
-		// 			default: 1,
-		// 			choices: MOTOR_ID,
-		// 		},
-		// 	],
-		// 	callback: async (recStopB) => {
-		// 		const cmd = 'G218'
-		// 		const sendBuf = Buffer.from(cmd + '\n', 'latin1')
-
-		// 		if (self.config.prot == 'tcp') {
-		// 			self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-		// 			if (self.socket !== undefined && self.socket.isConnected) {
-		// 				self.socket.send(sendBuf)
-		// 			} else {
-		// 				self.log('debug', 'Socket not connected :(')
-		// 			}
-		// 		}
-		// 	}
-		// },
-
 
 		presetRunTimeU: {
 			name: 'Preset Run Time Increment',
@@ -3858,19 +3140,7 @@ module.exports = function (self) {
 			],
 			callback: async (presetRunTimeU) => {
 				self.presetRunTimes[presetRunTimeU.options.num] += 1;
-
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + presetRunTimeU.options.num + ' T' + self.presetRunTimes[presetRunTimeU.options.num] / 10 + ' A' + self.presetRampTimes[presetRunTimeU.options.num] / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + presetRunTimeU.options.num + ' T' + self.presetRunTimes[presetRunTimeU.options.num] / 10 + ' A' + self.presetRampTimes[presetRunTimeU.options.num] / 10)
 			},
 		},
 		presetRunTimeD: {
@@ -3887,19 +3157,7 @@ module.exports = function (self) {
 			],
 			callback: async (presetRunTimeD) => {
 				self.presetRunTimes[presetRunTimeD.options.num] -= 1;
-
-				const cmd = 'G21 N1 P'
-				const sendBuf = Buffer.from(cmd + presetRunTimeD.options.num + ' T' + self.presetRunTimes[presetRunTimeD.options.num] / 10 + ' A' + self.presetRampTimes[presetRunTimeD.options.num] / 10 + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G21 N1 P' + presetRunTimeD.options.num + ' T' + self.presetRunTimes[presetRunTimeD.options.num] / 10 + ' A' + self.presetRampTimes[presetRunTimeD.options.num] / 10)
 			},
 		},
 
@@ -3915,58 +3173,9 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (virtButtonPress) => {
-				// console.log('Hello world!', event.options.num)
-				const cmd = 'G600 C'
-				const sendBuf = Buffer.from(cmd + virtButtonPress.options.vbutton + '\n', 'latin1')
-
-				if (self.config.prot == 'tcp') {
-					self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-					if (self.socket !== undefined && self.socket.isConnected) {
-						self.socket.send(sendBuf)
-					} else {
-						self.log('debug', 'Socket not connected :(')
-					}
-				}
+				self.sendEmotimoAPICommand('G600 C' + virtButtonPress.options.vbutton)
 			},
 		},
-		sample_action: {
-			name: 'My First Action',
-			options: [
-				{
-					id: 'num',
-					type: 'number',
-					label: 'Test',
-					default: 5,
-					min: 0,
-					max: 100,
-				},
-			],
-			callback: async (event) => {
-				console.log('Hello world!', event.options.num)
-			},
-		},
-
-		// buttonFeedback: {
-		// 	name: 'Button Feedback (highlight/clear)',
-		// 	options: [
-		// 		{
-		// 			type: 'dropdown',
-		// 			label: 'highlight/clear',
-		// 			id: 'bol',
-		// 			choices: [
-		// 				{ id: 1, label: 'Highlight' },
-		// 				{ id: 0, label: 'Clear' },
-		// 			],
-		// 			default: '1',
-		// 		},
-		// 	],
-		// 	callback: async (event) => {
-		// 		self.state.heldThresholdReached = event.options.bol
-		// 		self.checkFeedbacks()
-		// 	},
-		// },
-
 		send: {
 			name: 'Send Command',
 			options: [

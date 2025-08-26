@@ -94,6 +94,7 @@ const variableList = [
 	{ name: 'CurrentPresetM4Pos', variableId: 'CurrentPstM4Pos'},
 	{ name: 'Is Moving', variableId: 'IsMoving'},
 	{ name: 'Set Presets', variableId: 'SetPsts'},
+	{ name: 'Set Loops', variableId: 'SetLps'},
 	{ name: 'Current Motor Profile', variableId: 'CurrentMtrProf'},
 ]
 

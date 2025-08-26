@@ -200,15 +200,27 @@ class eMotimoModuleInstance extends InstanceBase {
 	sendEmotimoAPICommand = function (str) {
 		var self = this;
 
-		const sendBuf = Buffer.from(str, 'latin1')
+		/*
+		* create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
+		* sending a string assumes 'utf8' encoding
+		* which then escapes character values over 0x7F
+		* and destroys the 'binary' content
+		*/
+		const sendBuf = Buffer.from(str + '\n', 'latin1')
+
+		self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
 
 		if (self.config.prot == 'tcp') {
-			self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
 			if (self.socket !== undefined && self.socket.isConnected) {
 				self.socket.send(sendBuf)
 			} else {
 				self.log('debug', 'Socket not connected :(')
+			}
+		} else if (self.config.prot == 'udp') {
+			if (self.udp !== undefined) {
+				self.udp.send(sendBuf)
+			} else {
+				self.log('debug', 'UDP brokie :(')
 			}
 		}
 	};
@@ -672,6 +684,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ CurrentMtrInversion: 'Normal' })
 		this.setVariableValues({ LastPstID: -1 })
 		this.setVariableValues({ CurrentMtrProf: -1 })
+		this.setVariableValues({ SetLps: "[0]" })
 	}
 
 	fetchAllPresets() {
@@ -682,11 +695,6 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.log('debug', 'Finished fetching all presets')
 				return
 			}
-
-			const cmd = `G752 P${i}\n`
-			const sendBuf = Buffer.from(cmd, 'latin1')
-			this.log('debug', `Sending: ${cmd.trim()}`)
-	
 			if (this.socket && this.socket.isConnected) {
 				this.socket.once('data', (data) => {
 					const str = data.toString().trim()
@@ -717,12 +725,12 @@ class eMotimoModuleInstance extends InstanceBase {
 					i++
 					setTimeout(sendNext, 100)
 				})
-				this.socket.send(sendBuf)
+				this.log('debug', `Sending: G752 P${i}`)
+				self.sendEmotimoAPICommand(`G752 P${i}`)
 			} else {
 				this.log('warn', 'Socket not connected')
 			}
 		}
-
 		sendNext()
 	}
 }

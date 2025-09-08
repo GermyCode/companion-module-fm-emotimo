@@ -90,8 +90,24 @@ const VIRTUAL_BUTTON = [
 
 ]
 
+const CHOICES_SET = [
+	{ id: 'set', label: 'Set Value' },
+	{ id: 'up', label: 'Increment' },
+	{ id: 'down', label: 'Decrement' },
+]
+
+const CHOICES_SET_TYPE = [
+	{ id: 'pst', label: 'Preset' },
+	{ id: 'smart', label: 'Smart' },
+]
+
 module.exports = function (self) {
 	self.setActionDefinitions({
+
+//============================
+//  ***   MOTOR STUFFS   ***
+//============================
+
 		jogMotor: {
 			name: 'Motor Jog',
 			options: [
@@ -683,1876 +699,6 @@ module.exports = function (self) {
 			},
 		},
 
-		//Presets
-		savePset: {
-			name: 'Save Preset',
-			options: [
-				{
-					id: 'num',
-					type: 'number',
-					label: 'Preset Number',
-					default: 0,
-					min: 0,
-					max: 127,
-				},
-			],
-			callback: async (setPreset) => {
-				// console.log('Hello world!', event.options.num)
-				var preset = setPreset.options.num
-				var panpos = self.getVariableValue('PPos')
-				var tiltpos = self.getVariableValue('TPos')
-				var m3pos = self.getVariableValue('SPos')
-				var m4pos = self.getVariableValue('MPos')
-
-				self.setVariableValues({ [`Pst${preset}PanPos`]: panpos })
-				self.setVariableValues({ [`Pst${preset}TiltPos`]: tiltpos })
-				self.setVariableValues({ [`Pst${preset}M3Pos`]: m3pos })
-				self.setVariableValues({ [`Pst${preset}M4Pos`]: m4pos })
-
-				self.sendEmotimoAPICommand('G21 P' + preset + ' T' + self.presetRunTimes[setPreset.options.num] / 10 + ' A' + self.presetRampTimes[setPreset.options.num] / 10)
-			},
-		},
-		recallPset: {
-			name: 'Recall Preset',
-			options: [
-				{
-					id: 'num',
-					type: 'number',
-					label: 'Preset Number',
-					default: 0,
-					min: 0,
-					max: 127,
-				},
-			],
-			callback: async (recallPreset) => {
-				// console.log('Hello world!', event.options.num)
-				const cmd = 'G20 P' + recallPreset.options.num
-				self.setVariableValues({ LastPstID: recallPreset.options.num })
-				self.sendEmotimoAPICommand(cmd)
-			},
-		},
-		setPresetRunTime: {
-			name: 'Set Preset Run Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_pst',
-					label: 'Preset ID',
-					default: 0,
-					choices: PRESET_ID,
-				},
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -250,
-		    	max: 250,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (runTime) => {
-				var runtemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RunT')
-				var ramptemp = self.getVariableValue('Pst' + runTime.options.id_pst + 'RampT')
-
-				if (runTime.options.direction === 'amount') {
-					runtemp += runTime.options.amountValue
-				} else {
-					runtemp += runTime.options.direction
-				}
-
-				if (runtemp > 600) {
-					runtemp = 600;
-				} else if (runtemp < 10) {
-					runtemp = 10;
-				}
-
-				self.log('debug', 'Preset ID: ' + runTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				var varID = 'Pst'+runTime.options.id_pst+'RunT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-				self.setVariableValues({ [varID]: runtemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + runTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-		setPresetRampTime: {
-			name: 'Set Preset Ramp Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_pst',
-					label: 'Preset ID',
-					default: 0,
-					choices: PRESET_ID,
-				},
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -250,
-		    	max: 250,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (rampTime) => {
-				var ramptemp = self.getVariableValue('Pst' + rampTime.options.id_pst + 'RampT')
-				var runtemp = self.getVariableValue('Pst' + rampTime.options.id_pst + 'RunT')
-
-				if (rampTime.options.direction === 'amount') {
-					ramptemp += rampTime.options.amountValue
-				} else {
-					ramptemp += rampTime.options.direction
-				}
-
-				if (ramptemp > 250) {
-					ramptemp = 250;
-				} else if (ramptemp < 1) {
-					ramptemp = 1;
-				}
-
-				self.log('debug', 'Preset ID: ' + rampTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				var varID = 'Pst'+rampTime.options.id_pst+'RunT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-				self.setVariableValues({ [varID]: ramptemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + rampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-		resetPresetRunTime: {
-			name: 'Reset Preset Run Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_pst',
-					label: 'Preset ID',
-					default: 0,
-					choices: PRESET_ID,
-					// allowCustom: true,
-					// allowExpression: true,
-				},
-			],
-			callback: async (resetPresetRunTime) => {
-				var runtemp = 50;
-				var ramptemp = self.getVariableValue('Pst' + resetPresetRunTime.options.id_pst + 'RampT')
-
-				self.log('debug', 'Preset ID: ' + resetPresetRunTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				var varID = 'Pst'+resetPresetRunTime.options.id_pst+'RunT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-				self.setVariableValues({ [varID]: runtemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + resetPresetRunTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-		resetPresetRampTime: {
-			name: 'Reset Preset Ramp Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_pst',
-					label: 'Preset ID',
-					default: 0,
-					choices: PRESET_ID,
-					// allowCustom: true,
-				},
-			],
-			callback: async (resetPresetRampTime) => {
-				var ramptemp = 10;
-				var runtemp = self.getVariableValue('Pst' + resetPresetRampTime.options.id_pst + 'RunT')
-
-				self.log('debug', 'Preset ID: ' + resetPresetRampTime.options.id_pst + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				var varID = 'Pst'+resetPresetRampTime.options.id_pst+'RunT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-				self.setVariableValues({ [varID]: ramptemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + resetPresetRampTime.options.id_pst + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-
-		setMotorProfile: {
-			name: 'Set Motor Profile',
-			options: [
-				{
-					id: 'prodileid',
-					type: 'dropdown',
-					label: 'Profile: Default: User 1',
-					default: 5,
-					choices: MOTOR_PROFILES,
-				}
-			],
-			callback: async (motorProfile) => {
-				const selProf = motorProfile.options.prodileid
-				self.setVariableValues({ CurrentMtrProf: selProf})
-
-				self.sendEmotimoAPICommand('G102 P' + selProf)
-			}
-		},
-
-
-
-
-//============================
-//  ***   SMART STUFFS   ***
-//============================
-
-		gotoCoords: {
-			name: 'Goto Coordinates',
-			options: [
-				{
-					id: 'motorid',
-					type: 'dropdown',
-					label: 'Motor:',
-					default: 1,
-					choices: MOTOR_ID
-				},
-				{
-					id: 'coords',
-					type: 'textinput',
-					label: 'Value',
-					default: '0',
-					useVariables: true,
-				},
-				{
-					id: 'runtime',
-					type: 'textinput',
-					label: 'Run Time (Seconds)',
-					default: '5.0',
-					useVariables: true,
-				},
-				{
-					id: 'ramptime',
-					type: 'textinput',
-					label: 'Ramp Time (Seconds)',
-					default: '0.5',
-					useVariables: true,
-				},
-			],
-			callback: async (gotoCoords) => {
-				const resolvedCoordsValue = await self.parseVariablesInString(gotoCoords.options.coords)
-				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
-				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
-
-				self.sendEmotimoAPICommand('G11 M' + gotoCoords.options.motorid + ' P' + resolvedCoordsValue + ' T' + resolvedRunValue + ' A' + resolvedRampValue)
-			}
-		},
-
-		savePstCoords: {
-			name: 'Save Preset By Coordinates',
-			options: [
-				{
-					id: 'smart',
-					type:'dropdown',
-					label: 'Smart or select preset id',
-					choices: [
-						{ id: 0, label: 'Smart' },
-						{ id: 1, label: 'Preset ID' }
-					],
-					default: 0
-				},
-				{
-					id: 'preset',
-					type: 'number',
-					label: 'Preset ID',
-					default: 0,
-					min: 0, 
-					max: 127,
-					isVisible: (options) => options.smart === 1,
-				},
-				{
-					type: 'static-text',
-					label: 'info',
-					value: 'Leave blank to store current motor position'
-				},
-				{
-					id: 'pCoords',
-					type: 'textinput',
-					label: 'Pan Coords',
-					useVariables: true,
-				},
-				{
-					id: 'tCoords',
-					type: 'textinput',
-					label: 'Tilt Coords',
-					useVariables: true,
-				},
-				{
-					id: 'sCoords',
-					type: 'textinput',
-					label: 'Slide Coords',
-					useVariables: true,
-				},
-				{
-					id: 'zCoords',
-					type: 'textinput',
-					label: 'Zoom Coords',
-					useVariables: true,
-				},
-				{
-					id: 'runtime',
-					type: 'textinput',
-					label: 'Run Time',
-					default: '50',
-					min: 10,
-					max: 600,
-					useVariables: true,
-				},
-				{
-					id: 'ramptime',
-					type: 'textinput',
-					label: 'Ramp Time',
-					default: '10',
-					min:5,
-					max:300,
-					useVariables: true,
-				},
-			],
-			callback: async (savePstCoords) => {
-				if (savePstCoords.options.smart == 0) {
-					var preset = self.getVariableValue('CurrentPstSet')
-				} else {
-					var preset = savePstCoords.options.preset
-				}
-				// If a variable gets inputted, get that value, otherwise it takes the inputted value
-				var resolvedRunValue = await self.parseVariablesInString(savePstCoords.options.runtime)
-				var resolvedRampValue = await self.parseVariablesInString(savePstCoords.options.ramptime)
-				var resolvedPanValue = await self.parseVariablesInString(savePstCoords.options.pCoords)
-				var resolvedTiltValue = await self.parseVariablesInString(savePstCoords.options.tCoords)
-				var resolvedSlideValue = await self.parseVariablesInString(savePstCoords.options.sCoords)
-				var resolvedZoomValue = await self.parseVariablesInString(savePstCoords.options.zCoords)
-				
-				// find if the variables/preset already exists
-				var exists = false
-				for (const item of variableList) {
-					if (item.variableId === `Pst${preset}Stat`) {
-						exists = true
-						break
-					}
-				}
-				if (!exists) {
-					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
-
-					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
-					self.updateActions()
-
-					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
-					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
-					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
-					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
-					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
-					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
-					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
-
-					self.setVariableDefinitions(variableList)
-				}
-
-				// G21 needs all axis to have a value in order to store a custom location
-				var cmd = 'G21 P' + preset
-				var cmd2 = ' F0 I0 C0'
-
-				// Pan
-				if (!resolvedPanValue) { // if blank, get the current position instead
-					resolvedPanValue = self.getVariableValue('MPos')
-				}
-				cmd += ' X' + resolvedPanValue
-				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstPanPos: resolvedPanValue })
-				} else {
-					self.setVariableValues({ [`Pst${preset}PanPos`]: resolvedPanValue })
-				}
-				// Tilt
-				if (!resolvedTiltValue) { // if blank, get the current position instead
-					resolvedTiltValue = self.getVariableValue('MPos')
-				}
-				cmd += ' Y' + resolvedTiltValue
-				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstTiltPos: resolvedTiltValue })
-				} else {
-					self.setVariableValues({ [`Pst${preset}TiltPos`]: resolvedTiltValue })
-				}
-				// Slide
-				if (!resolvedSlideValue) { // if blank, get the current position instead
-					resolvedSlideValue = self.getVariableValue('MPos')
-				}
-				cmd += ' Z' + resolvedSlideValue
-				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstM3Pos: resolvedSlideValue })
-				} else {
-					self.setVariableValues({ [`Pst${preset}M3Pos`]: resolvedSlideValue })
-				}
-				//Zoom
-				if (!resolvedZoomValue) { // if blank, get the current position instead
-					resolvedZoomValue = self.getVariableValue('MPos')
-				}
-				cmd += ' W' + resolvedZoomValue
-				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstM4Pos: resolvedZoomValue })
-				} else {
-					self.setVariableValues({ [`Pst${preset}M4Pos`]: resolvedZoomValue })
-				}
-
-				if (!resolvedRunValue) { // if blank, set a default value instead
-					resolvedRunValue = 50
-				}
-				cmd2 += ' T' + resolvedRunValue / 10
-				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstSetRun: resolvedRunValue })
-				} else {
-					self.setVariableValues({ [`Pst${preset}RunT`]: resolvedRunValue })
-				}
-
-				if (!resolvedRampValue) { // if blank, set a default value instead
-					resolvedRampValue = 10
-				}
-				cmd2 += ' A' + resolvedRampValue / 10
-				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstSetRun: resolvedRampValue })
-				} else {
-					self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue })
-				}
-
-				self.setVariableValues({ [`Pst${preset}RunT`]: resolvedRunValue})
-				self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue})
-				self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
-
-				self.sendEmotimoAPICommand(cmd + cmd2)
-			}
-		},
-
-		setMotorPosition: {
-			name: 'Set Motor Position',
-			options: [
-				{
-					type: 'static-text',
-					label: 'WARNING',
-					value: 'Sets the internal motor position to a value, does NOT move the motor'
-				},
-				{
-					type: 'static-text',
-					label: 'info',
-					value: 'Leave blank to keep current value.'
-				},
-				{
-					id: 'pCoords',
-					type: 'textinput',
-					label: 'Pan Coords',
-					useVariables: true,
-				},
-				{
-					id: 'tCoords',
-					type: 'textinput',
-					label: 'Tilt Coords',
-					useVariables: true,
-				},
-				{
-					id: 'sCoords',
-					type: 'textinput',
-					label: 'Slide Coords',
-					useVariables: true,
-				},
-				{
-					id: 'zCoords',
-					type: 'textinput',
-					label: 'Zoom Coords',
-					useVariables: true,
-				},
-			],
-			callback: async (setMotorPos) => {
-				const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-				// If a variable gets inputted, get that value, otherwise it takes the inputted value
-				var resolvedPanValue = await self.parseVariablesInString(setMotorPos.options.pCoords)
-				var resolvedTiltValue = await self.parseVariablesInString(setMotorPos.options.tCoords)
-				var resolvedSlideValue = await self.parseVariablesInString(setMotorPos.options.sCoords)
-				var resolvedZoomValue = await self.parseVariablesInString(setMotorPos.options.zCoords)
-				let sendBuf
-
-				// Pan
-				if (resolvedPanValue) { // if not blank, do things
-					self.log('debug', `Setting motor PAN to position ${resolvedPanValue}`)
-					self.setVariableValues({ 'PPos': resolvedPanValue })
-					self.sendEmotimoAPICommand(`G200 M1 P${resolvedPanValue}`)
-					await wait(200) // waits 200ms before continuing
-				}
-				// Tilt
-				if (resolvedTiltValue) { // if not blank, do things
-					self.log('debug', `Setting motor Tilt to position ${resolvedTiltValue}`)
-					self.setVariableValues({ 'TPos': resolvedTiltValue })
-					self.sendEmotimoAPICommand(`G200 M2 P${resolvedTiltValue}`)
-					await wait(200) // waits 200ms before continuing
-				}
-				// Slide
-				if (resolvedSlideValue) { // if not blank, do things
-					self.log('debug', `Setting motor M3/Slide to position ${resolvedSlideValue}`)
-					self.setVariableValues({ 'SPos': resolvedSlideValue })
-					self.sendEmotimoAPICommand(`G200 M3 P${resolvedSlideValue}`)
-					await wait(200) // waits 200ms before continuing
-				}
-				//Zoom
-				if (resolvedZoomValue) { // if not blank, do things
-					self.log('debug', `Setting motor M4/Zoom to position ${resolvedZoomValue}`)
-					self.setVariableValues({ 'MPos': resolvedZoomValue })
-					self.sendEmotimoAPICommand(`G200 M4 P${resolvedZoomValue}`)
-					await wait(200) // waits 200ms before continuing
-				}
-			}
-		},
-
-
-		// Sets the run time based on an inputted value
-		setPresetRunTimeByValue: {
-			name: 'Set Preset Run Time By Value',
-			options: [
-				{ // select to change all presets or just selected one
-					id: 'count',
-					type: 'dropdown',
-					label: 'All or Current Preset',
-					default: 1,
-					choices: [
-						{ id: 0, label: 'Select Preset' },
-						{ id: 1, label: 'Smart Preset' },
-						{ id: 2, label: 'All' },
-					],
-				},
-				{
-					type: 'dropdown',
-					id: 'pstid',
-					label: 'Preset ID',
-					default: 0,
-					choices: LOOP_ID,
-					isVisible: (options) => options.count === 0,
-				},
-				{ // input value for the run time
-					id: 'setvalue',
-					type: 'textinput',
-					label: 'Value',
-					min: 10,
-					max: 600,
-					default: '50',
-					useVariables: true,
-				},
-			],
-			callback: async (runTime) => {
-				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
-				let ramptemp
-				let preset
-				if (runTime.options.count === 0) {
-					preset = runTime.options.pstid
-					ramptemp = self.getVariableValue(`Pst${preset}RampT`)
-				} else {
-					preset = self.getVariableValue('CurrentPstSet')
-					ramptemp = self.getVariableValue('CurrentPstSetRamp')
-				}
-			
-				let runtime = Number(resolvedValue)
-				// checks to make sure inputted values are in an acceptiable range
-				if (runtime > 600) runtime = 600
-				else if (runtime < 10) runtime = 10
-			
-				self.setVariableValues({ CurrentPstSetRun: runtime })
-			
-				const rampT = ramptemp / 10
-				const runT = runtime / 10
-			
-				// === If count is 2, apply to all presets in SetPsts ===
-				if (runTime.options.count === 2) {
-					const setListRaw = self.getVariableValue('SetPsts')
-					let setList = []
-
-					try {
-						setList = JSON.parse(setListRaw)
-					} catch (e) {
-						self.log('debug', 'Invalid JSON in SetPsts: ' + setListRaw)
-					}
-			
-					for (const p of setList) {
-						if (self.getVariableValue(`Pst${p}RunT`) === runtime) {
-							self.log('debug', `Preset ${p} already at Run: ${runtime}, skipping.`)
-							continue
-						}
-						self.log('debug', 'p: ' + p)
-						const ramptime = self.getVariableValue(`Pst${p}RampT`)
-						self.log('debug', `Preset ID: ${p} RunT: ${runtime} RampT: ${ramptime}`)
-						self.setVariableValues({ [`Pst${p}RunT`]: runtime })
-
-						self.sendEmotimoAPICommand(`G21 N1 P${p} T${runT} A` + ramptime/10)
-						await new Promise((r) => setTimeout(r, 200))
-					}
-				}
-				// === Only one preset selected (manual or current set) ===
-				else {
-					if (self.getVariableValue(`Pst${preset}RunT`) === runtime) {
-						self.log('debug', `Preset ${preset} already at Run: ${runtime}, skipping.`)
-						return
-					}
-					self.log('debug', `Preset ID: ${preset} RunT: ${runtime} RampT: ${ramptemp}`)
-					self.setVariableValues({ [`Pst${preset}RunT`]: runtime })
-
-					self.sendEmotimoAPICommand(`G21 N1 P${preset} T${runT} A${rampT}`)
-				}
-			}
-		},
-
-    // Sets the ramp time based on an inputted value
-    setPresetRampTimeByValue: {
-			name: 'Set Preset Ramp Time By Value',
-			options: [
-        { // select to change all presets or just selected one
-          id: 'count',
-					type: 'dropdown',
-					label: 'All or Current Preset',
-          default: 1,
-          choices: [
-						{ id: 0, label: 'Select Preset' },
-            { id: 1, label: 'Smart Preset' },
-            { id: 2, label: 'All' },
-          ],
-        },
-				{
-					type: 'dropdown',
-					id: 'pstid',
-					label: 'Preset ID',
-					default: 0,
-					choices: LOOP_ID,
-					isVisible: (options) => options.count === 0,
-				},
-        { // input value for the ramp time
-          id: 'setvalue',
-					type: 'textinput',
-					label: 'Value',
-          min: 1,
-		    	max: 250,
-          default: '10',
-					useVariables: true,
-        },
-			],
-			callback: async (rampTime) => {
-				const resolvedValue = await self.parseVariablesInString(rampTime.options.setvalue)
-				let runtemp
-				let preset
-				if (rampTime.options.count === 0) {
-					preset = rampTime.options.pstid
-					runtemp = self.getVariableValue(`Pst${preset}RunT`)
-				} else {
-					preset = self.getVariableValue('CurrentPstSet')
-					runtemp = self.getVariableValue('CurrentPstSetRun')
-				}
-			
-				let ramptime = Number(resolvedValue)
-				// checks to make sure inputted values are in an acceptiable range
-				if (ramptime > 600) ramptime = 600
-				else if (ramptime < 10) ramptime = 10
-			
-				self.setVariableValues({ CurrentPstSetRamp: ramptime })
-			
-				const baseCmd = ''
-				const rampT = ramptime / 10
-				const runT = runtemp / 10
-			
-				// === If count is 2, apply to all presets in SetPsts ===
-				if (rampTime.options.count === 2) {
-					const setListRaw = self.getVariableValue('SetPsts')
-					let setList = []
-			
-					try {
-						setList = JSON.parse(setListRaw)
-					} catch (e) {
-						self.log('debug', 'Invalid JSON in SetPsts: ' + setListRaw)
-					}
-			
-					for (const p of setList) {
-						if (self.getVariableValue(`Pst${p}RampT`) === ramptime) {
-							self.log('debug', `Preset ${p} already at Ramp: ${ramptime}, skipping.`)
-							continue
-						}
-						self.log('debug', 'p: ' + p)
-						const runtime = self.getVariableValue(`Pst${p}RunT`)
-						self.log('debug', `Preset ID: ${p} RunT: ${runtime} RampT: ${ramptime}`)
-						self.setVariableValues({ [`Pst${p}RampT`]: ramptime })
-
-						self.sendEmotimoAPICommand(`G21 N1 P${p} T` + runtime/10 + ` A${rampT}`)
-						await new Promise((r) => setTimeout(r, 200))
-					}
-				}
-				// === Only one preset selected (manual or current set) ===
-				else {
-					if (self.getVariableValue(`Pst${preset}RampT`) === ramptime) {
-						self.log('debug', `Preset ${preset} already at Ramp: ${ramptime}, skipping.`)
-						return
-					}
-					self.log('debug', `Preset ID: ${preset} RunT: ${runtime} RampT: ${ramptemp}`)
-					self.setVariableValues({ [`Pst${preset}RampT`]: ramptemp })
-
-					self.sendEmotimoAPICommand(`G21 N1 P${preset} T${runT} A${rampT}`)
-				}
-			}
-		},
-
-		setLoopRunTimeByValue: {
-			name: 'Set Loop Run Time By Value',
-			options: [
-				{ // select to change all loops or just selected one
-					id: 'count',
-					type: 'dropdown',
-					label: 'All or Current Loop',
-					default: 1,
-					choices: [
-						{ id: 0, label: 'Select Loop' },
-						{ id: 1, label: 'Smart Loop' },
-						{ id: 2, label: 'All' },
-					],
-				},
-				{
-					type: 'dropdown',
-					id: 'lpid',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-					isVisible: (options) => options.count === 0,
-				},
-				{ // input value for the run time
-					id: 'setvalue',
-					type: 'textinput',
-					label: 'Value',
-					min: 10,
-					max: 600,
-					default: '50',
-					useVariables: true,
-				},
-			],
-			callback: async (runTime) => {
-				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
-				let loop
-				if (runTime.options.count === 0) {
-					loop = runTime.options.lpid
-				} else {
-					loop = self.getVariableValue('CurrentLpSet')
-				}
-
-				let runtime = Number(resolvedValue)
-				// checks to make sure inputted values are in an acceptiable range
-				if (runtime > 600) runtime = 600
-				else if (runtime < 10) runtime = 10
-
-				// === If count is 2, apply to all loops in SetLps ===
-				if (runTime.options.count === 2) {
-					const setListRaw = self.getVariableValue('SetLps')
-					let setList = []
-			
-					try {
-						setList = JSON.parse(setListRaw)
-					} catch (e) {
-						self.log('debug', 'Invalid JSON in SetPsts: ' + setListRaw)
-					}
-
-					for (const p of setList) {
-						if (self.getVariableValue(`Lp${p}RunT`) === runtime) {
-							self.log('debug', `Loop ${p} already at Run: ${runtime}, skipping.`)
-							continue
-						}
-						self.log('debug', `Loop ID: ${p} RunT: ${runtime}`)
-						self.setVariableValues({ CurrentLpRun: runtime })
-						self.setVariableValues({ [`Lp${p}RunT`]: runtime })
-
-						await new Promise((r) => setTimeout(r, 200))
-					}
-				}
-				// === Only one loop selected (manual or current set) ===
-				else {
-					if (self.getVariableValue(`Lp${loop}RunT`) === runtime) {
-						self.log('debug', `Loop ${loop} already at Run: ${runtime}, skipping.`)
-						return
-					}
-					self.log('debug', `Loop ID: ${loop} RunT: ${runtime}`)
-					if (self.getVariableValue('CurrentLpSet') === loop) {
-						self.setVariableValues({ CurrentLpRun: runtime })
-					}
-					self.setVariableValues({ [`Lp${loop}RunT`]: runtime })
-				}
-			}
-		},
-
-		// Sets the ramp time based on an inputted value
-		setLoopRampTimeByValue: {
-			name: 'Set Loop Ramp Time By Value',
-			options: [
-				{ // select to change all presets or just selected one
-					id: 'count',
-					type: 'dropdown',
-					label: 'All or Current Loop',
-					default: 1,
-					choices: [
-						{ id: 0, label: 'Select Loop' },
-						{ id: 1, label: 'Smart Loop' },
-						{ id: 2, label: 'All' },
-					],
-				},
-				{
-					type: 'dropdown',
-					id: 'lpid',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-					isVisible: (options) => options.count === 0,
-				},
-				{ // input value for the ramp time
-					id: 'setvalue',
-					type: 'textinput',
-					label: 'Value',
-					min: 1,
-		    	max: 250,
-					default: '10',
-					useVariables: true,
-				},
-			],
-			callback: async (rampTime) => {
-				const resolvedValue = await self.parseVariablesInString(rampTime.options.setvalue)
-				let loop
-				if (rampTime.options.count === 0) {
-					loop = rampTime.options.lpid
-				} else {
-					loop = self.getVariableValue('CurrentLpSet')
-				}
-			
-				let ramptime = Number(resolvedValue)
-				// checks to make sure inputted values are in an acceptiable range
-				if (ramptime > 600) ramptime = 600
-				else if (ramptime < 10) ramptime = 10
-
-				// === If count is 2, apply to all loops in SetLps ===
-				if (rampTime.options.count === 2) {
-					const setListRaw = self.getVariableValue('SetLps')
-					let setList = []
-			
-					try {
-						setList = JSON.parse(setListRaw)
-					} catch (e) {
-						self.log('debug', 'Invalid JSON in SetLps: ' + setListRaw)
-					}
-
-					for (const p of setList) {
-						if (self.getVariableValue(`Lp${p}RampT`) === ramptime) {
-							self.log('debug', `Loop ${p} already at Ramp: ${ramptime}, skipping.`)
-							continue
-						}
-						self.log('debug', `Loop ID: ${p} RampT: ${ramptime}`)
-						self.setVariableValues({ CurrentLpRamp: ramptime })
-						self.setVariableValues({ [`Lp${p}RampT`]: ramptime })
-
-						await new Promise((r) => setTimeout(r, 200))
-					}
-				}
-				// === Only one loop selected (manual or current set) ===
-				else {
-					if (self.getVariableValue(`Lp${loop}RampT`) === ramptime) {
-						self.log('debug', `Loop ${loop} already at Ramp: ${ramptime}, skipping.`)
-						return
-					}
-					self.log('debug', `Loop ID: ${loop} RampT: ${ramptime}`)
-					if (self.getVariableValue('CurrentLpSet') == loop) {
-						self.setVariableValues({ CurrentLpRamp: ramptime })
-					}
-					self.setVariableValues({ [`Lp${loop}RampT`]: ramptime })
-				}
-			}
-		},
-
-//=============================
-//  ***   Smart Presets   ***
-//=============================
-
-    // Sets the run time based on increments
-		setPresetRunTimeSmart: {
-			name: 'Smart Set Preset Run Time',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -250,
-		    	max: 250,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (runTime) => {
-				var runtemp = self.getVariableValue('CurrentPstSetRun')
-				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
-				var preset = self.getVariableValue('CurrentPstSet')
-
-				if (runTime.options.direction === 'amount') {
-					runtemp += runTime.options.amountValue
-				} else {
-					runtemp += runTime.options.direction
-				}
-
-				if (runtemp > 600) {
-					runtemp = 600;
-				} else if (runtemp < 10) {
-					runtemp = 10;
-				}
-
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-        var varID = 'Pst'+preset+'RunT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-        self.setVariableValues({ [varID]: runtemp })
-
-				self.setVariableValues({ CurrentPstSetRun: runtemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-
-		// Sets the ramp time based on increments
-		setPresetRampTimeSmart: {
-			name: 'Smart Set Preset Ramp Time',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -250,
-		    	max: 250,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (rampTime) => {
-				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
-				var runtemp = self.getVariableValue('CurrentPstSetRun')
-				var preset = self.getVariableValue('CurrentPstSet')
-
-				if (rampTime.options.direction === 'amount') {
-					ramptemp += rampTime.options.amountValue
-				} else {
-					ramptemp += rampTime.options.direction
-				}
-				
-				if (ramptemp > 250) {
-					ramptemp = 250;
-				} else if (ramptemp < 1) {
-					ramptemp = 1;
-				}
-
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-        var varID = 'Pst'+preset+'RampT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-        self.setVariableValues({ [varID]: ramptemp })
-
-				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-
-    // Resets the run time smart
-		resetPresetRunTimeSmart: {
-			name: 'Reset Preset Run Time Smart',
-			options: [
-				
-			],
-			callback: async (resetPresetRunTime) => {
-				var preset = self.getVariableValue('CurrentPstSet')
-				var runtemp = 50;
-				var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
-
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-
-        var varID = 'Pst'+preset+'RunT'
-        self.log('debug', 'Variable ID: ' + varID)
-        self.setVariableValues({ [varID]: runtemp })
-
-				self.setVariableValues({ CurrentPstSetRun: runtemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-
-    // Resets the ramp time smart
-		resetPresetRampTimeSmart: {
-			name: 'Reset Preset Ramp Time Smart',
-			options: [
-				
-			],
-			callback: async (resetPresetRampTime) => {
-				var preset = self.getVariableValue('CurrentPstSet')
-				var ramptemp = 10;
-				var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
-
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-        var varID = 'Pst'+preset+'RampT'
-        self.log('debug', 'Variable ID: ' + varID)
-        self.setVariableValues({ [varID]: ramptemp })
-
-				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
-
-				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			}
-		},
-
-		// Goes to the next or previous preset number
-		setPresetID: {
-			name: 'Set Preset ID',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [...DIRECTION_ID,
-						{ id: 'goto', label: 'Goto Preset' }
-					]
-				},
-				{
-					id: 'gotoPst',
-					type: 'number',
-					label: 'Goto Preset ID',
-					default: 0,
-					min: 0,
-					max: 127,
-					isVisible: (options) => options.direction === 'goto'
-				}
-			],
-			callback: async (pst) => {
-				var preset = self.getVariableValue('CurrentPstSet')
-				if (pst.options.direction === 'goto') {
-					preset = pst.options.gotoPst
-				} else {
-					preset += pst.options.direction
-				}
-
-				if (preset < 0) {
-					preset = 0;
-				} else if (preset > 127) { 
-					preset = 127;
-				}
-
-				var exists = false
-				for (const item of variableList) {
-					if (item.variableId === `Pst${preset}Stat`) {
-						exists = true
-						break
-					}
-				}
-				if (!exists) {
-					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
-
-					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
-					self.updateActions()
-
-					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
-					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
-					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
-					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
-					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
-					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
-					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
-
-					self.setVariableDefinitions(variableList)
-
-					self.setVariableValues({ [`Pst${preset}RunT`]: 50 })
-					self.setVariableValues({ [`Pst${preset}RampT`]: 10 })
-					self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
-				}
-
-				var ramptemp = self.getVariableValue(`Pst${preset}RampT`)
-				var runtemp = self.getVariableValue(`Pst${preset}RunT`)
-				var panpos = self.getVariableValue(`Pst${preset}PanPos`)
-				var tiltpos = self.getVariableValue(`Pst${preset}TiltPos`)
-				var m3pos = self.getVariableValue(`Pst${preset}M3Pos`)
-				var m4pos = self.getVariableValue(`Pst${preset}M4Pos`)
-
-				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp + ' PanPos: ' + panpos + ' TiltPos: ' + tiltpos + ' M3Pos: ' + m3pos + ' M4Pos: ' + m4pos)
-
-				self.setVariableValues({ CurrentPstSet: preset })
-				self.setVariableValues({ CurrentPstSetRun: runtemp })
-				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
-				self.setVariableValues({ CurrentPstPanPos: panpos })
-				self.setVariableValues({ CurrentPstTiltPos: tiltpos })
-				self.setVariableValues({ CurrentPstM3Pos: m3pos })
-				self.setVariableValues({ CurrentPstM4Pos: m4pos })
-
-				self.checkFeedbacks("SetPresetSmart")
-			}
-		},
-
-    // saves the position at the selected preset
-		savePsetSmart: {
-			name: 'Save Preset Smart',
-			options: [
-			
-			],
-			callback: async (setPreset) => {
-				var runtemp = self.getVariableValue('CurrentPstSetRun')
-				var ramptemp = self.getVariableValue('CurrentPstSetRamp')
-				var preset = self.getVariableValue('CurrentPstSet')
-
-				self.sendEmotimoAPICommand('G21 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-			},
-		},
-
-    // recalls the selected preset
-		recallPsetSmart: {
-			name: 'Recall Preset Smart',
-			options: [
-				
-			],
-			callback: async (recallPreset) => {
-				var preset = self.getVariableValue('CurrentPstSet')
-				self.setVariableValues({ LastPstID: preset })
-
-				self.sendEmotimoAPICommand('G20 P' + preset)
-			},
-		},
-
-//=====================
-//  ***   Loops   ***
-//=====================
-
-    // sets the selected loop run time
-    setLoopRunTime: {
-			name: 'Set Loop Run Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -250,
-		    	max: 250,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (runTime) => {
-				var runtemp = self.getVariableValue('Lp'+runTime.options.id_loop+'RunT')
-
-				if (runTime.options.direction === 'amount') {
-					runtemp += runTime.options.amountValue
-				} else {
-					runtemp += runTime.options.direction
-				}
-
-				if (runtemp > 600) {
-					runtemp = 600;
-				} else if (runtemp < 10) {
-					runtemp = 10;
-				}
-
-				var varID = 'Lp'+runTime.options.id_loop+'RunT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-        self.setVariableValues({ [varID]: runtemp })
-			}
-		},
-		setLoopRampTime: {
-			name: 'Set Loop Ramp Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -250,
-		    	max: 250,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (rampTime) => {
-				var ramptemp = self.getVariableValue('Lp'+rampTime.options.id_loop+'RampT')
-
-				if (rampTime.options.direction === 'amount') {
-					ramptemp += rampTime.options.amountValue
-				} else {
-					ramptemp += rampTime.options.direction
-				}
-
-				if (ramptemp > 250) {
-					ramptemp = 250;
-				} else if (ramptemp < 1) {
-					ramptemp = 1;
-				}
-
-				var varID = 'Lp'+rampTime.options.id_loop+'RunT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-        self.setVariableValues({ [varID]: ramptemp })
-			}
-		},
-		resetLoopRunTime: {
-			name: 'Reset Loop Run Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-			],
-			callback: async (resetLpRunTime) => {
-				var runtemp = 50;
-
-				var varID = 'Lp'+resetLpRunTime.options.id_loop+'RampT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-        self.setVariableValues({ [varID]: runtemp })
-			}
-		},
-		resetLoopRampTime: {
-			name: 'Reset Loop Ramp Time',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-			],
-			callback: async (resetLpRampTime) => {
-				var ramptemp = 50;
-
-				var varID = 'Lp'+resetLpRampTime.options.id_loop+'RampT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-        self.setVariableValues({ [varID]: ramptemp })
-			}
-		},
-		setLoopAPoint: {
-			name: 'Set Loop A Point',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'pst', label: 'Set Preset' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Preset ID',
-					id: 'psetid',
-					min: 0,
-		    	max: 127,
-					default: 0,
-					isVisible: (options) => options.direction === 'pst',
-				},
-			],
-			callback: async (LpAPt) => {
-				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
-
-				if (dir.options.direction === 'pst') {
-					pointTemp = LpAPt.options.psetid
-				} else {
-					pointTemp += LpAPt.options.direction
-				}
-
-				if (pointTemp > 127) {
-					pointTemp = 127;
-				} else if (pointTemp < 0) {
-					pointTemp = 0;
-				}
-
-				var varID = 'Lp'+LpAPt.options.id_loop+'APoint'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
-        self.setVariableValues({ [varID]: pointTemp })
-			}
-		},
-		setLoopBPoint: {
-			name: 'Set Loop B Point',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'pst', label: 'Set Preset' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Preset ID',
-					id: 'psetid',
-					min: 0,
-		    	max: 127,
-					default: 0,
-					isVisible: (options) => options.direction === 'pst',
-				},
-			],
-			callback: async (LpBPt) => {
-				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
-
-				if (dir.options.direction === 'pst') {
-					pointTemp = LpBPt.options.psetid
-				} else {
-					pointTemp += LpBPt.options.direction
-				}
-
-				if (pointTemp > 127) {
-					pointTemp = 127;
-				} else if (pointTemp < 0) {
-					pointTemp = 0;
-				}
-
-				var varID = 'Lp'+LpBPt.options.id_loop+'BPoint'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
-        self.setVariableValues({ [varID]: pointTemp })
-			}
-		},
-		recallAPoint: {
-			name: 'Recall Loop A Point',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-			],
-			callback: async (LpAPt) => {
-				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
-				self.sendEmotimoAPICommand('G20 P' + pointTemp)
-			}
-		},
-		recallBPoint: {
-			name: 'Recall Loop B Point',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-			],
-			callback: async (LpBPt) => {
-				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
-				self.sendEmotimoAPICommand('G20 P' + pointTemp)
-			}
-		},
-		recallLoop: {
-			name: 'Recall Loop',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_loop',
-					label: 'Loop ID',
-					default: 0,
-					choices: LOOP_ID,
-				},
-			],
-			callback: async (LpRecall) => {
-				var tempA = self.getVariableValue('Lp'+LpRecall.options.id_loop+'APoint');
-				var tempB = self.getVariableValue('Lp'+LpRecall.options.id_loop+'BPoint');
-				var loopActive = self.getVariableValue('LpActive')
-
-				self.log('debug', 'Active Loop: ' + loopActive)
-				if (loopActive == -1) {
-					self.setVariableValues({ LpActive: LpRecall.options.id_loop })
-					self.setVariableValues({ LastPstID: -1})
-					self.checkFeedbacks("LoopStatus")
-
-					self.sendEmotimoAPICommand('G25 L' + LpRecall.options.id_loop + ' A' + tempA + ' B' + tempB + ' C500 D500')
-					setTimeout(() => self.sendEmotimoAPICommand('G24 L' + LpRecall.options.id_loop + ' N0'), 100);
-				} else {
-					self.setVariableValues({ LpActive: -1 })
-					self.sendEmotimoAPICommand('G24')
-				}
-			}
-		},
-
-		//Smart Loops
-		setLoopRunTimeSmart: {
-			name: 'Smart Set Loop Run Time',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -250,
-		    	max: 250,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (runTime) => {
-				var runtemp = self.getVariableValue('CurrentLpRun')
-				var ramptemp = self.getVariableValue('CurrentLpRamp')
-				var id_loop = self.getVariableValue('CurrentLpSet')
-				var lpAPt = self.getVariableValue('CurrentLpA')
-				var lpBPt = self.getVariableValue('CurrentLpB')
-
-				if (runTime.options.direction === 'amount') {
-					runtemp += runTime.options.amountValue
-				} else {
-					runtemp += runTime.options.direction
-				}
-
-				if (runtemp > 600) {
-					runtemp = 600;
-				} else if (runtemp < 10) {
-					runtemp = 10;
-				}
-
-				self.log('debug', 'Loop ID: ' + id_loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				var varID = 'Lp'+id_loop+'RunT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-        self.setVariableValues({ [varID]: runtemp })
-
-				self.setVariableValues({ CurrentLpRun: runtemp })
-
-				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-			}
-		},
-		setLoopRampTimeSmart: {
-			name: 'Smart Set Loop Ramp Time',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -300,
-		    	max: 300,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-			],
-			callback: async (rampTime) => {
-				var ramptemp = self.getVariableValue('CurrentLpRamp')
-				var runtemp = self.getVariableValue('CurrentLpRun')
-				var id_loop = self.getVariableValue('CurrentLpSet')
-				var lpAPt = self.getVariableValue('CurrentLpA')
-				var lpBPt = self.getVariableValue('CurrentLpB')
-
-				if (rampTime.options.direction === 'amount') {
-					ramptemp += rampTime.options.amountValue
-				} else {
-					ramptemp += rampTime.options.direction
-				}
-				
-				if (ramptemp > 300) {
-					ramptemp = 300;
-				} else if (ramptemp < 1) {
-					ramptemp = 1;
-				}
-
-				self.log('debug', 'Loop ID: ' + id_loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				var varID = 'Lp'+id_loop+'RampT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-        self.setVariableValues({ [varID]: ramptemp })
-
-				self.setVariableValues({ CurrentLpRamp: ramptemp })
-
-				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-			}
-		},
-		resetLoopRunTimeSmart: {
-			name: 'Reset Loop Run Time Smart',
-			options: [
-				
-			],
-			callback: async (resetLpRunTime) => {
-				var runtemp = 50;
-				var id_loop = self.getVariableValue('CurrentLpSet')
-
-				var varID = 'Lp'+id_loop+'RampT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-        self.setVariableValues({ [varID]: runtemp })
-
-				self.setVariableValues({ CurrentLpRun: runtemp })
-			}
-		},
-		resetLoopRampTimeSmart: {
-			name: 'Reset Loop Ramp Time Smart',
-			options: [
-				
-			],
-			callback: async (resetLpRampTime) => {
-				var ramptemp = 50;
-				var id_loop = self.getVariableValue('CurrentLpSet')
-
-				var varID = 'Lp'+id_loop+'RampT'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-        self.setVariableValues({ [varID]: ramptemp })
-
-				self.setVariableValues({ CurrentLpRamp: ramptemp })
-			}
-		},
-		setLoopAPointSmart: {
-			name: 'Smart Set Loop A Point',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'pst', label: 'Set Preset' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Preset ID',
-					id: 'psetid',
-					min: 0,
-		    	max: 127,
-					default: 0,
-					isVisible: (options) => options.direction === 'pst',
-				},
-			],
-			callback: async (dir) => {
-				var ramptemp = self.getVariableValue('CurrentLpRamp')
-				var runtemp = self.getVariableValue('CurrentLpRun')
-				var id_loop = self.getVariableValue('CurrentLpSet')
-				var lpAPt = self.getVariableValue('CurrentLpA')
-				var lpBPt = self.getVariableValue('CurrentLpB')
-
-				if (dir.options.direction === 'pst') {
-					lpAPt = dir.options.psetid
-				} else {
-					lpAPt += dir.options.direction
-				}
-
-				if (lpAPt > 127) {
-					lpAPt = 127;
-				} else if (lpAPt < 0) {
-					lpAPt = 0;
-				}
-
-				self.log('debug', 'Loop ID: ' + id_loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
-
-				var varID = 'Lp'+id_loop+'APoint'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + lpAPt)
-        self.setVariableValues({ [varID]: lpAPt })
-				
-				self.setVariableValues({ CurrentLpA: lpAPt })
-
-				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-			}
-		},
-		setLoopBPointSmart: {
-			name: 'Smart Set Loop B Point',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'pst', label: 'Set Preset' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Preset ID',
-					id: 'psetid',
-					min: 0,
-		    	max: 127,
-					default: 0,
-					isVisible: (options) => options.direction === 'pst',
-				},
-			],
-			callback: async (dir) => {
-				var ramptemp = self.getVariableValue('CurrentLpRamp')
-				var runtemp = self.getVariableValue('CurrentLpRun')
-				var id_loop = self.getVariableValue('CurrentLpSet')
-				var lpAPt = self.getVariableValue('CurrentLpA')
-				var lpBPt = self.getVariableValue('CurrentLpB')
-
-				if (dir.options.direction === 'pst') {
-					lpBPt = dir.options.psetid
-				} else {
-					lpBPt += dir.options.direction
-				}
-
-				if (lpBPt > 127) {
-					lpBPt = 127;
-				} else if (lpBPt < 0) {
-					lpBPt = 0;
-				}
-
-				self.log('debug', 'Loop ID: ' + id_loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
-
-				var varID = 'Lp'+id_loop+'BPoint'
-        self.log('debug', 'Variable ID: ' + varID + ' to ' + lpBPt)
-        self.setVariableValues({ [varID]: lpBPt })
-				
-				self.setVariableValues({ CurrentLpB: lpBPt })
-
-				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-			}
-		},
-		recallAPointSmart: {
-			name: 'Recall Loop A Point Smart',
-			options: [
-				
-			],
-			callback: async (LpAPt) => {
-				var temp = self.getVariableValue('CurrentLpA')
-				self.sendEmotimoAPICommand('G20 P' + temp)
-			}
-		},
-		recallBPointSmart: {
-			name: 'Recall Loop B Point Smart',
-			options: [
-				
-			],
-			callback: async (LpAPt) => {
-				var temp = self.getVariableValue('CurrentLpB')
-				self.sendEmotimoAPICommand('G20 P' + temp)
-			}
-		},
-		setLoopID: {
-			name: 'Set Loop ID',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [...DIRECTION_ID,
-						{ id: 'goto', label: 'Goto Loop' }
-					]
-				},
-				{
-					id: 'gotoLoop',
-					type: 'number',
-					label: 'Goto Loop ID',
-					default: 0,
-					isVisible: (options) => options.direction === 'goto'
-				}
-			],
-			callback: async (loop) => {
-				var id_loop = self.getVariableValue('CurrentLpSet')
-
-				if (loop.options.direction === 'goto') {
-					id_loop = loop.options.gotoLoop
-				} else {
-					id_loop += loop.options.direction
-				}
-
-				if (id_loop > 7) {
-					id_loop = 7;
-				} else if (id_loop < 0) {
-					id_loop = 0;
-				}
-
-				var exists = false
-				for (const item of variableList) {
-					if (item.variableId === `Lp${id_loop}RunT`) {
-						exists = true
-						break
-					}
-				}
-
-				if (!exists) {
-					self.log('debug', `Loop ${id_loop} does not exist yet. Adding now`)
-
-					LOOP_ID.push({ id: id_loop, label: `Lp${id_loop}` })
-					let setLpsRaw = self.getVariableValue('SetLps')
-					let setlps = []
-
-					try {
-						setlps = JSON.parse(setLpsRaw) || []
-					} catch (e) {
-						setlps = []
-					}
-
-					// Only add if not already present
-					if (!setlps.includes(id_loop)) {
-						setlps.push(id_loop)
-						self.setVariableValues({ SetLps: JSON.stringify(setlps) })
-					}
-					self.updateActions()
-
-					variableList.push({ name: `Loop${id_loop}RunT`, variableId: `Lp${id_loop}RunT` })
-					variableList.push({ name: `Loop${id_loop}RampT`, variableId: `Lp${id_loop}RampT` })
-					variableList.push({ name: `Loop${id_loop}APoint`, variableId: `Lp${id_loop}APoint` })
-					variableList.push({ name: `Loop${id_loop}BPoint`, variableId: `Lp${id_loop}BPoint` })
-
-					self.setVariableDefinitions(variableList)
-
-					self.setVariableValues({ [`Lp${id_loop}RunT`]: 50 })
-					self.setVariableValues({ [`Lp${id_loop}RampT`]: 10 })
-					self.setVariableValues({ [`Lp${id_loop}APoint`]: 0 })
-					self.setVariableValues({ [`Lp${id_loop}BPoint`]: 0 })
-				}
-
-				var ramptemp = self.getVariableValue('Lp' + id_loop + 'RampT')
-				var runtemp = self.getVariableValue('Lp' + id_loop + 'RunT')
-				var lpApt = self.getVariableValue('Lp' + id_loop + 'APoint')
-				var lpBpt = self.getVariableValue('Lp' + id_loop + 'BPoint')
-
-				self.log('debug', 'Loop ID: ' + id_loop + ' A: ' + lpApt + ' B: ' + lpBpt + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				self.setVariableValues({ CurrentLpSet: id_loop })
-				self.setVariableValues({ CurrentLpRun: runtemp })
-				self.setVariableValues({ CurrentLpRamp: ramptemp })
-				self.setVariableValues({ CurrentLpA: lpApt })
-				self.setVariableValues({ CurrentLpB: lpBpt })
-
-				self.checkFeedbacks("SetLoopSmart")
-			}
-		},
-		saveLpSmart: {
-			name: 'Save Loop Smart',
-			options: [
-			
-			],
-			callback: async (setLoop) => {
-				var ramptemp = self.getVariableValue('CurrentLpRamp')
-				var runtemp = self.getVariableValue('CurrentLpRun')
-				var id_loop = self.getVariableValue('CurrentLpSet')
-				var lpAPt = self.getVariableValue('CurrentLpA')
-				var lpBPt = self.getVariableValue('CurrentLpB')
-
-				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-			},
-		},
-		recallLpSmart: {
-			name: 'Recall Loop Smart',
-			options: [
-				
-			],
-			callback: async (recallLoop) => {
-				var loop = self.getVariableValue('CurrentLpSet')
-				var loopActive = self.getVariableValue('LpActive')
-
-				if (loopActive == -1) {
-					self.setVariableValues({ LpActive: loop })
-					self.checkFeedbacks("LoopStatus")
-
-					self.sendEmotimoAPICommand('G24 L' + loop)
-				} else {
-					self.setVariableValues({ LpActive: -1 })
-					self.checkFeedbacks("LoopStatus")
-
-					self.sendEmotimoAPICommand('G24')
-				}
-			},
-		},
-
-
 		homeRS: {
 			name: 'Center RS',
 			options: [
@@ -2591,7 +737,7 @@ module.exports = function (self) {
 				self.sendEmotimoAPICommand('G812 C0 M' + (calTN.options.id_mot-4))
 			}
 		},
-		
+
 		//Limits
 		setStopA: {
 			name: 'Set Stop A',
@@ -3125,42 +1271,1630 @@ module.exports = function (self) {
 				self.setVariableValues({ CurrentMtrInversion: motorInvertName})
 			},
 		},
-
-		presetRunTimeU: {
-			name: 'Preset Run Time Increment',
+		setMotorProfile: {
+			name: 'Set Motor Profile',
 			options: [
 				{
-					id: 'num',
+					id: 'prodileid',
+					type: 'dropdown',
+					label: 'Profile: Default: User 1',
+					default: 5,
+					choices: MOTOR_PROFILES,
+				}
+			],
+			callback: async (motorProfile) => {
+				const selProf = motorProfile.options.prodileid
+				self.setVariableValues({ CurrentMtrProf: selProf})
+
+				self.sendEmotimoAPICommand('G102 P' + selProf)
+			}
+		},
+
+//============================
+//  ***   PRESET STUFFS   ***
+//============================
+
+		savePset: {
+			name: 'Save Preset',
+			options: [ 
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
 					type: 'number',
-					label: 'Preset Number',
+					id: 'id_pst',
+					label: 'Preset ID',
 					default: 0,
 					min: 0,
 					max: 127,
+					isVisible: (options) => options.settype === 'pst',
 				},
 			],
-			callback: async (presetRunTimeU) => {
-				self.presetRunTimes[presetRunTimeU.options.num] += 1;
-				self.sendEmotimoAPICommand('G21 N1 P' + presetRunTimeU.options.num + ' T' + self.presetRunTimes[presetRunTimeU.options.num] / 10 + ' A' + self.presetRampTimes[presetRunTimeU.options.num] / 10)
+			callback: async (setPreset) => {
+				if (setPreset.options.settype === 'pst') {
+					var preset = setPreset.options.id_pst
+				} else {
+					var preset = self.getVariableValue('CurrentPstSet')
+				}
+
+				var runtemp = self.getVariableValue('Pst'+preset+'RunT') || 50
+				var ramptemp = self.getVariableValue('Pst'+preset+'RampT') || 10
+
+				if (!PRESET_ID.some(p => p.id === preset)) {
+					self.log('debug', 'Preset ' + preset + ' is not already set. Setting now')
+					self.sendEmotimoAPICommand('G21 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+					setTimeout(() => {
+						self.log('debug', 'Getting info for new preset')
+						self.sendEmotimoAPICommand('G752 P' + preset)
+					}, 100)
+				} else {
+				self.sendEmotimoAPICommand('G21 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+				}
 			},
 		},
-		presetRunTimeD: {
-			name: 'Preset Run Time Decrement',
-			options: [
+		recallPset: {
+			name: 'Recall Preset',
+			options: [ 
 				{
-					id: 'num',
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
 					type: 'number',
-					label: 'Preset Number',
+					id: 'id_pst',
+					label: 'Preset ID',
 					default: 0,
 					min: 0,
 					max: 127,
+					isVisible: (options) => options.settype === 'pst',
 				},
 			],
-			callback: async (presetRunTimeD) => {
-				self.presetRunTimes[presetRunTimeD.options.num] -= 1;
-				self.sendEmotimoAPICommand('G21 N1 P' + presetRunTimeD.options.num + ' T' + self.presetRunTimes[presetRunTimeD.options.num] / 10 + ' A' + self.presetRampTimes[presetRunTimeD.options.num] / 10)
+			callback: async (recallPreset) => {
+				if (recallPreset.options.settype === 'pst') {
+					var preset = recallPreset.options.id_pst
+				} else {
+					var preset = self.getVariableValue('CurrentPstSet')
+				}
+
+				if (!PRESET_ID.some(p => p.id === preset)) {
+					self.log('warn', 'Cannot recall preset ' + preset + ' because it is not set yet')
+					return;
+				}
+
+				const cmd = 'G20 P' + preset
+				self.setVariableValues({ LastPstID: preset })
+				self.log('debug', 'Recalled Preset: ' + preset)
+				self.sendEmotimoAPICommand(cmd)
 			},
 		},
 
+		setPresetRunTime: {
+			name: 'Set Preset Run Time',
+			options: [ 
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id_pst',
+					label: 'Preset ID',
+					default: 0,
+					choices: PRESET_ID,
+					isVisible: (options) => options.settype === 'pst',
+					tooltip: 'If you dont see a specific preset ID, make sure it is set first',
+				},
+				{
+					type: 'dropdown',
+					id: 'setopt',
+					label: 'Set Options',
+					default: 'set',
+					choices: CHOICES_SET,
+					tooltip: 'Set Value: set a specific value\nIncrement: Increase by a value each time\nDecrement: Decrease by a value each time',
+				},
+				{
+					type: 'number',
+					label: 'Value',
+					id: 'setvalue',
+					min: 10,
+					max: 600,
+					default: 50,
+					isVisible: (options) => options.setopt === 'set'
+				},
+				{
+					type: 'number',
+					label: 'Value',
+					id: 'ammount',
+					min: 1,
+					max: 600,
+					default: 5,
+					isVisible: (options) => options.setopt === 'up' || options.setopt === 'down'
+				},
+			],
+			callback: async (runTime) => {
+				if (runTime.options.settype === 'pst') {
+					var preset = runTime.options.id_pst
+					var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
+					var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
+				} else {
+					var preset = self.getVariableValue('CurrentPstSet')
+					var runtemp = self.getVariableValue('CurrentPstSetRun')
+					var ramptemp = self.getVariableValue('CurrentPstSetRamp')
+				}
+
+				if (runTime.options.setopt === 'set') {
+					runtemp = runTime.options.setvalue
+				} else if (runTime.options.setopt === 'up') {
+					runtemp += runTime.options.ammount
+				} else if (runTime.options.setopt === 'down') {
+					runtemp -= runTime.options.ammount
+				}
+
+				if (runtemp > 600) {
+					runtemp = 600;
+				} else if (runtemp < 10) {
+					runtemp = 10;
+				}
+
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Pst'+preset+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+				self.setVariableValues({ [varID]: runtemp })
+				if (runTime.options.settype === 'smart' || runTime.options.id_pst === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRun: runtemp })
+				}
+
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+			}
+		},
+		setPresetRampTime: {
+			name: 'Set Preset Ramp Time',
+			options: [ 
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id_pst',
+					label: 'Preset ID',
+					default: 0,
+					choices: PRESET_ID,
+					isVisible: (options) => options.settype === 'pst',
+					tooltip: 'If you dont see a specific preset ID, make sure it is set first',
+				},
+				{
+					type: 'dropdown',
+					id: 'setopt',
+					label: 'Set Options',
+					default: 'set',
+					choices: CHOICES_SET,
+					tooltip: 'Set Value: set a specific value\nIncrement: Increase by a value each time\nDecrement: Decrease by a value each time',
+				},
+				{
+					type: 'number',
+					label: 'Value',
+					id: 'setvalue',
+					min: 5,
+					max: 300,
+					default: 10,
+					isVisible: (options) => options.setopt === 'set'
+				},
+				{
+					type: 'number',
+					label: 'Value',
+					id: 'ammount',
+					min: 1,
+					max: 300,
+					default: 5,
+					isVisible: (options) => options.setopt === 'up' || options.setopt === 'down'
+				},
+			],
+			callback: async (rampTime) => {
+				if (rampTime.options.settype === 'pst') {
+					var preset = rampTime.options.id_pst
+					var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
+					var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
+				} else {
+					var preset = self.getVariableValue('CurrentPstSet')
+					var runtemp = self.getVariableValue('CurrentPstSetRun')
+					var ramptemp = self.getVariableValue('CurrentPstSetRamp')
+				}
+
+				if (rampTime.options.setopt === 'set') {
+					ramptemp = rampTime.options.setvalue
+				} else if (rampTime.options.setopt === 'up') {
+					ramptemp += rampTime.options.ammount
+				} else if (rampTime.options.setopt === 'down') {
+					ramptemp -= rampTime.options.ammount
+				}
+
+				if (ramptemp > 300) {
+					ramptemp = 300;
+				} else if (ramptemp < 5) {
+					ramptemp = 5;
+				}
+
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Pst'+preset+'RampT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+				self.setVariableValues({ [varID]: ramptemp })
+
+				if (rampTime.options.settype === 'smart' || rampTime.options.id_pst === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRamp: ramptemp })
+				}
+
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+			}
+		},
+
+		resetPresetRunTime: {
+			name: 'Reset Preset Run Time',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id_pst',
+					label: 'Preset ID',
+					default: 0,
+					choices: PRESET_ID,
+					isVisible: (options) => options.settype === 'pst',
+					tooltip: 'If you dont see a specific preset ID, make sure it is set first',
+				},
+			],
+			callback: async (resetPresetRunTime) => {
+				var runtemp = 50;
+
+				if (resetPresetRunTime.options.settype === 'pst') {
+					var preset = resetPresetRunTime.options.id_pst
+					var ramptemp = self.getVariableValue('Pst' + preset + 'RampT')
+				} else {
+					var preset = self.getVariableValue('CurrentPstSet')
+					var ramptemp = self.getVariableValue('CurrentPstSetRamp')
+				}
+
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Pst'+preset+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+				self.setVariableValues({ [varID]: runtemp })
+
+				if (resetPresetRunTime.options.settype === 'smart' || resetPresetRunTime.options.id_pst === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRun: runtemp })
+				}
+
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+			}
+		},
+		resetPresetRampTime: {
+			name: 'Reset Preset Ramp Time',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id_pst',
+					label: 'Preset ID',
+					default: 0,
+					choices: PRESET_ID,
+					isVisible: (options) => options.settype === 'pst',
+					tooltip: 'If you dont see a specific preset ID, make sure it is set first',
+				},
+			],
+			callback: async (resetPresetRampTime) => {
+				var ramptemp = 10;
+
+				if (resetPresetRampTime.options.settype === 'pst') {
+					var preset = resetPresetRampTime.options.id_pst
+					var runtemp = self.getVariableValue('Pst' + preset + 'RunT')
+				} else {
+					var runtemp = self.getVariableValue('CurrentPstSetRun')
+					var preset = self.getVariableValue('CurrentPstSet')
+				}
+
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Pst'+preset+'RampT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+				self.setVariableValues({ [varID]: ramptemp })
+
+				if (resetPresetRampTime.options.settype === 'smart' || resetPresetRampTime.options.id_pst === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRamp: ramptemp })
+				}
+
+				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+			}
+		},
+
+		// Goes to the next or previous preset number
+		setPresetID: {
+			name: 'Set Preset ID',
+			options: [
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [...DIRECTION_ID,
+						{ id: 'goto', label: 'Goto Preset' }
+					]
+				},
+				{
+					id: 'gotoPst',
+					type: 'number',
+					label: 'Goto Preset ID',
+					default: 0,
+					min: 0,
+					max: 127,
+					isVisible: (options) => options.direction === 'goto'
+				}
+			],
+			callback: async (pst) => {
+				var preset = self.getVariableValue('CurrentPstSet')
+				if (pst.options.direction === 'goto') {
+					preset = pst.options.gotoPst
+				} else {
+					preset += pst.options.direction
+				}
+
+				if (preset < 0) {
+					preset = 0;
+				} else if (preset > 127) { 
+					preset = 127;
+				}
+
+				var exists = false
+				for (const item of variableList) {
+					if (item.variableId === `Pst${preset}Stat`) {
+						exists = true
+						break
+					}
+				}
+				if (!exists) {
+					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
+
+					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
+					self.updateActions()
+
+					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
+					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
+					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
+					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
+					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
+					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
+
+					self.setVariableDefinitions(variableList)
+
+					self.setVariableValues({ [`Pst${preset}RunT`]: 50 })
+					self.setVariableValues({ [`Pst${preset}RampT`]: 10 })
+					self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
+				}
+
+				var ramptemp = self.getVariableValue(`Pst${preset}RampT`)
+				var runtemp = self.getVariableValue(`Pst${preset}RunT`)
+				var panpos = self.getVariableValue(`Pst${preset}PanPos`)
+				var tiltpos = self.getVariableValue(`Pst${preset}TiltPos`)
+				var m3pos = self.getVariableValue(`Pst${preset}M3Pos`)
+				var m4pos = self.getVariableValue(`Pst${preset}M4Pos`)
+
+				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp + ' PanPos: ' + panpos + ' TiltPos: ' + tiltpos + ' M3Pos: ' + m3pos + ' M4Pos: ' + m4pos)
+
+				self.setVariableValues({ CurrentPstSet: preset })
+				self.setVariableValues({ CurrentPstSetRun: runtemp })
+				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
+				self.setVariableValues({ CurrentPstPanPos: panpos })
+				self.setVariableValues({ CurrentPstTiltPos: tiltpos })
+				self.setVariableValues({ CurrentPstM3Pos: m3pos })
+				self.setVariableValues({ CurrentPstM4Pos: m4pos })
+
+				self.checkFeedbacks("SetPresetSmart")
+			}
+		},
+
+//============================
+//  ***   LOOP STUFFS   ***
+//============================
+
+		// Sets the run time based on an inputted value
+		setLoopRunTimeByValue: {
+			name: 'Set Loop Run Time By Value',
+			options: [
+				{ // select to change all loops or just selected one
+					id: 'count',
+					type: 'dropdown',
+					label: 'All or Current Loop',
+					default: 1,
+					choices: [
+						{ id: 0, label: 'Select Loop' },
+						{ id: 1, label: 'Smart Loop' },
+						{ id: 2, label: 'All' },
+					],
+				},
+				{
+					type: 'dropdown',
+					id: 'lpid',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+					isVisible: (options) => options.count === 0,
+				},
+				{ // input value for the run time
+					id: 'setvalue',
+					type: 'textinput',
+					label: 'Value',
+					min: 10,
+					max: 600,
+					default: '50',
+					useVariables: true,
+				},
+			],
+			callback: async (runTime) => {
+				const resolvedValue = await self.parseVariablesInString(runTime.options.setvalue)
+				let loop
+				if (runTime.options.count === 0) {
+					loop = runTime.options.lpid
+				} else {
+					loop = self.getVariableValue('CurrentLpSet')
+				}
+
+				let runtime = Number(resolvedValue)
+				// checks to make sure inputted values are in an acceptiable range
+				if (runtime > 600) runtime = 600
+				else if (runtime < 10) runtime = 10
+
+				// === If count is 2, apply to all loops in SetLps ===
+				if (runTime.options.count === 2) {
+					const setListRaw = self.getVariableValue('SetLps')
+					let setList = []
+			
+					try {
+						setList = JSON.parse(setListRaw)
+					} catch (e) {
+						self.log('debug', 'Invalid JSON in SetPsts: ' + setListRaw)
+					}
+
+					for (const p of setList) {
+						if (self.getVariableValue(`Lp${p}RunT`) === runtime) {
+							self.log('debug', `Loop ${p} already at Run: ${runtime}, skipping.`)
+							continue
+						}
+						self.log('debug', `Loop ID: ${p} RunT: ${runtime}`)
+						self.setVariableValues({ CurrentLpRun: runtime })
+						self.setVariableValues({ [`Lp${p}RunT`]: runtime })
+
+						await new Promise((r) => setTimeout(r, 200))
+					}
+				}
+				// === Only one loop selected (manual or current set) ===
+				else {
+					if (self.getVariableValue(`Lp${loop}RunT`) === runtime) {
+						self.log('debug', `Loop ${loop} already at Run: ${runtime}, skipping.`)
+						return
+					}
+					self.log('debug', `Loop ID: ${loop} RunT: ${runtime}`)
+					if (self.getVariableValue('CurrentLpSet') === loop) {
+						self.setVariableValues({ CurrentLpRun: runtime })
+					}
+					self.setVariableValues({ [`Lp${loop}RunT`]: runtime })
+				}
+			}
+		},
+		// Sets the ramp time based on an inputted value
+		setLoopRampTimeByValue: {
+			name: 'Set Loop Ramp Time By Value',
+			options: [
+				{ // select to change all presets or just selected one
+					id: 'count',
+					type: 'dropdown',
+					label: 'All or Current Loop',
+					default: 1,
+					choices: [
+						{ id: 0, label: 'Select Loop' },
+						{ id: 1, label: 'Smart Loop' },
+						{ id: 2, label: 'All' },
+					],
+				},
+				{
+					type: 'dropdown',
+					id: 'lpid',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+					isVisible: (options) => options.count === 0,
+				},
+				{ // input value for the ramp time
+					id: 'setvalue',
+					type: 'textinput',
+					label: 'Value',
+					min: 1,
+		    	max: 250,
+					default: '10',
+					useVariables: true,
+				},
+			],
+			callback: async (rampTime) => {
+				const resolvedValue = await self.parseVariablesInString(rampTime.options.setvalue)
+				let loop
+				if (rampTime.options.count === 0) {
+					loop = rampTime.options.lpid
+				} else {
+					loop = self.getVariableValue('CurrentLpSet')
+				}
+			
+				let ramptime = Number(resolvedValue)
+				// checks to make sure inputted values are in an acceptiable range
+				if (ramptime > 600) ramptime = 600
+				else if (ramptime < 10) ramptime = 10
+
+				// === If count is 2, apply to all loops in SetLps ===
+				if (rampTime.options.count === 2) {
+					const setListRaw = self.getVariableValue('SetLps')
+					let setList = []
+			
+					try {
+						setList = JSON.parse(setListRaw)
+					} catch (e) {
+						self.log('debug', 'Invalid JSON in SetLps: ' + setListRaw)
+					}
+
+					for (const p of setList) {
+						if (self.getVariableValue(`Lp${p}RampT`) === ramptime) {
+							self.log('debug', `Loop ${p} already at Ramp: ${ramptime}, skipping.`)
+							continue
+						}
+						self.log('debug', `Loop ID: ${p} RampT: ${ramptime}`)
+						self.setVariableValues({ CurrentLpRamp: ramptime })
+						self.setVariableValues({ [`Lp${p}RampT`]: ramptime })
+
+						await new Promise((r) => setTimeout(r, 200))
+					}
+				}
+				// === Only one loop selected (manual or current set) ===
+				else {
+					if (self.getVariableValue(`Lp${loop}RampT`) === ramptime) {
+						self.log('debug', `Loop ${loop} already at Ramp: ${ramptime}, skipping.`)
+						return
+					}
+					self.log('debug', `Loop ID: ${loop} RampT: ${ramptime}`)
+					if (self.getVariableValue('CurrentLpSet') == loop) {
+						self.setVariableValues({ CurrentLpRamp: ramptime })
+					}
+					self.setVariableValues({ [`Lp${loop}RampT`]: ramptime })
+				}
+			}
+		},
+    // sets the selected loop run time
+		setLoopRunTime: {
+			name: 'Set Loop Run Time',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+					max: 250,
+					default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
+			],
+			callback: async (runTime) => {
+				var runtemp = self.getVariableValue('Lp'+runTime.options.id_loop+'RunT')
+
+				if (runTime.options.direction === 'amount') {
+					runtemp += runTime.options.amountValue
+				} else {
+					runtemp += runTime.options.direction
+				}
+
+				if (runtemp > 600) {
+					runtemp = 600;
+				} else if (runtemp < 10) {
+					runtemp = 10;
+				}
+
+				var varID = 'Lp'+runTime.options.id_loop+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+				self.setVariableValues({ [varID]: runtemp })
+			}
+		},
+		setLoopRampTime: {
+			name: 'Set Loop Ramp Time',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+					max: 250,
+					default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
+			],
+			callback: async (rampTime) => {
+				var ramptemp = self.getVariableValue('Lp'+rampTime.options.id_loop+'RampT')
+
+				if (rampTime.options.direction === 'amount') {
+					ramptemp += rampTime.options.amountValue
+				} else {
+					ramptemp += rampTime.options.direction
+				}
+
+				if (ramptemp > 250) {
+					ramptemp = 250;
+				} else if (ramptemp < 1) {
+					ramptemp = 1;
+				}
+
+				var varID = 'Lp'+rampTime.options.id_loop+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+				self.setVariableValues({ [varID]: ramptemp })
+			}
+		},
+		resetLoopRunTime: {
+			name: 'Reset Loop Run Time',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+			],
+			callback: async (resetLpRunTime) => {
+				var runtemp = 50;
+
+				var varID = 'Lp'+resetLpRunTime.options.id_loop+'RampT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+				self.setVariableValues({ [varID]: runtemp })
+			}
+		},
+		resetLoopRampTime: {
+			name: 'Reset Loop Ramp Time',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+			],
+			callback: async (resetLpRampTime) => {
+				var ramptemp = 50;
+
+				var varID = 'Lp'+resetLpRampTime.options.id_loop+'RampT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+				self.setVariableValues({ [varID]: ramptemp })
+			}
+		},
+		setLoopAPoint: {
+			name: 'Set Loop A Point',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+					max: 127,
+					default: 0,
+					isVisible: (options) => options.direction === 'pst',
+				},
+			],
+			callback: async (LpAPt) => {
+				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
+
+				if (dir.options.direction === 'pst') {
+					pointTemp = LpAPt.options.psetid
+				} else {
+					pointTemp += LpAPt.options.direction
+				}
+
+				if (pointTemp > 127) {
+					pointTemp = 127;
+				} else if (pointTemp < 0) {
+					pointTemp = 0;
+				}
+
+				var varID = 'Lp'+LpAPt.options.id_loop+'APoint'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
+				self.setVariableValues({ [varID]: pointTemp })
+			}
+		},
+		setLoopBPoint: {
+			name: 'Set Loop B Point',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+					max: 127,
+					default: 0,
+					isVisible: (options) => options.direction === 'pst',
+				},
+			],
+			callback: async (LpBPt) => {
+				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
+
+				if (dir.options.direction === 'pst') {
+					pointTemp = LpBPt.options.psetid
+				} else {
+					pointTemp += LpBPt.options.direction
+				}
+
+				if (pointTemp > 127) {
+					pointTemp = 127;
+				} else if (pointTemp < 0) {
+					pointTemp = 0;
+				}
+
+				var varID = 'Lp'+LpBPt.options.id_loop+'BPoint'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
+				self.setVariableValues({ [varID]: pointTemp })
+			}
+		},
+		recallAPoint: {
+			name: 'Recall Loop A Point',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+			],
+			callback: async (LpAPt) => {
+				var pointTemp = self.getVariableValue('Lp'+LpAPt.options.id_loop+'APoint');
+				self.sendEmotimoAPICommand('G20 P' + pointTemp)
+			}
+		},
+		recallBPoint: {
+			name: 'Recall Loop B Point',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+			],
+			callback: async (LpBPt) => {
+				var pointTemp = self.getVariableValue('Lp'+LpBPt.options.id_loop+'BPoint');
+				self.sendEmotimoAPICommand('G20 P' + pointTemp)
+			}
+		},
+		recallLoop: {
+			name: 'Recall Loop',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_loop',
+					label: 'Loop ID',
+					default: 0,
+					choices: LOOP_ID,
+				},
+			],
+			callback: async (LpRecall) => {
+				var tempA = self.getVariableValue('Lp'+LpRecall.options.id_loop+'APoint');
+				var tempB = self.getVariableValue('Lp'+LpRecall.options.id_loop+'BPoint');
+				var loopActive = self.getVariableValue('LpActive')
+
+				self.log('debug', 'Active Loop: ' + loopActive)
+				if (loopActive == -1) {
+					self.setVariableValues({ LpActive: LpRecall.options.id_loop })
+					self.setVariableValues({ LastPstID: -1})
+					self.checkFeedbacks("LoopStatus")
+
+					self.sendEmotimoAPICommand('G25 L' + LpRecall.options.id_loop + ' A' + tempA + ' B' + tempB + ' C500 D500')
+					setTimeout(() => self.sendEmotimoAPICommand('G24 L' + LpRecall.options.id_loop + ' N0'), 100);
+				} else {
+					self.setVariableValues({ LpActive: -1 })
+					self.sendEmotimoAPICommand('G24')
+				}
+			}
+		},
+
+		//SMARTS???
+		setLoopRunTimeSmart: {
+			name: 'Smart Set Loop Run Time',
+			options: [
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -250,
+		    	max: 250,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
+			],
+			callback: async (runTime) => {
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var id_loop = self.getVariableValue('CurrentLpSet')
+				var lpAPt = self.getVariableValue('CurrentLpA')
+				var lpBPt = self.getVariableValue('CurrentLpB')
+
+				if (runTime.options.direction === 'amount') {
+					runtemp += runTime.options.amountValue
+				} else {
+					runtemp += runTime.options.direction
+				}
+
+				if (runtemp > 600) {
+					runtemp = 600;
+				} else if (runtemp < 10) {
+					runtemp = 10;
+				}
+
+				self.log('debug', 'Loop ID: ' + id_loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Lp'+id_loop+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+        self.setVariableValues({ [varID]: runtemp })
+
+				self.setVariableValues({ CurrentLpRun: runtemp })
+
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+			}
+		},
+		setLoopRampTimeSmart: {
+			name: 'Smart Set Loop Ramp Time',
+			options: [
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'amount', label: 'Amount' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Amount ( - for less)',
+					id: 'amountValue',
+					min: -300,
+		    	max: 300,
+          default: 5,
+					isVisible: (options) => options.direction === 'amount',
+				},
+			],
+			callback: async (rampTime) => {
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
+				var lpAPt = self.getVariableValue('CurrentLpA')
+				var lpBPt = self.getVariableValue('CurrentLpB')
+
+				if (rampTime.options.direction === 'amount') {
+					ramptemp += rampTime.options.amountValue
+				} else {
+					ramptemp += rampTime.options.direction
+				}
+				
+				if (ramptemp > 300) {
+					ramptemp = 300;
+				} else if (ramptemp < 1) {
+					ramptemp = 1;
+				}
+
+				self.log('debug', 'Loop ID: ' + id_loop + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				var varID = 'Lp'+id_loop+'RampT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+        self.setVariableValues({ [varID]: ramptemp })
+
+				self.setVariableValues({ CurrentLpRamp: ramptemp })
+
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+			}
+		},
+		resetLoopRunTimeSmart: {
+			name: 'Reset Loop Run Time Smart',
+			options: [
+				
+			],
+			callback: async (resetLpRunTime) => {
+				var runtemp = 50;
+				var id_loop = self.getVariableValue('CurrentLpSet')
+
+				var varID = 'Lp'+id_loop+'RampT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+        self.setVariableValues({ [varID]: runtemp })
+
+				self.setVariableValues({ CurrentLpRun: runtemp })
+			}
+		},
+		resetLoopRampTimeSmart: {
+			name: 'Reset Loop Ramp Time Smart',
+			options: [
+				
+			],
+			callback: async (resetLpRampTime) => {
+				var ramptemp = 50;
+				var id_loop = self.getVariableValue('CurrentLpSet')
+
+				var varID = 'Lp'+id_loop+'RampT'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+        self.setVariableValues({ [varID]: ramptemp })
+
+				self.setVariableValues({ CurrentLpRamp: ramptemp })
+			}
+		},
+		setLoopAPointSmart: {
+			name: 'Smart Set Loop A Point',
+			options: [
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+		    	max: 127,
+					default: 0,
+					isVisible: (options) => options.direction === 'pst',
+				},
+			],
+			callback: async (dir) => {
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
+				var lpAPt = self.getVariableValue('CurrentLpA')
+				var lpBPt = self.getVariableValue('CurrentLpB')
+
+				if (dir.options.direction === 'pst') {
+					lpAPt = dir.options.psetid
+				} else {
+					lpAPt += dir.options.direction
+				}
+
+				if (lpAPt > 127) {
+					lpAPt = 127;
+				} else if (lpAPt < 0) {
+					lpAPt = 0;
+				}
+
+				self.log('debug', 'Loop ID: ' + id_loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
+
+				var varID = 'Lp'+id_loop+'APoint'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + lpAPt)
+        self.setVariableValues({ [varID]: lpAPt })
+				
+				self.setVariableValues({ CurrentLpA: lpAPt })
+
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+			}
+		},
+		setLoopBPointSmart: {
+			name: 'Smart Set Loop B Point',
+			options: [
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [
+						...DIRECTION_ID,
+						{ id: 'pst', label: 'Set Preset' }
+					]
+				},
+				{
+					type: 'number',
+					label: 'Preset ID',
+					id: 'psetid',
+					min: 0,
+		    	max: 127,
+					default: 0,
+					isVisible: (options) => options.direction === 'pst',
+				},
+			],
+			callback: async (dir) => {
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
+				var lpAPt = self.getVariableValue('CurrentLpA')
+				var lpBPt = self.getVariableValue('CurrentLpB')
+
+				if (dir.options.direction === 'pst') {
+					lpBPt = dir.options.psetid
+				} else {
+					lpBPt += dir.options.direction
+				}
+
+				if (lpBPt > 127) {
+					lpBPt = 127;
+				} else if (lpBPt < 0) {
+					lpBPt = 0;
+				}
+
+				self.log('debug', 'Loop ID: ' + id_loop + ' A Point: ' + lpAPt + ' B Point: ' + lpBPt)
+
+				var varID = 'Lp'+id_loop+'BPoint'
+        self.log('debug', 'Variable ID: ' + varID + ' to ' + lpBPt)
+        self.setVariableValues({ [varID]: lpBPt })
+				
+				self.setVariableValues({ CurrentLpB: lpBPt })
+
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+			}
+		},
+		recallAPointSmart: {
+			name: 'Recall Loop A Point Smart',
+			options: [
+				
+			],
+			callback: async (LpAPt) => {
+				var temp = self.getVariableValue('CurrentLpA')
+				self.sendEmotimoAPICommand('G20 P' + temp)
+			}
+		},
+		recallBPointSmart: {
+			name: 'Recall Loop B Point Smart',
+			options: [
+				
+			],
+			callback: async (LpAPt) => {
+				var temp = self.getVariableValue('CurrentLpB')
+				self.sendEmotimoAPICommand('G20 P' + temp)
+			}
+		},
+		setLoopID: {
+			name: 'Set Loop ID',
+			options: [
+				{
+					id: 'direction',
+					type: 'dropdown',
+					label: 'Direction',
+					default: 1,
+					choices: [...DIRECTION_ID,
+						{ id: 'goto', label: 'Goto Loop' }
+					]
+				},
+				{
+					id: 'gotoLoop',
+					type: 'number',
+					label: 'Goto Loop ID',
+					default: 0,
+					isVisible: (options) => options.direction === 'goto'
+				}
+			],
+			callback: async (loop) => {
+				var id_loop = self.getVariableValue('CurrentLpSet')
+
+				if (loop.options.direction === 'goto') {
+					id_loop = loop.options.gotoLoop
+				} else {
+					id_loop += loop.options.direction
+				}
+
+				if (id_loop > 7) {
+					id_loop = 7;
+				} else if (id_loop < 0) {
+					id_loop = 0;
+				}
+
+				var exists = false
+				for (const item of variableList) {
+					if (item.variableId === `Lp${id_loop}RunT`) {
+						exists = true
+						break
+					}
+				}
+
+				if (!exists) {
+					self.log('debug', `Loop ${id_loop} does not exist yet. Adding now`)
+
+					LOOP_ID.push({ id: id_loop, label: `Lp${id_loop}` })
+					let setLpsRaw = self.getVariableValue('SetLps')
+					let setlps = []
+
+					try {
+						setlps = JSON.parse(setLpsRaw) || []
+					} catch (e) {
+						setlps = []
+					}
+
+					// Only add if not already present
+					if (!setlps.includes(id_loop)) {
+						setlps.push(id_loop)
+						self.setVariableValues({ SetLps: JSON.stringify(setlps) })
+					}
+					self.updateActions()
+
+					variableList.push({ name: `Loop${id_loop}RunT`, variableId: `Lp${id_loop}RunT` })
+					variableList.push({ name: `Loop${id_loop}RampT`, variableId: `Lp${id_loop}RampT` })
+					variableList.push({ name: `Loop${id_loop}APoint`, variableId: `Lp${id_loop}APoint` })
+					variableList.push({ name: `Loop${id_loop}BPoint`, variableId: `Lp${id_loop}BPoint` })
+
+					self.setVariableDefinitions(variableList)
+
+					self.setVariableValues({ [`Lp${id_loop}RunT`]: 50 })
+					self.setVariableValues({ [`Lp${id_loop}RampT`]: 10 })
+					self.setVariableValues({ [`Lp${id_loop}APoint`]: 0 })
+					self.setVariableValues({ [`Lp${id_loop}BPoint`]: 0 })
+				}
+
+				var ramptemp = self.getVariableValue('Lp' + id_loop + 'RampT')
+				var runtemp = self.getVariableValue('Lp' + id_loop + 'RunT')
+				var lpApt = self.getVariableValue('Lp' + id_loop + 'APoint')
+				var lpBpt = self.getVariableValue('Lp' + id_loop + 'BPoint')
+
+				self.log('debug', 'Loop ID: ' + id_loop + ' A: ' + lpApt + ' B: ' + lpBpt + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
+
+				self.setVariableValues({ CurrentLpSet: id_loop })
+				self.setVariableValues({ CurrentLpRun: runtemp })
+				self.setVariableValues({ CurrentLpRamp: ramptemp })
+				self.setVariableValues({ CurrentLpA: lpApt })
+				self.setVariableValues({ CurrentLpB: lpBpt })
+
+				self.checkFeedbacks("SetLoopSmart")
+			}
+		},
+		saveLpSmart: {
+			name: 'Save Loop Smart',
+			options: [
+			
+			],
+			callback: async (setLoop) => {
+				var ramptemp = self.getVariableValue('CurrentLpRamp')
+				var runtemp = self.getVariableValue('CurrentLpRun')
+				var id_loop = self.getVariableValue('CurrentLpSet')
+				var lpAPt = self.getVariableValue('CurrentLpA')
+				var lpBPt = self.getVariableValue('CurrentLpB')
+
+				self.sendEmotimoAPICommand('G25 L' + id_loop + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+			},
+		},
+		recallLpSmart: {
+			name: 'Recall Loop Smart',
+			options: [
+				
+			],
+			callback: async (recallLoop) => {
+				var loop = self.getVariableValue('CurrentLpSet')
+				var loopActive = self.getVariableValue('LpActive')
+
+				if (loopActive == -1) {
+					self.setVariableValues({ LpActive: loop })
+					self.checkFeedbacks("LoopStatus")
+
+					self.sendEmotimoAPICommand('G24 L' + loop)
+				} else {
+					self.setVariableValues({ LpActive: -1 })
+					self.checkFeedbacks("LoopStatus")
+
+					self.sendEmotimoAPICommand('G24')
+				}
+			},
+		},
+
+//============================
+//  ***   OTHER STUFFS   ***
+//============================
+
+		gotoCoords: {
+			name: 'Goto Coordinates',
+			options: [
+				{
+					id: 'motorid',
+					type: 'dropdown',
+					label: 'Motor:',
+					default: 1,
+					choices: MOTOR_ID
+				},
+				{
+					id: 'coords',
+					type: 'textinput',
+					label: 'Value',
+					default: '0',
+					useVariables: true,
+				},
+				{
+					id: 'runtime',
+					type: 'textinput',
+					label: 'Run Time (Seconds)',
+					default: '5.0',
+					useVariables: true,
+				},
+				{
+					id: 'ramptime',
+					type: 'textinput',
+					label: 'Ramp Time (Seconds)',
+					default: '0.5',
+					useVariables: true,
+				},
+			],
+			callback: async (gotoCoords) => {
+				const resolvedCoordsValue = await self.parseVariablesInString(gotoCoords.options.coords)
+				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
+				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
+
+				self.sendEmotimoAPICommand('G11 M' + gotoCoords.options.motorid + ' P' + resolvedCoordsValue + ' T' + resolvedRunValue + ' A' + resolvedRampValue)
+			}
+		},
+		savePstCoords: {
+			name: 'Save Preset By Coordinates',
+			options: [
+				{
+					id: 'smart',
+					type:'dropdown',
+					label: 'Smart or select preset id',
+					choices: [
+						{ id: 0, label: 'Smart' },
+						{ id: 1, label: 'Preset ID' }
+					],
+					default: 0
+				},
+				{
+					id: 'preset',
+					type: 'number',
+					label: 'Preset ID',
+					default: 0,
+					min: 0, 
+					max: 127,
+					isVisible: (options) => options.smart === 1,
+				},
+				{
+					type: 'static-text',
+					label: 'info',
+					value: 'Leave blank to store current motor position'
+				},
+				{
+					id: 'pCoords',
+					type: 'textinput',
+					label: 'Pan Coords',
+					useVariables: true,
+				},
+				{
+					id: 'tCoords',
+					type: 'textinput',
+					label: 'Tilt Coords',
+					useVariables: true,
+				},
+				{
+					id: 'sCoords',
+					type: 'textinput',
+					label: 'Slide Coords',
+					useVariables: true,
+				},
+				{
+					id: 'zCoords',
+					type: 'textinput',
+					label: 'Zoom Coords',
+					useVariables: true,
+				},
+				{
+					id: 'runtime',
+					type: 'textinput',
+					label: 'Run Time',
+					default: '50',
+					min: 10,
+					max: 600,
+					useVariables: true,
+				},
+				{
+					id: 'ramptime',
+					type: 'textinput',
+					label: 'Ramp Time',
+					default: '10',
+					min:5,
+					max:300,
+					useVariables: true,
+				},
+			],
+			callback: async (savePstCoords) => {
+				if (savePstCoords.options.smart == 0) {
+					var preset = self.getVariableValue('CurrentPstSet')
+				} else {
+					var preset = savePstCoords.options.preset
+				}
+				// If a variable gets inputted, get that value, otherwise it takes the inputted value
+				var resolvedRunValue = await self.parseVariablesInString(savePstCoords.options.runtime)
+				var resolvedRampValue = await self.parseVariablesInString(savePstCoords.options.ramptime)
+				var resolvedPanValue = await self.parseVariablesInString(savePstCoords.options.pCoords)
+				var resolvedTiltValue = await self.parseVariablesInString(savePstCoords.options.tCoords)
+				var resolvedSlideValue = await self.parseVariablesInString(savePstCoords.options.sCoords)
+				var resolvedZoomValue = await self.parseVariablesInString(savePstCoords.options.zCoords)
+				
+				// find if the variables/preset already exists
+				var exists = false
+				for (const item of variableList) {
+					if (item.variableId === `Pst${preset}Stat`) {
+						exists = true
+						break
+					}
+				}
+				if (!exists) {
+					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
+
+					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
+					self.updateActions()
+
+					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
+					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
+					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
+					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
+					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
+					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
+
+					self.setVariableDefinitions(variableList)
+				}
+
+				// G21 needs all axis to have a value in order to store a custom location
+				var cmd = 'G21 P' + preset
+				var cmd2 = ' F0 I0 C0'
+
+				// Pan
+				if (!resolvedPanValue) { // if blank, get the current position instead
+					resolvedPanValue = self.getVariableValue('MPos')
+				}
+				cmd += ' X' + resolvedPanValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstPanPos: resolvedPanValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}PanPos`]: resolvedPanValue })
+				}
+				// Tilt
+				if (!resolvedTiltValue) { // if blank, get the current position instead
+					resolvedTiltValue = self.getVariableValue('MPos')
+				}
+				cmd += ' Y' + resolvedTiltValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstTiltPos: resolvedTiltValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}TiltPos`]: resolvedTiltValue })
+				}
+				// Slide
+				if (!resolvedSlideValue) { // if blank, get the current position instead
+					resolvedSlideValue = self.getVariableValue('MPos')
+				}
+				cmd += ' Z' + resolvedSlideValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstM3Pos: resolvedSlideValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}M3Pos`]: resolvedSlideValue })
+				}
+				//Zoom
+				if (!resolvedZoomValue) { // if blank, get the current position instead
+					resolvedZoomValue = self.getVariableValue('MPos')
+				}
+				cmd += ' W' + resolvedZoomValue
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstM4Pos: resolvedZoomValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}M4Pos`]: resolvedZoomValue })
+				}
+
+				if (!resolvedRunValue) { // if blank, set a default value instead
+					resolvedRunValue = 50
+				}
+				cmd2 += ' T' + resolvedRunValue / 10
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRun: resolvedRunValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}RunT`]: resolvedRunValue })
+				}
+
+				if (!resolvedRampValue) { // if blank, set a default value instead
+					resolvedRampValue = 10
+				}
+				cmd2 += ' A' + resolvedRampValue / 10
+				if (preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstSetRun: resolvedRampValue })
+				} else {
+					self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue })
+				}
+
+				self.setVariableValues({ [`Pst${preset}RunT`]: resolvedRunValue})
+				self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue})
+				self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
+
+				self.sendEmotimoAPICommand(cmd + cmd2)
+			}
+		},
+		setMotorPosition: {
+			name: 'Set Motor Position',
+			options: [
+				{
+					type: 'static-text',
+					label: 'WARNING',
+					value: 'Sets the internal motor position to a value, does NOT move the motor'
+				},
+				{
+					type: 'static-text',
+					label: 'info',
+					value: 'Leave blank to keep current value.'
+				},
+				{
+					id: 'pCoords',
+					type: 'textinput',
+					label: 'Pan Coords',
+					useVariables: true,
+				},
+				{
+					id: 'tCoords',
+					type: 'textinput',
+					label: 'Tilt Coords',
+					useVariables: true,
+				},
+				{
+					id: 'sCoords',
+					type: 'textinput',
+					label: 'Slide Coords',
+					useVariables: true,
+				},
+				{
+					id: 'zCoords',
+					type: 'textinput',
+					label: 'Zoom Coords',
+					useVariables: true,
+				},
+			],
+			callback: async (setMotorPos) => {
+				const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+				// If a variable gets inputted, get that value, otherwise it takes the inputted value
+				var resolvedPanValue = await self.parseVariablesInString(setMotorPos.options.pCoords)
+				var resolvedTiltValue = await self.parseVariablesInString(setMotorPos.options.tCoords)
+				var resolvedSlideValue = await self.parseVariablesInString(setMotorPos.options.sCoords)
+				var resolvedZoomValue = await self.parseVariablesInString(setMotorPos.options.zCoords)
+				let sendBuf
+
+				// Pan
+				if (resolvedPanValue) { // if not blank, do things
+					self.log('debug', `Setting motor PAN to position ${resolvedPanValue}`)
+					self.setVariableValues({ 'PPos': resolvedPanValue })
+					self.sendEmotimoAPICommand(`G200 M1 P${resolvedPanValue}`)
+					await wait(200) // waits 200ms before continuing
+				}
+				// Tilt
+				if (resolvedTiltValue) { // if not blank, do things
+					self.log('debug', `Setting motor Tilt to position ${resolvedTiltValue}`)
+					self.setVariableValues({ 'TPos': resolvedTiltValue })
+					self.sendEmotimoAPICommand(`G200 M2 P${resolvedTiltValue}`)
+					await wait(200) // waits 200ms before continuing
+				}
+				// Slide
+				if (resolvedSlideValue) { // if not blank, do things
+					self.log('debug', `Setting motor M3/Slide to position ${resolvedSlideValue}`)
+					self.setVariableValues({ 'SPos': resolvedSlideValue })
+					self.sendEmotimoAPICommand(`G200 M3 P${resolvedSlideValue}`)
+					await wait(200) // waits 200ms before continuing
+				}
+				//Zoom
+				if (resolvedZoomValue) { // if not blank, do things
+					self.log('debug', `Setting motor M4/Zoom to position ${resolvedZoomValue}`)
+					self.setVariableValues({ 'MPos': resolvedZoomValue })
+					self.sendEmotimoAPICommand(`G200 M4 P${resolvedZoomValue}`)
+					await wait(200) // waits 200ms before continuing
+				}
+			}
+		},
 		virtualInput: {
 			name: 'Virtual Button Input',
 			options: [
@@ -3214,14 +2948,6 @@ module.exports = function (self) {
 							self.socket.send(sendBuf)
 						} else {
 							self.log('debug', 'Socket not connected :(')
-						}
-					}
-
-					if (self.config.prot == 'udp') {
-						if (self.udp !== undefined) {
-							self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
-
-							self.udp.send(sendBuf)
 						}
 					}
 				}

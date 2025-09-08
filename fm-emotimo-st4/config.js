@@ -1,3 +1,5 @@
+const { Regex } = require('@companion-module/base')
+
 const { MODELS } = require('./models.js')
 
 module.exports = {

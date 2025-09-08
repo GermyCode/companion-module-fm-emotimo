@@ -200,27 +200,15 @@ class eMotimoModuleInstance extends InstanceBase {
 	sendEmotimoAPICommand = function (str) {
 		var self = this;
 
-		/*
-		* create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
-		* sending a string assumes 'utf8' encoding
-		* which then escapes character values over 0x7F
-		* and destroys the 'binary' content
-		*/
-		const sendBuf = Buffer.from(str + '\n', 'latin1')
-
-		self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+		const sendBuf = Buffer.from(str, 'latin1')
 
 		if (self.config.prot == 'tcp') {
+			self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+
 			if (self.socket !== undefined && self.socket.isConnected) {
 				self.socket.send(sendBuf)
 			} else {
 				self.log('debug', 'Socket not connected :(')
-			}
-		} else if (self.config.prot == 'udp') {
-			if (self.udp !== undefined) {
-				self.udp.send(sendBuf)
-			} else {
-				self.log('debug', 'UDP brokie :(')
 			}
 		}
 	};
@@ -571,9 +559,9 @@ class eMotimoModuleInstance extends InstanceBase {
 
 			this.log('debug', "Heartbeat Initialized");
 			this.heartbeatInterval = setInterval(() => {
+				var cmd = 'G500\n';
 				// var cmd = '\x45\x4D\x07\x00\x00\xC1\xA4';
-				this.sendEmotimoAPICommand('G500');
-				setTimeout(() => this.sendEmotimoAPICommand('G999'), 100);
+				this.sendEmotimoAPICommand(cmd);
 			}, this.config.interval)
 
 		} else {
@@ -695,6 +683,11 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.log('debug', 'Finished fetching all presets')
 				return
 			}
+
+			const cmd = `G752 P${i}\n`
+			const sendBuf = Buffer.from(cmd, 'latin1')
+			this.log('debug', `Sending: ${cmd.trim()}`)
+	
 			if (this.socket && this.socket.isConnected) {
 				this.socket.once('data', (data) => {
 					const str = data.toString().trim()
@@ -725,12 +718,12 @@ class eMotimoModuleInstance extends InstanceBase {
 					i++
 					setTimeout(sendNext, 100)
 				})
-				this.log('debug', `Sending: G752 P${i}`)
-				this.sendEmotimoAPICommand(`G752 P${i}`)
+				this.socket.send(sendBuf)
 			} else {
 				this.log('warn', 'Socket not connected')
 			}
 		}
+
 		sendNext()
 	}
 }

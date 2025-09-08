@@ -42,4 +42,36 @@ Send us an email: info@emotimo.com
 
 Want to see how far you can push this module:
 
-Check out the [eMotimo API](https://support.emotimo.com/hc/en-us/articles/360007015111-The-eMotimo-ST4-API) and this modules [Repository](https://github.com/bitfocus/companion-module-emotimo-st4) on github
+Check out the [eMotimo API](https://support.emotimo.com/hc/en-us/articles/360007015111-The-eMotimo-ST4-API) and this modules [Repository](https://github.com/bitfocus/companion-module-emotimo-st4) and the [Modified](https://github.com/GermyCode/companion-module-fm-emotimo) on github
+
+
+# Updates
+### V1.1.3
+* When setting up loops it used to send a command everytime a loop action happened, like setting the A or B points. Now it only sends one command on loop recall with the info sotred in this modules variables. 
+  * Reason: 
+    1. it just sends somany commands when setting up loops, 
+    2. You cant recall loop info from the emotimo like you can with presets, so theres no reason to always keep it updated when making loops, instead only update it once on recall
+
+### V1.1.1
+* Modern connection system with merged smart actions from V1.1.1
+
+### V1.1.1
+* Legacy connection system
+- Merged smart and normal actions into one action. There is now a dropdown to select smart or preset in the action. 
+  * Reason: There were lots of actions and it could be confusing on which to use, also added tooltips that might help
+
+### V1.1.0
+* If it disconnects dont keep piling up requests, so when it disconnects it doesnt flood the emotimo and stall it
+* removed G900 heartbeat keep-alive command as its not necessary
+
+### V1.0.4
+* added G900 heartbeat keep-alive command
+* added the set run/ramp time by value action for loops
+
+### V1.0.3
+
+### V1.0.2
+
+### V1.0.1
+
+### V1.0.0

@@ -39,13 +39,6 @@ module.exports = {
 				],
 			},
 			{
-				type: 'static-text',
-				id: 'modelInfo',
-				width: 12,
-				label: 'Camera Model',
-				value: 'Please Select the camera model.',
-			},
-			{
 				type: 'dropdown',
 				id: 'model',
 				label: 'Select Your Camera Model',
@@ -56,17 +49,33 @@ module.exports = {
 			},
 			{
 				type: 'static-text',
+				id: 'dummy1',
+				width: 12,
+				label: ' ',
+				value: ' ',
+			},
+			{
+				type: 'checkbox',
+				id: 'fetch',
+				label: 'Gets Presets, Motor performance, ect. on startup',
+				width: 10,
+				default: true,
+			},
+			{
+				type: 'static-text',
 				id: 'startupPstAmountInfo',
 				width: 12,
 				label: 'Startup Preset Fetch',
-				value: 'Fetches the first X presets on startup. If the positions are all 0, then it doesn\'t store it.',
+				value: 'Fetches the first X presets on startup. If the positions are all 0, then it doesn\'t store it. Set to 0 to not request presets.',
+				isVisible: (config) => !!config.fetch
 			},
 			{
 				type: 'textinput',
 				id: 'startupPstAmount',
-				label: 'Fetch amount',
-				width: 3,
+				label: 'Preset Fetch amount',
+				width: 4,
 				default: 30,
+				isVisible: (config) => !!config.fetch
 			},
 			{
 				type: 'static-text',
@@ -74,7 +83,7 @@ module.exports = {
 				width: 12,
 				label: 'Update Interval',
 				value:
-					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable. Recomended 2000ms to get acurate positions.',
+					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable. Recomended 2000ms to get acurate positions without overloading.',
 			},
 			{
 				type: 'textinput',

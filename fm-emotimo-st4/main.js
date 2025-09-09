@@ -68,7 +68,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.initPresets()
 
 		// Give socket time to establish
-		setTimeout(() => this.fetchAllPresets(), 1000)
+		if (config.fetch) setTimeout(() => this.fetchStartup(), 1000);
 	}
 
 	updateActions() {
@@ -104,7 +104,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		if (this.socket !== undefined && this.socket.isConnected) {
 			this.socket.send(sendBuf)
 		} else {
-			this.log('warn', 'Socket not connected :(')
+			this.log('error', 'Module: Socket not connected :(')
 		}
 	};
 
@@ -135,14 +135,14 @@ class eMotimoModuleInstance extends InstanceBase {
 
 		this.socket.on('error', (err) => {
 			this.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-			this.log('error', 'Network error: ' + err.message)
+			this.log('error', 'Module: Network error: ' + err.message)
 			// restart the whole module
 			this._onDead('Network error: ' + err.message)
 		})
 
 		this.socket.on('close', (res) => {
 			this.updateStatus(InstanceStatus.ConnectionFailure, res.message)
-			this.log('error', 'Network error: ' + res.message)
+			this.log('error', 'Module: Network error: ' + res.message)
 			// restart the whole module
 			this._onDead('Connection closed by emotimo: ' + res.message)
 		})
@@ -181,7 +181,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		// initialize new heartbeat
 		this.heartbeatInterval = setInterval(() => {
 			if (!this.socket?.isConnected) { // if the socket is not connected
-				this.log('warn', 'Socket not connected for heartbeat :(')
+				this.log('error', 'Module: Socket not connected for heartbeat :(')
 				return;
 			}
 			if (this.retryCount > 5) {
@@ -219,7 +219,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		if (!this._backoff) this._backoff = 2000 // starts at 2s then doubles every try
 		const delay = this._backoff
 		this._backoff = Math.min(this._backoff * 2, 10000) // cap at 10s
-		this.log('warn', `Reconnecting (reason: ${reason}) in ${delay}ms`)
+		this.log('error', `Reconnecting (reason: ${reason}) in ${delay}ms`)
 		this._reconnectTimer = setTimeout(() => {
 			this._reconnectTimer = null
 			this.init_tcp()
@@ -227,7 +227,7 @@ class eMotimoModuleInstance extends InstanceBase {
 	}
 
 	_onDead(origin = 'unknown') {
-		this.log('warn', `Connection marked dead via ${origin}`)
+		this.log('error', `Connection marked dead via ${origin}`)
 		this._cleanupSocket()
 		this._scheduleReconnect(origin)
 	}
@@ -314,7 +314,7 @@ class eMotimoModuleInstance extends InstanceBase {
 					this.setVariableValues({ PPos: Number(data[1])})
 					this.setVariableValues({ TPos: Number(data[2])})
 					this.setVariableValues({ SPos: Number(data[3])})
-					this.setVariableValues({ MPos: Number(data[4])})
+					this.setVariableValues({ ZPos: Number(data[4])})
 					this.setVariableValues({ FPos: Number(data[5])})
 					this.setVariableValues({ IPos: Number(data[6])})
 					this.setVariableValues({ ZPos: Number(data[7])})
@@ -345,7 +345,7 @@ class eMotimoModuleInstance extends InstanceBase {
 						var panpos = this.getVariableValue('PPos')
 						var tiltpos = this.getVariableValue('TPos')
 						var m3pos = this.getVariableValue('SPos')
-						var m4pos = this.getVariableValue('MPos')
+						var m4pos = this.getVariableValue('ZPos')
 
 						this.setVariableValues({ [`Pst${presetId}PanPos`]: panpos })
 						this.setVariableValues({ [`Pst${presetId}TiltPos`]: tiltpos })
@@ -383,11 +383,11 @@ class eMotimoModuleInstance extends InstanceBase {
 						this.setVariableValues({ TiltStopA: 0 })
 						this.setVariableValues({ TiltStopB: 0 })
 					} else if (data == 3) {
-						this.setVariableValues({ M3StopA: 0 })
-						this.setVariableValues({ M3StopB: 0 })
+						this.setVariableValues({ 'M3-SlideStopA': 0 })
+						this.setVariableValues({ 'M3-SlideStopB': 0 })
 					} else if (data == 4) {
-						this.setVariableValues({ M4StopA: 0 })
-						this.setVariableValues({ M4StopB: 0 })
+						this.setVariableValues({ 'M4-ZoomStopA': 0 })
+						this.setVariableValues({ 'M4-ZoomStopB': 0 })
 					} else if (data == 5) {
 						this.setVariableValues({ TNFocusStopA: 0 })
 						this.setVariableValues({ TNFocusStopB: 0 })
@@ -422,9 +422,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopA: 1 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopA: 1 })
+							this.setVariableValues({ 'M3-SlideStopA': 1 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopA: 1 })
+							this.setVariableValues({ 'M4-ZoomStopA': 1 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopA: 1 })
 						} else if (motor == 6) {
@@ -442,9 +442,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopA: 0 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopA: 0 })
+							this.setVariableValues({ 'M3-SlideStopA': 0 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopA: 0 })
+							this.setVariableValues({ 'M4-ZoomStopA': 0 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopA: 0 })
 						} else if (motor == 6) {
@@ -471,9 +471,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopB: 1 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopB: 1 })
+							this.setVariableValues({ 'M3-SlideStopB': 1 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopB: 1 })
+							this.setVariableValues({ 'M4-ZoomStopB': 1 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopB: 1 })
 						} else if (motor == 6) {
@@ -491,9 +491,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopB: 0 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopB: 0 })
+							this.setVariableValues({ 'M3-SlideStopB': 0 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopB: 0 })
+							this.setVariableValues({ 'M4-ZoomStopB': 0 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopB: 0 })
 						} else if (motor == 6) {
@@ -514,10 +514,10 @@ class eMotimoModuleInstance extends InstanceBase {
 					this.setVariableValues({ PanStopB: 0 })
 					this.setVariableValues({ TiltStopA: 0 })
 					this.setVariableValues({ TiltStopB: 0 })
-					this.setVariableValues({ M3StopA: 0 })
-					this.setVariableValues({ M3StopB: 0 })
-					this.setVariableValues({ M4StopA: 0 })
-					this.setVariableValues({ M4StopB: 0 })
+					this.setVariableValues({ 'M3-SlideStopA': 0 })
+					this.setVariableValues({ 'M3-SlideStopB': 0 })
+					this.setVariableValues({ 'M4-ZoomStopA': 0 })
+					this.setVariableValues({ 'M4-ZoomStopB': 0 })
 					this.setVariableValues({ TNFocusStopA: 0 })
 					this.setVariableValues({ TNFocusStopB: 0 })
 					this.setVariableValues({ TNIrisStopA: 0 })
@@ -555,7 +555,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ PPos: 0 })
 		this.setVariableValues({ TPos: 0 })
 		this.setVariableValues({ SPos: 0 })
-		this.setVariableValues({ MPos: 0 })
+		this.setVariableValues({ ZPos: 0 })
 		this.setVariableValues({ FPos: 5000 })
 		this.setVariableValues({ IPos: 5000 })
 		this.setVariableValues({ ZPos: 5000 })
@@ -568,15 +568,15 @@ class eMotimoModuleInstance extends InstanceBase {
 			this.setVariableValues({ PStep: 1000 })
 		}
 		this.setVariableValues({ SStep: 1000 })
-		this.setVariableValues({ MStep: 1000 })
+		this.setVariableValues({ ZStep: 1000 })
 		this.setVariableValues({ FStep: 50 })
 		this.setVariableValues({ IStep: 50 })
 		this.setVariableValues({ ZStep: 50 })
 		this.setVariableValues({ RStep: 1 })
 		this.setVariableValues({ PanSpeedLimit: 100 })
 		this.setVariableValues({ TiltSpeedLimit: 100 })
-		this.setVariableValues({ M3SpeedLimit: 100 })
-		this.setVariableValues({ M4SpeedLimit: 100 })
+		this.setVariableValues({ 'M3-SlideSpeedLimit': 100 })
+		this.setVariableValues({ 'M4-ZoomSpeedLimit': 100 })
 		this.setVariableValues({ TN1SpeedLimit: 50 })
 		this.setVariableValues({ TN2SpeedLimit: 50 })
 		this.setVariableValues({ TN3SpeedLimit: 50 })
@@ -584,8 +584,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ FocusSpeedLimit: 100 })
 		this.setVariableValues({ PanCruiseSpeed: 0 })
 		this.setVariableValues({ TiltCruiseSpeed: 0 })
-		this.setVariableValues({ M3CruiseSpeed: 0 })
-		this.setVariableValues({ M4CruiseSpeed: 0 })
+		this.setVariableValues({ 'M3-SlideCruiseSpeed': 0 })
+		this.setVariableValues({ 'M4-ZoomCruiseSpeed': 0 })
 		this.setVariableValues({ TN1CruiseSpeed: 0 })
 		this.setVariableValues({ TN2CruiseSpeed: 0 })
 		this.setVariableValues({ TN3CruiseSpeed: 0 })
@@ -603,10 +603,10 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ PanStopB: 0 })
 		this.setVariableValues({ TiltStopA: 0 })
 		this.setVariableValues({ TiltStopB: 0 })
-		this.setVariableValues({ M3StopA: 0 })
-		this.setVariableValues({ M3StopB: 0 })
-		this.setVariableValues({ M4StopA: 0 })
-		this.setVariableValues({ M4StopB: 0 })
+		this.setVariableValues({ 'M3-SlideStopA': 0 })
+		this.setVariableValues({ 'M3-SlideStopB': 0 })
+		this.setVariableValues({ 'M4-ZoomStopA': 0 })
+		this.setVariableValues({ 'M4-ZoomStopB': 0 })
 		this.setVariableValues({ TNFocusStopA: 0 })
 		this.setVariableValues({ TNFocusStopB: 0 })
 		this.setVariableValues({ TNIrisStopA: 0 })
@@ -632,8 +632,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ CurrentMtrSpeed: 100 })
 		this.setVariableValues({ PanInversion: 1 })
 		this.setVariableValues({ TiltInversion: 1 })
-		this.setVariableValues({ M3Inversion: 1 })
-		this.setVariableValues({ M4Inversion: 1 })
+		this.setVariableValues({ 'M3-SlideInversion': 1 })
+		this.setVariableValues({ 'M4-ZoomInversion': 1 })
 		this.setVariableValues({ TN1Inversion: 1 })
 		this.setVariableValues({ TN2Inversion: 1 })
 		this.setVariableValues({ TN3Inversion: 1 })
@@ -645,7 +645,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ SetLps: "[0]" })
 	}
 
-	fetchAllPresets() {
+	fetchStartup() {
 		let i = 0
 		this.fetchPstsStat = true
 
@@ -655,7 +655,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				return
 			}
 			if (!this.socket && !this.socket?.isConnected) {
-				this.log('warn', 'Socket not connected');
+				this.log('error', 'Module: Socket not connected');
 				return;
 			}
 			this.socket.once('data', (data) => {
@@ -691,6 +691,10 @@ class eMotimoModuleInstance extends InstanceBase {
 		}
 		sendNext()
 		this.fetchPstsStat = false
+
+		// TO-DO
+		// G101 -> get motor performance
+		// G215 & G216 -> get stop A get stop B
 	}
 }
 

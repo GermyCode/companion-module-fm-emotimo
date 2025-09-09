@@ -1,5 +1,11 @@
 ![eMotimo Logo](logo.png)
 
+# Important!
+For labels to line up, Put the slide motor in M3, and the zoom motor in M4.
+If you use a focus motor instead, M4 should work for that instead of zoom.
+I Have not tested with it on focus, use at your own risk!
+
+
 ## Functions
 **Smart means it applies to the selected attribute**
 * Run time // How fast the preset runs

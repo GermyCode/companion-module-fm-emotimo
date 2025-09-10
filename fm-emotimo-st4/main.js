@@ -546,12 +546,6 @@ class eMotimoModuleInstance extends InstanceBase {
 	}
 
 	init_emotimo_variables() {
-		// this.setVariableDefinitions([
-		// 	{ name: 'FocusPosition', variableId: 'FPos' },
-		// 	{ name: 'IrisPosition', variableId: 'IPos' },
-		// 	{ name: 'ZoomPosition', variableId: 'ZPos' },
-		// ])
-
 		this.setVariableValues({ PPos: 0 })
 		this.setVariableValues({ TPos: 0 })
 		this.setVariableValues({ SPos: 0 })

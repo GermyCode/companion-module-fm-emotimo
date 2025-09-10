@@ -1378,105 +1378,6 @@ module.exports = function (self) {
 //  ***   LOOP STUFFS   ***
 //============================
 
-		saveLp: {
-			name: 'Save Loop',
-			options: [
-				{
-					type: 'static-text',
-					label: 'info',
-					value: 'Sends loop settings to the emotimo. This isnt necessary since it sends the settings anyways when a loop is recalled. This is just a sanity check action.'
-				},
-				{
-					type: 'dropdown',
-					id: 'settype',
-					label: 'Set Type',
-					default: 'smart',
-					choices: CHOICES_SET_TYPE,
-					tooltip: 'Smart: The current preset/loop selected\nID: Select a specific loop ID to change',
-				},
-				{
-					type: 'dropdown',
-					id: 'id',
-					label: 'ID',
-					default: 0,
-					choices: LOOP_ID,
-					isVisible: (options) => options.settype === 'id',
-					tooltip: 'If you dont see a specific loop ID, make sure it is setup first',
-				},
-			],
-			callback: async (data) => {
-				self.log('warn', 'Action: saveLp')
-				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
-					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
-					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
-					var lpAPt = self.getVariableValue('Lp'+preset+'APoint');
-					var lpBPt = self.getVariableValue('Lp'+preset+'BPoint');
-				} else {
-					var preset = self.getVariableValue('CurrentLpSet')
-					var ramptemp = self.getVariableValue('CurrentLpRamp')
-					var runtemp = self.getVariableValue('CurrentLpRun')
-					var lpAPt = self.getVariableValue('CurrentLpA')
-					var lpBPt = self.getVariableValue('CurrentLpB')
-				}
-				self.sendEmotimoAPICommand('G25 L' + preset + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-			},
-		},
-		recallLoop: {
-			name: 'Recall Loop',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'settype',
-					label: 'Set Type',
-					default: 'smart',
-					choices: CHOICES_SET_TYPE,
-					tooltip: 'Smart: The current preset/loop selected\nID: Select a specific loop ID to change',
-				},
-				{
-					type: 'dropdown',
-					id: 'id',
-					label: 'ID',
-					default: 0,
-					choices: LOOP_ID,
-					isVisible: (options) => options.settype === 'id',
-					tooltip: 'If you dont see a specific loop ID, make sure it is setup first',
-				},
-			],
-			callback: async (data) => {
-				self.log('warn', 'Action: recallLoop')
-				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
-					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
-					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
-					var tempA = self.getVariableValue('Lp'+preset+'APoint');
-					var tempB = self.getVariableValue('Lp'+preset+'BPoint');
-				} else {
-					var preset = self.getVariableValue('CurrentLpSet')
-					var ramptemp = self.getVariableValue('CurrentLpRamp')
-					var runtemp = self.getVariableValue('CurrentLpRun')
-					var tempA = self.getVariableValue('CurrentLpA')
-					var tempB = self.getVariableValue('CurrentLpB')
-				}
-
-				var loopActive = self.getVariableValue('LpActive')
-
-				self.log('debug', 'Active Loop: ' + loopActive)
-				if (loopActive == -1) {
-					self.setVariableValues({ LpActive: preset })
-					self.setVariableValues({ LastPstID: -1})
-					self.checkFeedbacks("LoopStatus")
-
-					self.sendEmotimoAPICommand('G25 L' + preset + ' A' + tempA + ' B' + tempB + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-					setTimeout(() => self.sendEmotimoAPICommand('G24 L' + preset + ' N0'), 100);
-				} else {
-					self.setVariableValues({ LpActive: -1 })
-					self.checkFeedbacks("LoopStatus")
-					self.sendEmotimoAPICommand('G24')
-				}
-			}
-		},
-
 		setLoopID: {
 			name: 'Set Loop ID',
 			options: [
@@ -1568,102 +1469,6 @@ module.exports = function (self) {
 				self.setVariableValues({ CurrentLpB: lpBpt })
 
 				self.checkFeedbacks("SetLoopSmart")
-			}
-		},
-
-		setLoopRunTime: {
-			name: 'Set Loop Run Time',
-			options: [...LP_OPTIONS],
-			callback: async (data) => {
-				self.log('warn', 'Action: setLoopRunTime')
-				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
-					var runtemp = self.getVariableValue('Lp'+preset+'RunT')
-				} else {
-					var preset = self.getVariableValue('CurrentLpSet')
-					var runtemp = self.getVariableValue('CurrentLpRun')
-				}
-
-				if (data.options.setopt === 'set') {
-					runtemp = data.options.setvalue
-				} else if (data.options.setopt === 'up') {
-					// if current runtemp is 0, if they increase by 5 itll still be set to 0
-					// since 5 < 10, so if thats the case then set it to 10, else default behavior
-					runtemp += data.options.ammount;
-					if (runtemp < 10) {
-						runtemp = 10;
-					}
-				} else if (data.options.setopt === 'down') {
-					// if runtemp is 10 and they decrease, set it to 0, else default behavior
-					runtemp -= data.options.ammount
-					if (runtemp < 10) {
-						runtemp = 0;
-					}
-				} else if (data.options.setopt === 'reset') {
-					runtemp = 50
-				}
-
-				// basic limiting runtemp
-				// if over the limit, set to limit
-				// else if they SET the runtemp to say 3, which is invalid, default to 0
-				if (runtemp > 600) { runtemp = 600 }
-				else if (runtemp < 10 && runtemp > 0) { runtemp = 0 }
-
-				var varID = 'Lp'+preset+'RunT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
-				self.setVariableValues({ [varID]: runtemp })
-
-				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
-					self.setVariableValues({ CurrentLpRun: runtemp })
-				}
-			}
-		},
-		setLoopRampTime: {
-			name: 'Set Loop Ramp Time',
-			options: [...LP_OPTIONS],
-			callback: async (data) => {
-				self.log('warn', 'Action: setLoopRampTime')
-				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
-					var ramptemp = self.getVariableValue('Lp'+preset+'RampT')
-				} else {
-					var preset = self.getVariableValue('CurrentLpSet')
-					var ramptemp = self.getVariableValue('CurrentLpRamp')
-				}
-
-				if (data.options.setopt === 'set') {
-					ramptemp = data.options.setvalue
-				} else if (data.options.setopt === 'up') {
-					// if current ramptemp is 0, if they increase by 5 itll still be set to 0
-					// since 5 < 10, so if thats the case then set it to 10, else default behavior
-					if (ramptemp < 10) {
-						ramptemp = 10;
-					} else {
-						ramptemp += data.options.ammount;
-					}
-				} else if (data.options.setopt === 'down') {
-					// if ramptemp is 10 and they decrease, set it to 0, else default behavior
-					ramptemp -= data.options.ammount
-					if (ramptemp < 10) {
-						ramptemp = 0;
-					}
-				} else if (data.options.setopt === 'reset') {
-					ramptemp = 10
-				}
-
-				// basic limiting ramptemp
-				// if over the limit, set to limit
-				// else if they SET the ramptemp to say 3, which is invalid, default to 0
-				if (ramptemp > 600) { ramptemp = 600 }
-				else if (ramptemp < 10 && ramptemp > 0) { ramptemp = 0 }
-
-				var varID = 'Lp'+preset+'RampT'
-				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
-				self.setVariableValues({ [varID]: ramptemp })
-
-				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
-					self.setVariableValues({ CurrentLpRamp: ramptemp })
-				}
 			}
 		},
 
@@ -1806,6 +1611,200 @@ module.exports = function (self) {
 
 				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpB: pointTemp })
+				}
+			}
+		},
+
+		setLoopRunTime: {
+			name: 'Set Loop Run Time',
+			options: [...LP_OPTIONS],
+			callback: async (data) => {
+				self.log('warn', 'Action: setLoopRunTime')
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
+					var runtemp = self.getVariableValue('Lp'+preset+'RunT')
+				} else {
+					var preset = self.getVariableValue('CurrentLpSet')
+					var runtemp = self.getVariableValue('CurrentLpRun')
+				}
+
+				if (data.options.setopt === 'set') {
+					runtemp = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
+					// if current runtemp is 0, if they increase by 5 itll still be set to 0
+					// since 5 < 10, so if thats the case then set it to 10, else default behavior
+					runtemp += data.options.ammount;
+					if (runtemp < 10) {
+						runtemp = 10;
+					}
+				} else if (data.options.setopt === 'down') {
+					// if runtemp is 10 and they decrease, set it to 0, else default behavior
+					runtemp -= data.options.ammount
+					if (runtemp < 10) {
+						runtemp = 0;
+					}
+				} else if (data.options.setopt === 'reset') {
+					runtemp = 50
+				}
+
+				// basic limiting runtemp
+				// if over the limit, set to limit
+				// else if they SET the runtemp to say 3, which is invalid, default to 0
+				if (runtemp > 600) { runtemp = 600 }
+				else if (runtemp < 10 && runtemp > 0) { runtemp = 0 }
+
+				var varID = 'Lp'+preset+'RunT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
+				self.setVariableValues({ [varID]: runtemp })
+
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+					self.setVariableValues({ CurrentLpRun: runtemp })
+				}
+			}
+		},
+		setLoopRampTime: {
+			name: 'Set Loop Ramp Time',
+			options: [...LP_OPTIONS],
+			callback: async (data) => {
+				self.log('warn', 'Action: setLoopRampTime')
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
+					var ramptemp = self.getVariableValue('Lp'+preset+'RampT')
+				} else {
+					var preset = self.getVariableValue('CurrentLpSet')
+					var ramptemp = self.getVariableValue('CurrentLpRamp')
+				}
+
+				if (data.options.setopt === 'set') {
+					ramptemp = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
+					// if current ramptemp is 0, if they increase by 5 itll still be set to 0
+					// since 5 < 10, so if thats the case then set it to 10, else default behavior
+					ramptemp += data.options.ammount;
+					if (ramptemp < 10) {
+						ramptemp = 10;
+					}
+				} else if (data.options.setopt === 'down') {
+					// if ramptemp is 10 and they decrease, set it to 0, else default behavior
+					ramptemp -= data.options.ammount
+					if (ramptemp < 10) {
+						ramptemp = 0;
+					}
+				} else if (data.options.setopt === 'reset') {
+					ramptemp = 10
+				}
+
+				// basic limiting ramptemp
+				// if over the limit, set to limit
+				// else if they SET the ramptemp to say 3, which is invalid, default to 0
+				if (ramptemp > 600) { ramptemp = 600 }
+				else if (ramptemp < 10 && ramptemp > 0) { ramptemp = 0 }
+
+				var varID = 'Lp'+preset+'RampT'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
+				self.setVariableValues({ [varID]: ramptemp })
+
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+					self.setVariableValues({ CurrentLpRamp: ramptemp })
+				}
+			}
+		},
+
+		saveLp: {
+			name: 'Save Loop',
+			options: [
+				{
+					type: 'static-text',
+					label: 'info',
+					value: 'Sends loop settings to the emotimo. This isnt necessary since it sends the settings anyways when a loop is recalled. This is just a sanity check action.'
+				},
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset/loop selected\nID: Select a specific loop ID to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id',
+					label: 'ID',
+					default: 0,
+					choices: LOOP_ID,
+					isVisible: (options) => options.settype === 'id',
+					tooltip: 'If you dont see a specific loop ID, make sure it is setup first',
+				},
+			],
+			callback: async (data) => {
+				self.log('warn', 'Action: saveLp')
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
+					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
+					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
+					var lpAPt = self.getVariableValue('Lp'+preset+'APoint');
+					var lpBPt = self.getVariableValue('Lp'+preset+'BPoint');
+				} else {
+					var preset = self.getVariableValue('CurrentLpSet')
+					var ramptemp = self.getVariableValue('CurrentLpRamp')
+					var runtemp = self.getVariableValue('CurrentLpRun')
+					var lpAPt = self.getVariableValue('CurrentLpA')
+					var lpBPt = self.getVariableValue('CurrentLpB')
+				}
+				self.sendEmotimoAPICommand('G25 L' + preset + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+			},
+		},
+		recallLoop: {
+			name: 'Recall Loop',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current preset/loop selected\nID: Select a specific loop ID to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id',
+					label: 'ID',
+					default: 0,
+					choices: LOOP_ID,
+					isVisible: (options) => options.settype === 'id',
+					tooltip: 'If you dont see a specific loop ID, make sure it is setup first',
+				},
+			],
+			callback: async (data) => {
+				self.log('warn', 'Action: recallLoop')
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
+					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
+					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
+					var tempA = self.getVariableValue('Lp'+preset+'APoint');
+					var tempB = self.getVariableValue('Lp'+preset+'BPoint');
+				} else {
+					var preset = self.getVariableValue('CurrentLpSet')
+					var ramptemp = self.getVariableValue('CurrentLpRamp')
+					var runtemp = self.getVariableValue('CurrentLpRun')
+					var tempA = self.getVariableValue('CurrentLpA')
+					var tempB = self.getVariableValue('CurrentLpB')
+				}
+
+				var loopActive = self.getVariableValue('LpActive')
+
+				self.log('debug', 'Active Loop: ' + loopActive)
+				if (loopActive == -1) {
+					self.setVariableValues({ LpActive: preset })
+					self.setVariableValues({ LastPstID: -1})
+					self.checkFeedbacks("LoopStatus")
+
+					self.sendEmotimoAPICommand('G25 L' + preset + ' A' + tempA + ' B' + tempB + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+					setTimeout(() => self.sendEmotimoAPICommand('G24 L' + preset + ' N0'), 100);
+				} else {
+					self.setVariableValues({ LpActive: -1 })
+					self.checkFeedbacks("LoopStatus")
+					self.sendEmotimoAPICommand('G24')
 				}
 			}
 		},

@@ -74,7 +74,7 @@ module.exports = {
 				id: 'startupPstAmount',
 				label: 'Preset Fetch amount',
 				width: 4,
-				default: 30,
+				default: 15,
 				isVisible: (config) => !!config.fetch
 			},
 			{

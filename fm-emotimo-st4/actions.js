@@ -46,11 +46,7 @@ const DIRECTION_ID = [
 ]
 
 const MOTOR_SPEED = [
-	{ id: -100000, label: 'Neg Fastest' },
-	{ id: -50000, label: 'Neg Fast' },
-	{ id: -25000, label: 'Neg Medium' },
-	{ id: -5000, label: 'Neg Slow' },
-	{ id: 0, label: 'Stopped' },
+	{ id: 0, label: 'Default' },
 	{ id: 5000, label: 'Slow' },
 	{ id: 25000, label: 'Medium' },
 	{ id: 50000, label: 'Fast' },
@@ -109,7 +105,7 @@ const PST_OPTIONS = [
 		label: 'Set Type',
 		default: 'smart',
 		choices: CHOICES_SET_TYPE,
-		tooltip: 'Smart: The current preset/loop selected\nID: Select a specific preset/loop ID to change',
+		tooltip: 'Smart: The current preset selected\nID: Select a specific preset ID to change',
 	},
 	{
 		type: 'dropdown',
@@ -126,7 +122,7 @@ const PST_OPTIONS = [
 		label: 'Set Options',
 		default: 'set',
 		choices: CHOICES_SET,
-		tooltip: 'Set Value: set a specific value\nIncrement: Increase by a value each time\nDecrement: Decrease by a value each time\nReset: Reset to the default value',
+		tooltip: 'Set Value: set a specific value\nPositive: Increase by a value each time\nNegative: Decrease by a value each time\nReset: Reset to the default value',
 	},
 	{
 		type: 'number',
@@ -155,7 +151,7 @@ const LP_OPTIONS = [
 		label: 'Set Type',
 		default: 'smart',
 		choices: CHOICES_SET_TYPE,
-		tooltip: 'Smart: The current preset/loop selected\nID: Select a specific preset/loop ID to change',
+		tooltip: 'Smart: The current loop selected\nID: Select a specific loop ID to change',
 	},
 	{
 		type: 'dropdown',
@@ -225,10 +221,19 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'id',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current motor selected\nID: Select a specific ID to change',
+				},
+				{
+					type: 'dropdown',
 					id: 'id_mot',
 					label: 'Motor ID',
-					default: 2,
+					default: 1,
 					choices: MOTOR_ID,
+					isVisible: (options) => options.settype === 'id',
 				},
 				{
 					type: 'dropdown',
@@ -236,59 +241,170 @@ module.exports = function (self) {
 					label: 'Motor Speed',
 					default: 0,
 					choices: MOTOR_SPEED,
-				}
-			],
-			callback: async (actionJog) => {
-				self.log('warn', 'Action: Jog Motors')
-				self.sendEmotimoAPICommand('G300 M' + actionJog.options.id_mot + ' V' + actionJog.options.id_speed)
-			},
-		},
-		jogMotorSmart: {
-			name: 'Motor Jog Smart',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 2,
-					choices: MOTOR_ID,
+					tooltip: 'Default: Uses the current motor profile speed'
 				},
 				{
-					id: 'direction',
 					type: 'dropdown',
+					id: 'dir',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: DIRECTION_ID,
 				},
 			],
-			callback: async (actionJogSmart) => {
-				self.log('warn', 'Action: Jog Motors Smart')
-				var motorSpeed = 0
-				var motorInversion = 1
-				var temp = 0
+			callback: async (data) => {
+				self.log('warn', 'Action: Jog Motors')
+				if (data.options.settype ===  'id') {
+					var motor_id = data.options.id_mot
+				} else {
+					var motor_id = self.getVariableValue('CurrentMtrSet')
+				}
 
-				const motor_id = actionJogSmart.options.id_mot;
-				// gets the lable of the motor by the id provided, if none is found it gives 'Unknown'
+				// gets the label of the motor by the id provided, if none is found it gives 'Unknown'
 				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
-
 				if (motor_name === 'Unknown') {
 					self.log('error', 'Module: Motor Id: ' + motor_id + ' not fund');
 					return;
 				}
 
-				temp = self.getVariableValue(`${motor_name}SpeedLimit`)
-				motorInversion = self.getVariableValue(`${motor_name}Inversion`)
+				var motorSpeed = 0
 
-				if (motor_id < 5 || motor_id == 8) {
-					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 500.0
-				} else {
-					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 100.0
+				if (data.options.id_speed === 1) { // If default speed is selected
+					var motorInversion = 1
+					var temp = 0
+					temp = self.getVariableValue(`${motor_name}SpeedLimit`)
+					motorInversion = self.getVariableValue(`${motor_name}Inversion`)
+
+					self.log('warn', 'motorInversion: ' + motorInversion);
+					self.log('warn', 'temp: ' + temp);
+
+					if (motor_id < 5 || motor_id == 8) {
+						motorSpeed = motorInversion * data.options.dir * temp / 100.0 * 500.0
+					} else {
+						motorSpeed = motorInversion * data.options.dir * temp / 100.0 * 100.0
+					}
+
+					self.log('warn', 'motorSpeed: ' + motorSpeed);
+
+					self.sendEmotimoAPICommand('G301 M' + motor_id + ' V' + motorSpeed)
+					return;
 				}
 
-				self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
-				self.sendEmotimoAPICommand('G301 M' + motor_id + ' V' + motorSpeed)
+				motorSpeed = data.options.id_speed * data.options.dir
+				self.sendEmotimoAPICommand('G300 M' + motor_id + ' V' + motorSpeed)
 			},
 		},
+		jogMotorStop: {
+			name: 'Motor Jog STOP',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'id',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current motor selected\nID: Select a specific ID to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id_mot',
+					label: 'Motor ID',
+					default: 1,
+					choices: MOTOR_ID,
+					isVisible: (options) => options.settype === 'id',
+				},
+			],
+			callback: async (data) => {
+				self.log('warn', 'Action: Jog Motors STOP')
+				if (data.options.settype ===  'id') {
+					var motor_id = data.options.id_mot
+				} else {
+					var motor_id = self.getVariableValue('CurrentMtrSet')
+				}
+
+				self.sendEmotimoAPICommand('G300 M' + motor_id + ' V0')
+			},
+		},
+		setJogSpeedLimit: {
+			name: 'Set Motor Jog Speed',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'id',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current motor selected\nID: Select a specific ID to change',
+				},
+				{
+					type: 'dropdown',
+					id: 'id_mot',
+					label: 'Motor ID',
+					default: 1,
+					choices: MOTOR_ID,
+					isVisible: (options) => options.settype === 'id',
+				},
+				{
+					type: 'dropdown',
+					id: 'setopt',
+					label: 'Set Options',
+					default: 'set',
+					choices: CHOICES_SET,
+					tooltip: 'Set Value: set a specific value\nPositive: Increase by a value each time\nNegative: Decrease by a value each time\nReset: Reset to the default value',
+				},
+				{
+					type: 'number',
+					label: 'Value',
+					id: 'setvalue',
+					min: 0,
+		    	max: 100,
+          default: 100,
+					isVisible: (options) => options.setopt === 'set',
+				},
+				{
+					type: 'number',
+					label: 'Value',
+					id: 'ammount',
+					min: -100,
+		    	max: 100,
+          default: 5,
+					isVisible: (options) => options.setopt === 'up' || options.setopt === 'down'
+				},
+			],
+			callback: async (data) => {
+				self.log('warn', 'Action: setJogSpeedLimit')
+
+				const motor_id = data.options.id_mot
+				// gets the label of the motor by the id provided, if none is found it gives 'Unknown'
+				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
+				if (motor_name === 'Unknown') {
+					self.log('error', 'Module: Motor Id: ' + motor_id + ' not fund');
+					return;
+				}
+
+				var speedtemp = self.getVariableValue(`${motor_name}SpeedLimit`)
+
+				if (data.options.setopt === 'set') {
+					speedtemp = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
+					speedtemp += data.options.ammount
+				} else if (data.options.setopt === 'down') {
+					speedtemp -= data.options.ammount
+				} else if (data.options.setopt === 'reset') {
+					speedtemp = 100
+				}
+
+				if (speedtemp > 100) {
+					speedtemp = 100;
+				} else if (speedtemp < 0) {
+					speedtemp = 0;
+				}
+
+				self.log('debug', 'Motor ID: ' + data.options.id_mot + ' Speed: ' + speedtemp)
+
+				self.setVariableValues({ [`${motor_name}SpeedLimit`]: speedtemp })
+			}
+		},
+
 		setCruiseSpeed: {
 			name: 'Set Motor Cruise Speed',
 			options: [
@@ -307,15 +423,15 @@ module.exports = function (self) {
 					choices: DIRECTION_ID
 				},
 			],
-			callback: async (cruiseSpeed) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: Set Cruise Speed')
 				var motorSpeed = 0
 				var motorInversion = 1
 				var rawMotorSpeed = 0
 				var temp = 0
 
-				const motor_id = cruiseSpeed.options.id_mot;
-				// gets the lable of the motor by the id provided, if none is found it gives 'Unknown'
+				const motor_id = data.options.id_mot;
+				// gets the label of the motor by the id provided, if none is found it gives 'Unknown'
 				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
 
 				if (motor_name === 'Unknown') {
@@ -328,7 +444,7 @@ module.exports = function (self) {
 				motorInversion = self.getVariableValue(`${motor_name}Inversion`)
 
 				if (motor_id < 5 || motor_id == 8) {
-					rawMotorSpeed += cruiseSpeed.options.direction * 25
+					rawMotorSpeed += data.options.direction * 25
 					if (rawMotorSpeed > 500) {
 						rawMotorSpeed = 500
 					} else if (rawMotorSpeed < -500) {
@@ -336,7 +452,7 @@ module.exports = function (self) {
 					} 
 					motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
 				} else {
-					rawMotorSpeed += cruiseSpeed.options.direction * 5
+					rawMotorSpeed += data.options.direction * 5
 					if (rawMotorSpeed > 100) {
 						rawMotorSpeed = 100
 					} else if (rawMotorSpeed < -100) {
@@ -345,13 +461,49 @@ module.exports = function (self) {
 					motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
 				}
 
-				var varID = `${motor_name}CruiseSpeed`
-				self.setVariableValues({ [varID]: rawMotorSpeed })
+				self.setVariableValues({ [`${motor_name}CruiseSpeed`]: rawMotorSpeed })
 
 				self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
 				self.sendEmotimoAPICommand('G301 M' + motor_id + ' V' + motorSpeed)
 			},
 		},
+		resetCruiseSpeed: {
+			name: 'Reset Motor Cruise Speed',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_mot',
+					label: 'Motor ID',
+					default: 1,
+					choices: MOTOR_ID,
+				},
+			],
+			callback: async (data) => {
+				self.log('warn', 'Action: resetCruiseSpeed')
+				if (data.options.id_mot == 1) {
+					self.setVariableValues({ PanCruiseSpeed: 0 })
+				} else if (data.options.id_mot == 2) {
+					self.setVariableValues({ TiltCruiseSpeed: 0 })
+				} else if (data.options.id_mot == 3) {
+					self.setVariableValues({ 'M3-SlideCruiseSpeed': 0 })
+				} else if (data.options.id_mot == 4) {
+					self.setVariableValues({ 'M4-ZoomCruiseSpeed': 0 })
+				} else if (data.options.id_mot == 5) {
+					self.setVariableValues({ TN1CruiseSpeed: 0 })
+				} else if (data.options.id_mot == 6) {
+					self.setVariableValues({ TN2CruiseSpeed: 0 })
+				} else if (data.options.id_mot == 7) {
+					self.setVariableValues({ TN3CruiseSpeed: 0 })
+				} else if (data.options.id_mot == 8) {
+					self.setVariableValues({ RollCruiseSpeed: 0 })
+				} else if (data.options.id_mot == 9) {
+					self.setVariableValues({ FocusCruiseSpeed: 0 })
+				}
+
+				self.sendEmotimoAPICommand('G301 M' + data.options.id_mot + ' V0')
+			}
+		},
+
 		tnpositionDrive: {
 			name: 'Send TN Motor Position',
 			options: [
@@ -370,25 +522,25 @@ module.exports = function (self) {
 					choices: DIRECTION_ID
 				},
 			],
-			callback: async (setMotorPosition) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: tnpositionDrive')
 				var temp = 0
 				var increment = 0
 
 				if (cmd != '') {
-					if (setMotorPosition.options.id_mot == 5) {
+					if (data.options.id_mot == 5) {
 						temp = self.getVariableValue('FPos')
 						increment = self.getVariableValue('FStep')
-					} else if (setMotorPosition.options.id_mot == 6) {
+					} else if (data.options.id_mot == 6) {
 						temp = self.getVariableValue('IPos')
 						increment = self.getVariableValue('IStep')
-					} else if (setMotorPosition.options.id_mot == 7) {
+					} else if (data.options.id_mot == 7) {
 						temp = self.getVariableValue('ZPos')
 						increment = self.getVariableValue('ZStep')
 					}
 
-					temp += (setMotorPosition.options.direction * increment);
-					// self.log('debug', 'Motor ID' + setMotorPosition.options.id_mot + 'Position' + temp)
+					temp += (data.options.direction * increment);
+					// self.log('debug', 'Motor ID' + data.options.id_mot + 'Position' + temp)
 
 					if (temp > 10000) {
 						temp = 10000;
@@ -396,15 +548,15 @@ module.exports = function (self) {
 						temp = 0;
 					}
 
-					if (setMotorPosition.options.id_mot == 5) {
+					if (data.options.id_mot == 5) {
 						self.setVariableValues({ FPos: temp })
-					} else if (setMotorPosition.options.id_mot == 6) {
+					} else if (data.options.id_mot == 6) {
 						self.setVariableValues({ IPos: temp })
-					} else if (setMotorPosition.options.id_mot == 7) {
+					} else if (data.options.id_mot == 7) {
 						self.setVariableValues({ ZPos: temp })
 					}
 
-					self.sendEmotimoAPICommand('G302 M' + setMotorPosition.options.id_mot + ' P' + temp)
+					self.sendEmotimoAPICommand('G302 M' + data.options.id_mot + ' P' + temp)
 				}
 			},
 		},
@@ -426,70 +578,68 @@ module.exports = function (self) {
 					choices: DIRECTION_ID
 				},
 			],
-			callback: async (setMotorPosition) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: positionDrive')
 				var cmdParam ='X'
 				var temp = 0
 				var increment = 0
 
-				if (cmd != '') {
-					if (setMotorPosition.options.id_mot == 1) {
-						temp = self.getVariableValue('PPos')
-						increment = self.getVariableValue('PStep')
-						cmdParam = 'X'
-					} else if (setMotorPosition.options.id_mot == 2) {
-						temp = self.getVariableValue('TPos')
-						increment = self.getVariableValue('TStep')
-						cmdParam = 'Y'
-					} else if (setMotorPosition.options.id_mot == 3) {
-						temp = self.getVariableValue('SPos')
-						increment = self.getVariableValue('SStep')
-						cmdParam = 'Z'
-					} else if (setMotorPosition.options.id_mot == 4) {
-						temp = self.getVariableValue('MPos')
-						increment = self.getVariableValue('MStep')
-						cmdParam = 'W'
-					} else if (setMotorPosition.options.id_mot == 5) {
-						temp = self.getVariableValue('FPos')
-						increment = self.getVariableValue('FStep')
-						cmdParam = 'F'
-					} else if (setMotorPosition.options.id_mot == 6) {
-						temp = self.getVariableValue('IPos')
-						increment = self.getVariableValue('IStep')
-						cmdParam = 'I'
-					} else if (setMotorPosition.options.id_mot == 7) {
-						temp = self.getVariableValue('ZPos')
-						increment = self.getVariableValue('ZStep')
-						cmdParam = 'C'
-					} else if (setMotorPosition.options.id_mot == 8) {
-						temp = self.getVariableValue('RPos')
-						increment = self.getVariableValue('RStep')
-						cmdParam = 'R'
-					}
-
-					temp += (setMotorPosition.options.direction * increment);
-					// self.log('debug', 'Motor ID' + setMotorPosition.options.id_mot + 'Position' + temp)
-
-					if (setMotorPosition.options.id_mot == 1) {
-						self.setVariableValues({ PPos: temp })
-					} else if (setMotorPosition.options.id_mot == 2) {
-						self.setVariableValues({ TPos: temp })
-					} else if (setMotorPosition.options.id_mot == 3) {
-						self.setVariableValues({ SPos: temp })
-					} else if (setMotorPosition.options.id_mot == 4) {
-						self.setVariableValues({ MPos: temp })
-					} else if (setMotorPosition.options.id_mot == 5) {
-						self.setVariableValues({ FPos: temp })
-					} else if (setMotorPosition.options.id_mot == 6) {
-						self.setVariableValues({ IPos: temp })
-					} else if (setMotorPosition.options.id_mot == 7) {
-						self.setVariableValues({ ZPos: temp })
-					} else if (setMotorPosition.options.id_mot == 8) {
-						self.setVariableValues({ RPos: temp })
-					}
-
-					self.sendEmotimoAPICommand('G0 ' + cmdParam + temp)
+				if (data.options.id_mot == 1) {
+					temp = self.getVariableValue('PPos')
+					increment = self.getVariableValue('PStep')
+					cmdParam = 'X'
+				} else if (data.options.id_mot == 2) {
+					temp = self.getVariableValue('TPos')
+					increment = self.getVariableValue('TStep')
+					cmdParam = 'Y'
+				} else if (data.options.id_mot == 3) {
+					temp = self.getVariableValue('SPos')
+					increment = self.getVariableValue('SStep')
+					cmdParam = 'Z'
+				} else if (data.options.id_mot == 4) {
+					temp = self.getVariableValue('MPos')
+					increment = self.getVariableValue('MStep')
+					cmdParam = 'W'
+				} else if (data.options.id_mot == 5) {
+					temp = self.getVariableValue('FPos')
+					increment = self.getVariableValue('FStep')
+					cmdParam = 'F'
+				} else if (data.options.id_mot == 6) {
+					temp = self.getVariableValue('IPos')
+					increment = self.getVariableValue('IStep')
+					cmdParam = 'I'
+				} else if (data.options.id_mot == 7) {
+					temp = self.getVariableValue('ZPos')
+					increment = self.getVariableValue('ZStep')
+					cmdParam = 'C'
+				} else if (data.options.id_mot == 8) {
+					temp = self.getVariableValue('RPos')
+					increment = self.getVariableValue('RStep')
+					cmdParam = 'R'
 				}
+
+				temp += (data.options.direction * increment);
+				// self.log('debug', 'Motor ID' + data.options.id_mot + 'Position' + temp)
+
+				if (data.options.id_mot == 1) {
+					self.setVariableValues({ PPos: temp })
+				} else if (data.options.id_mot == 2) {
+					self.setVariableValues({ TPos: temp })
+				} else if (data.options.id_mot == 3) {
+					self.setVariableValues({ SPos: temp })
+				} else if (data.options.id_mot == 4) {
+					self.setVariableValues({ MPos: temp })
+				} else if (data.options.id_mot == 5) {
+					self.setVariableValues({ FPos: temp })
+				} else if (data.options.id_mot == 6) {
+					self.setVariableValues({ IPos: temp })
+				} else if (data.options.id_mot == 7) {
+					self.setVariableValues({ ZPos: temp })
+				} else if (data.options.id_mot == 8) {
+					self.setVariableValues({ RPos: temp })
+				}
+
+				self.sendEmotimoAPICommand('G0 ' + cmdParam + temp)
 			},
 		},
 		toggleIncrement: {
@@ -503,29 +653,29 @@ module.exports = function (self) {
 					choices: MOTOR_ID,
 				},
 			],
-			callback: async (toggleIncrement) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: toggleIncrement')
 				var temp = 0
 
-				if (toggleIncrement.options.id_mot == 1) {
+				if (data.options.id_mot == 1) {
 					temp = self.getVariableValue('PStep')
-				} else if (toggleIncrement.options.id_mot == 2) {
+				} else if (data.options.id_mot == 2) {
 					temp = self.getVariableValue('TStep')
-				} else if (toggleIncrement.options.id_mot == 3) {
+				} else if (data.options.id_mot == 3) {
 					temp = self.getVariableValue('SStep')
-				} else if (toggleIncrement.options.id_mot == 4) {
+				} else if (data.options.id_mot == 4) {
 					temp = self.getVariableValue('MStep')
-				} else if (toggleIncrement.options.id_mot == 5) {
+				} else if (data.options.id_mot == 5) {
 					temp = self.getVariableValue('FStep')
-				} else if (toggleIncrement.options.id_mot == 6) {
+				} else if (data.options.id_mot == 6) {
 					temp = self.getVariableValue('IStep')
-				} else if (toggleIncrement.options.id_mot == 7) {
+				} else if (data.options.id_mot == 7) {
 					temp = self.getVariableValue('ZStep')
-				} else if (toggleIncrement.options.id_mot == 8) {
+				} else if (data.options.id_mot == 8) {
 					temp = self.getVariableValue('RStep')
 				}
 
-				if (toggleIncrement.options.id_mot < 3) {
+				if (data.options.id_mot < 3) {
 					if (self.config.model == 'SA2.6 Conductor') {
 						if (temp == 1) {
 							temp = 10;
@@ -540,13 +690,13 @@ module.exports = function (self) {
 						}
 					}
 
-				} else if (toggleIncrement.options.id_mot < 5) {
+				} else if (data.options.id_mot < 5) {
 					if (temp == 1000) {
 						temp = 10000;
 					} else {
 						temp = 1000;
 					}
-				} else if (toggleIncrement.options.id_mot < 8) {
+				} else if (data.options.id_mot < 8) {
 					if (temp == 200) {
 						temp = 50;
 					} else {
@@ -560,201 +710,32 @@ module.exports = function (self) {
 					}
 				}
 
-				self.log('debug', 'Model: ' + self.config.model + ' Motor ID: ' + toggleIncrement.options.id_mot + ' Increment: ' + temp)
+				self.log('debug', 'Model: ' + self.config.model + ' Motor ID: ' + data.options.id_mot + ' Increment: ' + temp)
 
-				if (toggleIncrement.options.id_mot == 1) {
+				if (data.options.id_mot == 1) {
 					temp = self.setVariableValues({ PStep: temp })
-				} else if (toggleIncrement.options.id_mot == 2) {
+				} else if (data.options.id_mot == 2) {
 					temp = self.setVariableValues({ TStep: temp })
-				} else if (toggleIncrement.options.id_mot == 3) {
+				} else if (data.options.id_mot == 3) {
 					temp = self.setVariableValues({ SStep: temp })
-				} else if (toggleIncrement.options.id_mot == 4) {
+				} else if (data.options.id_mot == 4) {
 					temp = self.setVariableValues({ MStep: temp })
-				} else if (toggleIncrement.options.id_mot == 5) {
+				} else if (data.options.id_mot == 5) {
 					self.setVariableValues({ FStep: temp })
-				} else if (toggleIncrement.options.id_mot == 6) {
+				} else if (data.options.id_mot == 6) {
 					self.setVariableValues({ IStep: temp })
-				} else if (toggleIncrement.options.id_mot == 7) {
+				} else if (data.options.id_mot == 7) {
 					self.setVariableValues({ ZStep: temp })
-				} else if (toggleIncrement.options.id_mot == 8) {
+				} else if (data.options.id_mot == 8) {
 					self.setVariableValues({ RStep: temp })
 				}
 			}
 		},
-		setJogSpeedLimit: {
-			name: 'Set Motor Jog Speed',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 1,
-					choices: MOTOR_ID,
-				},
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' },
-						{ id: 'set', label: 'Set Value' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -100,
-		    	max: 100,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-				{
-					type: 'number',
-					label: 'Set Value',
-					id: 'setValue',
-					min: 0,
-		    	max: 100,
-          default: 100,
-					isVisible: (options) => options.direction === 'set',
-				},
-			],
-			callback: async (jogSpeed) => {
-				self.log('warn', 'Action: setJogSpeedLimit')
-				var temp = 0
 
-				if (jogSpeed.options.direction === 'set') {
-					temp = jogSpeed.options.setValue
-				} else {
-					if (jogSpeed.options.id_mot == 1) {
-						temp = self.getVariableValue('PanSpeedLimit')
-					} else if (jogSpeed.options.id_mot == 2) {
-						temp = self.getVariableValue('TiltSpeedLimit')
-					} else if (jogSpeed.options.id_mot == 3) {
-						temp = self.getVariableValue('M3-SlideSpeedLimit')
-					} else if (jogSpeed.options.id_mot == 4) {
-						temp = self.getVariableValue('M4-ZoomSpeedLimit')
-					} else if (jogSpeed.options.id_mot == 5) {
-						temp = self.getVariableValue('TN1SpeedLimit')
-					} else if (jogSpeed.options.id_mot == 6) {
-						temp = self.getVariableValue('TN2SpeedLimit')
-					} else if (jogSpeed.options.id_mot == 7) {
-						temp = self.getVariableValue('TN3SpeedLimit')
-					} else if (jogSpeed.options.id_mot == 8) {
-						temp = self.getVariableValue('RollSpeedLimit')
-					}
-
-					if (jogSpeed.options.direction === 'amount') {
-						temp += jogSpeed.options.amountValue
-					} else {
-						temp += jogSpeed.options.direction
-					}
-				}
-
-				if (temp > 100) {
-					temp = 100;
-				} else if (temp < 0) {
-					temp = 0;
-				}
-
-				self.log('debug', 'Motor ID: ' + jogSpeed.options.id_mot + ' Speed: ' + temp)
-
-				if (jogSpeed.options.id_mot == 1) {
-					self.setVariableValues({ PanSpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 2) {
-					self.setVariableValues({ TiltSpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 3) {
-					self.setVariableValues({ 'M3-SlideSpeedLimit': temp })
-				} else if (jogSpeed.options.id_mot == 4) {
-					self.setVariableValues({ 'M4-ZoomSpeedLimit': temp })
-				} else if (jogSpeed.options.id_mot == 5) {
-					self.setVariableValues({ TN1SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 6) {
-					self.setVariableValues({ TN2SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 7) {
-					self.setVariableValues({ TN3SpeedLimit: temp })
-				} else if (jogSpeed.options.id_mot == 8) {
-					self.setVariableValues({ RollSpeedLimit: temp })
-				}
-			}
-		},
-		resetJogSpeedLimit: {
-			name: 'Reset Motor Jog Speed',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 1,
-					choices: MOTOR_ID,
-				},
-			],
-			callback: async (resetSpeed) => {
-				self.log('warn', 'Action: resetJogSpeedLimit')
-				if (resetSpeed.options.id_mot == 1) {
-					self.setVariableValues({ PanSpeedLimit: 100 })
-				} else if (resetSpeed.options.id_mot == 2) {
-					self.setVariableValues({ TiltSpeedLimit: 100 })
-				} else if (resetSpeed.options.id_mot == 3) {
-					self.setVariableValues({ 'M3-SlideSpeedLimit': 100 })
-				} else if (resetSpeed.options.id_mot == 4) {
-					self.setVariableValues({ 'M4-ZoomSpeedLimit': 100 })
-				} else if (resetSpeed.options.id_mot == 5) {
-					self.setVariableValues({ TN1SpeedLimit: 25 })
-				} else if (resetSpeed.options.id_mot == 6) {
-					self.setVariableValues({ TN2SpeedLimit: 25 })
-				} else if (resetSpeed.options.id_mot == 7) {
-					self.setVariableValues({ TN3SpeedLimit: 25 })
-				} else if (resetSpeed.options.id_mot == 8) {
-					self.setVariableValues({ RollSpeedLimit: 100 })
-				}
-
-			}
-		},
-		resetCruiseSpeed: {
-			name: 'Reset Motor Cruise Speed',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 1,
-					choices: MOTOR_ID,
-				},
-			],
-			callback: async (resetSpeed) => {
-				self.log('warn', 'Action: resetCruiseSpeed')
-				if (resetSpeed.options.id_mot == 1) {
-					self.setVariableValues({ PanCruiseSpeed: 0 })
-				} else if (resetSpeed.options.id_mot == 2) {
-					self.setVariableValues({ TiltCruiseSpeed: 0 })
-				} else if (resetSpeed.options.id_mot == 3) {
-					self.setVariableValues({ 'M3-SlideCruiseSpeed': 0 })
-				} else if (resetSpeed.options.id_mot == 4) {
-					self.setVariableValues({ 'M4-ZoomCruiseSpeed': 0 })
-				} else if (resetSpeed.options.id_mot == 5) {
-					self.setVariableValues({ TN1CruiseSpeed: 0 })
-				} else if (resetSpeed.options.id_mot == 6) {
-					self.setVariableValues({ TN2CruiseSpeed: 0 })
-				} else if (resetSpeed.options.id_mot == 7) {
-					self.setVariableValues({ TN3CruiseSpeed: 0 })
-				} else if (resetSpeed.options.id_mot == 8) {
-					self.setVariableValues({ RollCruiseSpeed: 0 })
-				} else if (resetSpeed.options.id_mot == 9) {
-					self.setVariableValues({ FocusCruiseSpeed: 0 })
-				}
-
-				self.sendEmotimoAPICommand('G301 M' + resetSpeed.options.id_mot + ' V0')
-			}
-		},
 		stopMotors: {
 			name: 'Stop All Motors',
-			options: [
-
-			],
-			callback: async (haltMotors) => {
+			options: [],
+			callback: async () => {
 				self.log('warn', 'Action: stopMotors')
 				self.setVariableValues({ 'LastPstID': -1 })
 				self.sendEmotimoAPICommand('G911')
@@ -772,16 +753,15 @@ module.exports = function (self) {
 					choices: CHOICES_END,
 				},
 			],
-			callback: async (centerRS) => {
+			callback: async () => {
 				self.log('warn', 'Action: homeRS')
 				self.sendEmotimoAPICommand('G202')
 			}
 		},
 		calibrateAllTN: {
 			name: 'Calibrate All TN',
-			options: [
-			],
-			callback: async (centerRS) => {
+			options: [],
+			callback: async () => {
 				self.log('warn', 'Action: calibrateAllTN')
 				self.sendEmotimoAPICommand('G812 C0')
 			}
@@ -797,18 +777,16 @@ module.exports = function (self) {
 					choices: TN_MOTOR_ID,
 				},
 			],
-			callback: async (calTN) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: calibrateTNMotor')
-				self.sendEmotimoAPICommand('G812 C0 M' + (calTN.options.id_mot-4))
+				self.sendEmotimoAPICommand('G812 C0 M' + (data.options.id_mot-4))
 			}
 		},
 
 		invertCurrentAxis: {
 			name: 'Invert Current Motor',
-			options: [
-				
-			],
-			callback: async (invertAxis) => {
+			options: [],
+			callback: async () => {
 				self.log('warn', 'Action: invertCurrentAxis')
 				var motor = self.getVariableValue('CurrentMtrSet')
 				var motorInvertName = ''
@@ -867,27 +845,27 @@ module.exports = function (self) {
 		setStopA: {
 			name: 'Set Stop A',
 			options: [...MOTOR_OPTIONS],
-			callback: async (stopA) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setStopA')
-				if (stopA.options.settype === 'id') { // Not Smart type
-					var motor = stopA.options.id_mot
+				if (data.options.settype === 'id') { // Not Smart type
+					var motor_id = data.options.id_mot
 				} else {
-					var motor = self.getVariableValue('CurrentMtrSet')
+					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G213 M' + motor)
+				self.sendEmotimoAPICommand('G213 M' + motor_id)
 			}
 		},
 		setStopB: {
 			name: 'Set Stop B',
 			options: [...MOTOR_OPTIONS],
-			callback: async (stopB) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setStopB')
-				if (stopB.options.settype === 'id') { // Not Smart type
-					var motor = stopB.options.id_mot
+				if (data.options.settype === 'id') { // Not Smart type
+					var motor_id = data.options.id_mot
 				} else {
-					var motor = self.getVariableValue('CurrentMtrSet')
+					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G213 M' + motor)
+				self.sendEmotimoAPICommand('G213 M' + motor_id)
 			}
 		},
 
@@ -902,14 +880,14 @@ module.exports = function (self) {
 					choices: MOTOR_ID_UNSET,
 				},
 			],
-			callback: async (recStopA) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: recallStopA')
-				var motorID = recStopA.options.id_mot
+				const motor_id = data.options.id_mot
 
-				if (motorID == 0) {
-					motorID = self.getVariableValue('CurrentMtrSet')
+				if (motor_id == 0) {
+					motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G217 M' + motorID)
+				self.sendEmotimoAPICommand('G217 M' + motor_id)
 			}
 		},
 		recallStopB: {
@@ -923,54 +901,54 @@ module.exports = function (self) {
 					choices: MOTOR_ID_UNSET,
 				},
 			],
-			callback: async (recStopB) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: recallStopB')
-				var motorID = recStopB.options.id_mot
+				const motor_id = data.options.id_mot
 
-				if (motorID == 0) {
-					motorID = self.getVariableValue('CurrentMtrSet')
+				if (motor_id == 0) {
+					motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G218 M' + motorID)
+				self.sendEmotimoAPICommand('G218 M' + motor_id)
 			}
 		},
 
 		clearStopA: {
 			name: 'Clear Stop A',
 			options: [...MOTOR_OPTIONS],
-			callback: async (stopA) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: clearStopA')
-				if (stopA.options.settype === 'id') { // Not Smart type
-					var motor = stopA.options.id_mot
+				if (data.options.settype === 'id') { // Not Smart type
+					var motor_id = data.options.id_mot
 				} else {
-					var motor = self.getVariableValue('CurrentMtrSet')
+					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G219 M' + motor)
+				self.sendEmotimoAPICommand('G219 M' + motor_id)
 			}
 		},
 		clearStopB: {
 			name: 'Clear Stop B',
 			options: [...MOTOR_OPTIONS],
-			callback: async (stopB) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: clearStopB')
-				if (stopB.options.settype === 'id') { // Not Smart type
-					var motor = stopB.options.id_mot
+				if (data.options.settype === 'id') { // Not Smart type
+					var motor_id = data.options.id_mot
 				} else {
-					var motor = self.getVariableValue('CurrentMtrSet')
+					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G219 M' + motor)
+				self.sendEmotimoAPICommand('G219 M' + motor_id)
 			}
 		},
 		clearStopByAxis: {
 			name: 'Clear Stops by Axis',
 			options: [...MOTOR_OPTIONS],
-			callback: async (stopAxis) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: clearStopByAxis')
-				if (stopAxis.options.settype === 'id') { // Not Smart type
-					var motor = stopAxis.options.id_mot
+				if (data.options.settype === 'id') { // Not Smart type
+					var motor_id = data.options.id_mot
 				} else {
-					var motor = self.getVariableValue('CurrentMtrSet')
+					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G219 M' + motor)
+				self.sendEmotimoAPICommand('G219 M' + motor_id)
 			}
 		},
 		clearAllStops: {
@@ -980,186 +958,6 @@ module.exports = function (self) {
 				self.log('warn', 'Action: clearAllStops')
 				self.sendEmotimoAPICommand('G219 M0')
 			}
-		},
-
-		//Smart Motor Setup
-		setJogSpeedLimitSmart: {
-			name: 'Set Motor Jog Speed Smart',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' },
-						{ id: 'set', label: 'Set Value' }
-					]
-				},
-				{
-					type: 'number',
-					label: 'Amount ( - for less)',
-					id: 'amountValue',
-					min: -100,
-		    	max: 100,
-          default: 5,
-					isVisible: (options) => options.direction === 'amount',
-				},
-				{
-					type: 'number',
-					label: 'Set Value',
-					id: 'setValue',
-					min: 0,
-		    	max: 100,
-          default: 100,
-					isVisible: (options) => options.direction === 'set',
-				},
-			],
-			callback: async (jogSpeed) => {
-				self.log('warn', 'Action: setJogSpeedLimitSmart')
-				var motor = self.getVariableValue('CurrentMtrSet')
-				var motorSpeed = self.getVariableValue('CurrentMtrSpeed')
-
-				if (jogSpeed.options.direction === 'set') {
-					motorSpeed = jogSpeed.options.setValue
-				} else {
-					if (jogSpeed.options.direction === 'amount') {
-						motorSpeed += jogSpeed.options.amountValue
-					} else {
-						motorSpeed += jogSpeed.options.direction
-					}
-				}
-
-				if (motorSpeed > 100) {
-					motorSpeed = 100;
-				} else if (motorSpeed < 0) {
-					motorSpeed = 0;
-				}
-
-				self.log('debug', 'Motor ID: ' + motor + ' Speed: ' + motorSpeed)
-
-				if (motor == 1) {
-					self.setVariableValues({ PanSpeedLimit: motorSpeed })
-				} else if (motor == 2) {
-					self.setVariableValues({ TiltSpeedLimit: motorSpeed })
-				} else if (motor == 3) {
-					self.setVariableValues({ 'M3-SlideSpeedLimit': motorSpeed })
-				} else if (motor == 4) {
-					self.setVariableValues({ 'M4-ZoomSpeedLimit': motorSpeed })
-				} else if (motor == 5) {
-					self.setVariableValues({ TN1SpeedLimit: motorSpeed })
-				} else if (motor == 6) {
-					self.setVariableValues({ TN2SpeedLimit: motorSpeed })
-				} else if (motor == 7) {
-					self.setVariableValues({ TN3SpeedLimit: motorSpeed })
-				} else if (motor == 8) {
-					self.setVariableValues({ RollSpeedLimit: motorSpeed })
-				} else if (motor == 9) {
-					self.setVariableValues({ FocusSpeedLimit: motorSpeed })
-				}
-
-				self.setVariableValues({ CurrentMtrSpeed: motorSpeed })
-
-			}
-		},
-		resetJogSpeedLimitSmart: {
-			name: 'Reset Motor Jog Speed Smart',
-			options: [
-				
-			],
-			callback: async (resetSpeed) => {
-				self.log('warn', 'Action: resetJogSpeedLimitSmart')
-				var motor = self.getVariableValue('CurrentMtrSet')
-				if (motor == 1) {
-					self.setVariableValues({ PanSpeedLimit: 100 })
-					self.setVariableValues({ CurrentMtrSpeed: 100 })
-				} else if (motor == 2) {
-					self.setVariableValues({ TiltSpeedLimit: 100 })
-					self.setVariableValues({ CurrentMtrSpeed: 100 })
-				} else if (motor == 3) {
-					self.setVariableValues({ 'M3-SlideSpeedLimit': 100 })
-					self.setVariableValues({ CurrentMtrSpeed: 100 })
-				} else if (motor == 4) {
-					self.setVariableValues({ 'M4-ZoomSpeedLimit': 100 })
-					self.setVariableValues({ CurrentMtrSpeed: 100 })
-				} else if (motor == 5) {
-					self.setVariableValues({ TN1SpeedLimit: 25 })
-					self.setVariableValues({ CurrentMtrSpeed: 25 })
-				} else if (motor == 6) {
-					self.setVariableValues({ TN2SpeedLimit: 25 })
-					self.setVariableValues({ CurrentMtrSpeed: 25 })
-				} else if (motor == 7) {
-					self.setVariableValues({ TN3SpeedLimit: 25 })
-					self.setVariableValues({ CurrentMtrSpeed: 25 })
-				} else if (motor == 8) {
-					self.setVariableValues({ RollSpeedLimit: 100 })
-					self.setVariableValues({ CurrentMtrSpeed: 100 })
-				}
-
-			}
-		},
-		jogMotorSmarter: {
-			name: 'Motor Jog Smarter',
-			options: [
-				{
-					id: 'direction',
-					type: 'dropdown',
-					label: 'Direction',
-					default: 1,
-					choices: [
-						...DIRECTION_ID,
-						{ id: 'amount', label: 'Amount' }
-					]
-				},
-			],
-			callback: async (actionJogSmart) => {
-				self.log('warn', 'Action: jogMotorSmarter')
-				var motorSpeed = 0
-				var motorInversion = 1
-				var temp = 0
-
-				var motor = self.getVariableValue('CurrentMtrSet')
-
-				if (motor == 1) {
-					temp = self.getVariableValue('PanSpeedLimit')
-					motorInversion = self.getVariableValue('PanInversion')
-				} else if (motor == 2) {
-					temp = self.getVariableValue('TiltSpeedLimit')
-					motorInversion = self.getVariableValue('TiltInversion')
-				} else if (motor == 3) {
-					temp = self.getVariableValue('M3-SlideSpeedLimit')
-					motorInversion = self.getVariableValue('M3-SlideInversion')
-				} else if (motor == 4) {
-					temp = self.getVariableValue('M4-ZoomSpeedLimit')
-					motorInversion = self.getVariableValue('M4-ZoomInversion')
-				} else if (motor == 5) {
-					temp = self.getVariableValue('TN1SpeedLimit')
-					motorInversion = self.getVariableValue('TN1Inversion')
-				} else if (motor == 6) {
-					temp = self.getVariableValue('TN2SpeedLimit')
-					motorInversion = self.getVariableValue('TN2Inversion')
-				} else if (motor == 7) {
-					temp = self.getVariableValue('TN3SpeedLimit')
-					motorInversion = self.getVariableValue('TN3Inversion')
-				} else if (motor == 8) {
-					temp = self.getVariableValue('RollSpeedLimit')
-					motorInversion = self.getVariableValue('RollInversion')
-				} else if (motor == 9) {
-					temp = self.getVariableValue('FocusSpeedLimit')
-					motorInversion = self.getVariableValue('FocusInversion')
-				}
-
-				if (motor < 5 || motor == 8) {
-					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 500.0
-				} else {
-					motorSpeed = motorInversion * actionJogSmart.options.direction * temp / 100.0 * 100.0
-				}
-
-				self.log('debug', 'Temp: ' + temp + ' Motor Speed: ' + motorSpeed)
-
-				self.sendEmotimoAPICommand('G301 M' + motor + ' V' + motorSpeed)
-			},
 		},
 
 		// other
@@ -1174,7 +972,7 @@ module.exports = function (self) {
 					choices: DIRECTION_ID
 				},
 			],
-			callback: async (pst) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setMotorID')
 				var motor = self.getVariableValue('CurrentMtrSet')
 				var motorName = self.getVariableValue('CurrentMtrStr')
@@ -1184,7 +982,7 @@ module.exports = function (self) {
 				var motorNegName = ''
 				var motorInvertName = ''
 
-				motor += pst.options.direction
+				motor += data.options.direction
 				
 				if (motor > 9) {
 					motor = 9;
@@ -1277,9 +1075,9 @@ module.exports = function (self) {
 					choices: MOTOR_PROFILES,
 				}
 			],
-			callback: async (motorProfile) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setMotorProfile')
-				const selProf = motorProfile.options.prodileid
+				const selProf = data.options.prodileid
 				self.setVariableValues({ CurrentMtrProf: selProf})
 
 				self.sendEmotimoAPICommand('G102 P' + selProf)
@@ -1288,10 +1086,8 @@ module.exports = function (self) {
 
 		stopCurrentMotor: {
 			name: 'Stop Current Motor',
-			options: [
-				
-			],
-			callback: async (actionJogSmart) => {
+			options: [],
+			callback: async () => {
 				self.log('warn', 'Action: stopCurrentMotor')
 				var motor = self.getVariableValue('CurrentMtrSet')
 				self.sendEmotimoAPICommand('G301 M' + motor + ' V0')
@@ -1332,10 +1128,10 @@ module.exports = function (self) {
 					isVisible: (options) => options.settype === 'id',
 				},
 			],
-			callback: async (setPreset) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: savePset')
-				if (setPreset.options.settype === 'id') { // Not Smart type
-					var preset = setPreset.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 				} else {
 					var preset = self.getVariableValue('CurrentPstSet')
 				}
@@ -1376,10 +1172,10 @@ module.exports = function (self) {
 					isVisible: (options) => options.settype === 'id',
 				},
 			],
-			callback: async (recallPreset) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: recallPset')
-				if (recallPreset.options.settype === 'id') { // Not Smart type
-					var preset = recallPreset.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 				} else {
 					var preset = self.getVariableValue('CurrentPstSet')
 				}
@@ -1418,13 +1214,13 @@ module.exports = function (self) {
 					isVisible: (options) => options.direction === 'set'
 				}
 			],
-			callback: async (pst) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setPresetID')
 				var preset = self.getVariableValue('CurrentPstSet')
-				if (pst.options.direction === 'set') {
-					preset = pst.options.gotoPst
+				if (data.options.direction === 'set') {
+					preset = data.options.gotoPst
 				} else {
-					preset += pst.options.direction
+					preset += data.options.direction
 				}
 
 				if (preset < 0) {
@@ -1485,11 +1281,11 @@ module.exports = function (self) {
 		setPresetRunTime: {
 			name: 'Set Preset Run Time',
 			options: [...PST_OPTIONS],
-			callback: async (runTime) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setPresetRunTime')
 				var skip = false
-				if (runTime.options.settype === 'id') { // Not Smart type
-					var preset = runTime.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var runtemp = self.getVariableValue('Pst'+preset+'RunT')
 					var ramptemp = self.getVariableValue('Pst'+preset+'RampT')
 				} else {
@@ -1498,13 +1294,13 @@ module.exports = function (self) {
 					var ramptemp = self.getVariableValue('CurrentPstSetRamp')
 				}
 
-				if (runTime.options.setopt === 'set') {
-					runtemp = runTime.options.setvalue
-				} else if (runTime.options.setopt === 'up') {
-					runtemp += runTime.options.ammount
-				} else if (runTime.options.setopt === 'down') {
-					runtemp -= runTime.options.ammount
-				} else if (runTime.options.setopt === 'reset') {
+				if (data.options.setopt === 'set') {
+					runtemp = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
+					runtemp += data.options.ammount
+				} else if (data.options.setopt === 'down') {
+					runtemp -= data.options.ammount
+				} else if (data.options.setopt === 'reset') {
 					runtemp = 50
 				}
 
@@ -1521,7 +1317,7 @@ module.exports = function (self) {
 				var varID = 'Pst'+preset+'RunT'
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
 				self.setVariableValues({ [varID]: runtemp })
-				if (runTime.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
 					self.setVariableValues({ CurrentPstSetRun: runtemp })
 				}
 
@@ -1532,11 +1328,11 @@ module.exports = function (self) {
 		setPresetRampTime: {
 			name: 'Set Preset Ramp Time',
 			options: [...PST_OPTIONS],
-			callback: async (rampTime) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setPresetRampTime')
 				var skip = false
-				if (rampTime.options.settype === 'id') { // Not Smart type
-					var preset = rampTime.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var runtemp = self.getVariableValue('Pst'+preset+'RunT')
 					var ramptemp = self.getVariableValue('Pst'+preset+'RampT')
 				} else {
@@ -1545,13 +1341,13 @@ module.exports = function (self) {
 					var ramptemp = self.getVariableValue('CurrentPstSetRamp')
 				}
 
-				if (rampTime.options.setopt === 'set') {
-					ramptemp = rampTime.options.setvalue
-				} else if (rampTime.options.setopt === 'up') {
-					ramptemp += rampTime.options.ammount
-				} else if (rampTime.options.setopt === 'down') {
-					ramptemp -= rampTime.options.ammount
-				} else if (rampTime.options.setopt === 'reset') {
+				if (data.options.setopt === 'set') {
+					ramptemp = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
+					ramptemp += data.options.ammount
+				} else if (data.options.setopt === 'down') {
+					ramptemp -= data.options.ammount
+				} else if (data.options.setopt === 'reset') {
 					ramptemp = 10
 				}
 
@@ -1569,7 +1365,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
 				self.setVariableValues({ [varID]: ramptemp })
 
-				if (rampTime.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
 					self.setVariableValues({ CurrentPstSetRamp: ramptemp })
 				}
 
@@ -1608,10 +1404,10 @@ module.exports = function (self) {
 					tooltip: 'If you dont see a specific loop ID, make sure it is setup first',
 				},
 			],
-			callback: async (setLoop) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: saveLp')
-				if (setLoop.options.settype === 'id') { // Not Smart type
-					var preset = setLoop.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
 					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
 					var lpAPt = self.getVariableValue('Lp'+preset+'APoint');
@@ -1647,10 +1443,10 @@ module.exports = function (self) {
 					tooltip: 'If you dont see a specific loop ID, make sure it is setup first',
 				},
 			],
-			callback: async (LpRecall) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: recallLoop')
-				if (LpRecall.options.settype === 'id') { // Not Smart type
-					var preset = LpRecall.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
 					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
 					var tempA = self.getVariableValue('Lp'+preset+'APoint');
@@ -1701,14 +1497,14 @@ module.exports = function (self) {
 					isVisible: (options) => options.direction === 'set'
 				}
 			],
-			callback: async (loop) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setLoopID')
 				var id_loop = self.getVariableValue('CurrentLpSet')
 
-				if (loop.options.direction === 'set') {
-					id_loop = loop.options.gotoLoop
+				if (data.options.direction === 'set') {
+					id_loop = data.options.gotoLoop
 				} else {
-					id_loop += loop.options.direction
+					id_loop += data.options.direction
 				}
 
 				if (id_loop > 7) {
@@ -1778,32 +1574,32 @@ module.exports = function (self) {
 		setLoopRunTime: {
 			name: 'Set Loop Run Time',
 			options: [...LP_OPTIONS],
-			callback: async (runTime) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setLoopRunTime')
-				if (runTime.options.settype === 'id') { // Not Smart type
-					var preset = runTime.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var runtemp = self.getVariableValue('Lp'+preset+'RunT')
 				} else {
 					var preset = self.getVariableValue('CurrentLpSet')
 					var runtemp = self.getVariableValue('CurrentLpRun')
 				}
 
-				if (runTime.options.setopt === 'set') {
-					runtemp = runTime.options.setvalue
-				} else if (runTime.options.setopt === 'up') {
+				if (data.options.setopt === 'set') {
+					runtemp = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
 					// if current runtemp is 0, if they increase by 5 itll still be set to 0
 					// since 5 < 10, so if thats the case then set it to 10, else default behavior
-					runtemp += runTime.options.ammount;
+					runtemp += data.options.ammount;
 					if (runtemp < 10) {
 						runtemp = 10;
 					}
-				} else if (runTime.options.setopt === 'down') {
+				} else if (data.options.setopt === 'down') {
 					// if runtemp is 10 and they decrease, set it to 0, else default behavior
-					runtemp -= runTime.options.ammount
+					runtemp -= data.options.ammount
 					if (runtemp < 10) {
 						runtemp = 0;
 					}
-				} else if (runTime.options.setopt === 'reset') {
+				} else if (data.options.setopt === 'reset') {
 					runtemp = 50
 				}
 
@@ -1817,7 +1613,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
 				self.setVariableValues({ [varID]: runtemp })
 
-				if (runTime.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpRun: runtemp })
 				}
 			}
@@ -1825,33 +1621,33 @@ module.exports = function (self) {
 		setLoopRampTime: {
 			name: 'Set Loop Ramp Time',
 			options: [...LP_OPTIONS],
-			callback: async (rampTime) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setLoopRampTime')
-				if (rampTime.options.settype === 'id') { // Not Smart type
-					var preset = rampTime.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var ramptemp = self.getVariableValue('Lp'+preset+'RampT')
 				} else {
 					var preset = self.getVariableValue('CurrentLpSet')
 					var ramptemp = self.getVariableValue('CurrentLpRamp')
 				}
 
-				if (rampTime.options.setopt === 'set') {
-					ramptemp = rampTime.options.setvalue
-				} else if (rampTime.options.setopt === 'up') {
+				if (data.options.setopt === 'set') {
+					ramptemp = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
 					// if current ramptemp is 0, if they increase by 5 itll still be set to 0
 					// since 5 < 10, so if thats the case then set it to 10, else default behavior
 					if (ramptemp < 10) {
 						ramptemp = 10;
 					} else {
-						ramptemp += rampTime.options.ammount;
+						ramptemp += data.options.ammount;
 					}
-				} else if (rampTime.options.setopt === 'down') {
+				} else if (data.options.setopt === 'down') {
 					// if ramptemp is 10 and they decrease, set it to 0, else default behavior
-					ramptemp -= rampTime.options.ammount
+					ramptemp -= data.options.ammount
 					if (ramptemp < 10) {
 						ramptemp = 0;
 					}
-				} else if (rampTime.options.setopt === 'reset') {
+				} else if (data.options.setopt === 'reset') {
 					ramptemp = 10
 				}
 
@@ -1865,7 +1661,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
 				self.setVariableValues({ [varID]: ramptemp })
 
-				if (rampTime.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpRamp: ramptemp })
 				}
 			}
@@ -1911,20 +1707,20 @@ module.exports = function (self) {
 					isVisible: (options) => options.direction === 'id',
 				},
 			],
-			callback: async (LpAPt) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setLoopAPoint')
-				if (LpAPt.options.settype === 'id') { // Not Smart type
-					var preset = LpAPt.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var pointTemp = self.getVariableValue('Lp'+preset+'APoint');
 				} else {
 					var preset = self.getVariableValue('CurrentLpSet')
 					var pointTemp = self.getVariableValue('CurrentLpA');
 				}
 
-				if (LpAPt.options.direction === 'id') {
-					pointTemp = LpAPt.options.psetid
+				if (data.options.direction === 'id') {
+					pointTemp = data.options.psetid
 				} else {
-					pointTemp += LpAPt.options.direction
+					pointTemp += data.options.direction
 				}
 
 				if (pointTemp > 127) {
@@ -1937,7 +1733,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
 				self.setVariableValues({ [varID]: pointTemp })
 
-				if (LpAPt.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpA: pointTemp })
 				}
 			}
@@ -1982,20 +1778,20 @@ module.exports = function (self) {
 					isVisible: (options) => options.direction === 'id',
 				},
 			],
-			callback: async (LpBPt) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setLoopBPoint')
-				if (LpBPt.options.settype === 'id') { // Not Smart type
-					var preset = LpBPt.options.id
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
 					var pointTemp = self.getVariableValue('Lp'+preset+'BPoint');
 				} else {
 					var preset = self.getVariableValue('CurrentLpSet')
 					var pointTemp = self.getVariableValue('CurrentLpB');
 				}
 
-				if (LpBPt.options.direction === 'id') {
-					pointTemp = LpBPt.options.psetid
+				if (data.options.direction === 'id') {
+					pointTemp = data.options.psetid
 				} else {
-					pointTemp += LpBPt.options.direction
+					pointTemp += data.options.direction
 				}
 
 				if (pointTemp > 127) {
@@ -2008,7 +1804,7 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
 				self.setVariableValues({ [varID]: pointTemp })
 
-				if (LpBPt.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpB: pointTemp })
 				}
 			}
@@ -2050,13 +1846,13 @@ module.exports = function (self) {
 					useVariables: true,
 				},
 			],
-			callback: async (gotoCoords) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: gotoCoords')
-				const resolvedCoordsValue = await self.parseVariablesInString(gotoCoords.options.coords)
-				const resolvedRunValue = await self.parseVariablesInString(gotoCoords.options.runtime)
-				const resolvedRampValue = await self.parseVariablesInString(gotoCoords.options.ramptime)
+				const resolvedCoordsValue = await self.parseVariablesInString(data.options.coords)
+				const resolvedRunValue = await self.parseVariablesInString(data.options.runtime)
+				const resolvedRampValue = await self.parseVariablesInString(data.options.ramptime)
 
-				self.sendEmotimoAPICommand('G11 M' + gotoCoords.options.motorid + ' P' + resolvedCoordsValue + ' T' + resolvedRunValue + ' A' + resolvedRampValue)
+				self.sendEmotimoAPICommand('G11 M' + data.options.motorid + ' P' + resolvedCoordsValue + ' T' + resolvedRunValue + ' A' + resolvedRampValue)
 			}
 		},
 		savePstCoords: {
@@ -2129,20 +1925,20 @@ module.exports = function (self) {
 					useVariables: true,
 				},
 			],
-			callback: async (savePstCoords) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: savePstCoords')
-				if (savePstCoords.options.smart == 0) {
+				if (data.options.smart == 0) {
 					var preset = self.getVariableValue('CurrentPstSet')
 				} else {
-					var preset = savePstCoords.options.preset
+					var preset = data.options.preset
 				}
 				// If a variable gets inputted, get that value, otherwise it takes the inputted value
-				var resolvedRunValue = await self.parseVariablesInString(savePstCoords.options.runtime)
-				var resolvedRampValue = await self.parseVariablesInString(savePstCoords.options.ramptime)
-				var resolvedPanValue = await self.parseVariablesInString(savePstCoords.options.pCoords)
-				var resolvedTiltValue = await self.parseVariablesInString(savePstCoords.options.tCoords)
-				var resolvedSlideValue = await self.parseVariablesInString(savePstCoords.options.sCoords)
-				var resolvedZoomValue = await self.parseVariablesInString(savePstCoords.options.zCoords)
+				var resolvedRunValue = await self.parseVariablesInString(data.options.runtime)
+				var resolvedRampValue = await self.parseVariablesInString(data.options.ramptime)
+				var resolvedPanValue = await self.parseVariablesInString(data.options.pCoords)
+				var resolvedTiltValue = await self.parseVariablesInString(data.options.tCoords)
+				var resolvedSlideValue = await self.parseVariablesInString(data.options.sCoords)
+				var resolvedZoomValue = await self.parseVariablesInString(data.options.zCoords)
 				
 				// find if the variables/preset already exists
 				var exists = false
@@ -2279,14 +2075,14 @@ module.exports = function (self) {
 					useVariables: true,
 				},
 			],
-			callback: async (setMotorPos) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: setMotorPosition')
 				const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 				// If a variable gets inputted, get that value, otherwise it takes the inputted value
-				var resolvedPanValue = await self.parseVariablesInString(setMotorPos.options.pCoords)
-				var resolvedTiltValue = await self.parseVariablesInString(setMotorPos.options.tCoords)
-				var resolvedSlideValue = await self.parseVariablesInString(setMotorPos.options.sCoords)
-				var resolvedZoomValue = await self.parseVariablesInString(setMotorPos.options.zCoords)
+				var resolvedPanValue = await self.parseVariablesInString(data.options.pCoords)
+				var resolvedTiltValue = await self.parseVariablesInString(data.options.tCoords)
+				var resolvedSlideValue = await self.parseVariablesInString(data.options.sCoords)
+				var resolvedZoomValue = await self.parseVariablesInString(data.options.zCoords)
 				let sendBuf
 
 				// Pan
@@ -2330,9 +2126,9 @@ module.exports = function (self) {
 					choices: VIRTUAL_BUTTON,
 				},
 			],
-			callback: async (virtButtonPress) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: virtualInput')
-				self.sendEmotimoAPICommand('G600 C' + virtButtonPress.options.vbutton)
+				self.sendEmotimoAPICommand('G600 C' + data.options.vbutton)
 			},
 		},
 		send: {
@@ -2354,9 +2150,9 @@ module.exports = function (self) {
 					choices: CHOICES_END,
 				},
 			],
-			callback: async (action) => {
+			callback: async (data) => {
 				self.log('warn', 'Action: send CMD')
-				const cmd = unescape(await self.parseVariablesInString(action.options.id_send))
+				const cmd = unescape(await self.parseVariablesInString(data.options.id_send))
 
 				if (cmd != '') {
 					/*
@@ -2365,7 +2161,7 @@ module.exports = function (self) {
 					 * which then escapes character values over 0x7F
 					 * and destroys the 'binary' content
 					 */
-					const sendBuf = Buffer.from(cmd + action.options.id_end, 'latin1')
+					const sendBuf = Buffer.from(cmd + data.options.id_end, 'latin1')
 
 					if (self.config.prot == 'tcp') {
 						self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())

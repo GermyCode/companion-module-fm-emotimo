@@ -55,7 +55,7 @@ Check out the [eMotimo API](https://support.emotimo.com/hc/en-us/articles/360007
 ### V1.1.3
 * When setting up loops it used to send a command everytime a loop action happened, like setting the A or B points. Now it only sends one command on loop recall with the info sotred in this modules variables. 
   * Reason: 
-    1. it just sends somany commands when setting up loops, 
+    1. it just sends so many commands when setting up loops, 
     2. You cant recall loop info from the emotimo like you can with presets, so theres no reason to always keep it updated when making loops, instead only update it once on recall
 
 ### V1.1.1
@@ -67,7 +67,7 @@ Check out the [eMotimo API](https://support.emotimo.com/hc/en-us/articles/360007
   * Reason: There were lots of actions and it could be confusing on which to use, also added tooltips that might help
 
 ### V1.1.0
-* If it disconnects dont keep piling up requests, so when it disconnects it doesnt flood the emotimo and stall it
+* If it disconnects, it doesnt keep piling up requests so it doesnt flood the emotimo and stall it on reconnect
 * removed G900 heartbeat keep-alive command as its not necessary
 
 ### V1.0.4

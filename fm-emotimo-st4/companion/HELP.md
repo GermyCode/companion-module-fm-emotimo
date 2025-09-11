@@ -20,6 +20,9 @@ I Have not tested with it on focus, use at your own risk!
 * * Smart ramp Time
 * * Smart ramp Time set from value
 
+## Motor Inversions
+Basically flipps the selected axis. Say if you press pan left, but the camera pans right, you can invert it where left is left and right is right
+
 ## Company Overview
 eMotimo is an industry leader in motion control. We specialize in makes multi axis motion control heads for the cinema space. 
 

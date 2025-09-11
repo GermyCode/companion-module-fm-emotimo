@@ -216,34 +216,6 @@ module.exports = {
 			text: 'This is an Example Motor Setup Page for Streamdeck'
 		},
 
-		presets.CurMotPos = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Current Motor Pos',
-			style: {
-				text: '$(companion-module-emotimo-st4-3:CurrentMtrPosStr)\\n',
-				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'jogMotorSmarter',
-							options: {
-								direction: 1,
-							}
-						}
-					],
-					up: [
-						{
-							actionId: 'stopCurrentMotor',
-						}
-					],
-				},
-			],
-		},
 		presets.CurMotNeg = {
 			category: 'Motors',
 			type: 'button',
@@ -258,15 +230,53 @@ module.exports = {
 				{
 					down: [
 						{
-							actionId: 'jogMotorSmarter',
+							actionId: 'jogMotor',
 							options: {
-								direction: -1,
+								settype: 'smart',
+								id_speed: 0,
+								dir: -1
 							}
 						}
 					],
 					up: [
 						{
-							actionId: 'stopCurrentMotor',
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'smart',
+							}
+						}
+					],
+				},
+			],
+		},
+		presets.CurMotPos = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Current Motor Pos',
+			style: {
+				text: '$(companion-module-emotimo-st4-3:CurrentMtrPosStr)\\n',
+				size: '18',
+				color: colorWhite,
+				bgcolor: colorBlack,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'jogMotor',
+							options: {
+								settype: 'smart',
+								id_speed: 0,
+								dir: 1
+							}
+						}
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'smart',
+							}
 						}
 					],
 				},
@@ -305,15 +315,18 @@ module.exports = {
 				{
 					down: [
 						{
-							actionId: 'setJogSpeedLimitSmart',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								direction: 1
+								settype: 'smart',
+								setopt: 'up',
+								ammount: 1
 							}
 						}
 					],
 				}
 			],
 		},
+
 		presets.MotorLineBreak1 = {
 			category: 'Motors',
 			name: '',
@@ -352,13 +365,7 @@ module.exports = {
 				color: colorWhite,
 				bgcolor: colorBlack,
 			},
-			steps: [
-				{
-					down: [
-						
-					],
-				},
-			],
+			steps: [{}],
 		},
 		presets.DecreaseMtrSetup = {
 			category: 'Motors',
@@ -395,12 +402,17 @@ module.exports = {
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimitSmart',
+							actionId: 'setJogSpeedLimit',
+							options: {
+								settype: 'smart',
+								setopt: 'reset'
+							}
 						}
 					],
 				},
 			],
 		},
+
 		presets.MotorLineBreak2 = {
 			category: 'Motors',
 			name: '',
@@ -424,7 +436,10 @@ module.exports = {
 					],
 					up: [
 						{
-							actionId: 'setStopASmart',	 
+							actionId: 'setStopA',
+							options: {
+								settype: 'smart'
+							}
 						}
 					],
 					2000: {
@@ -435,9 +450,8 @@ module.exports = {
 							{
 								actionId: 'recallStopA',
 								options: {
-									id_mot: 0
+									settype: 'smart'
 								},
-								delay: 0,
 							},
 						],
 					},
@@ -470,8 +484,10 @@ module.exports = {
 						},
 						actions: [
 							{
-								actionId: 'clearStopByAxisSmart',
-								delay: 0,
+								actionId: 'clearStopsByAxis',
+								options: {
+									settype: 'smart',
+								}
 							},
 						],
 					},
@@ -494,7 +510,10 @@ module.exports = {
 					],
 					up: [
 						{
-							actionId: 'setStopBSmart',
+							actionId: 'setStopB',
+							options: {
+								settype: 'smart'
+							}
 						}
 					],
 					2000: {
@@ -505,9 +524,8 @@ module.exports = {
 							{
 								actionId: 'recallStopB',
 								options: {
-									id_mot: 0
+									settype: 'smart'
 								},
-								delay: 0,
 							},
 						],
 					},
@@ -515,7 +533,7 @@ module.exports = {
 			],
 			feedbacks: [
 				{
-					feedbackId: 'StopBStatusSmart',				
+					feedbackId: 'StopBStatusSmart',
 					style: {
 						bgcolor: colorDarkGreen,
 						color: colorBlack,
@@ -536,9 +554,11 @@ module.exports = {
 				{
 					down: [
 						{
-							actionId: 'setJogSpeedLimitSmart',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								direction: -1
+								settype: 'smart',
+								setopt: 'down',
+								ammount: 1
 							}
 						}
 					],

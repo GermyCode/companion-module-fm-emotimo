@@ -197,7 +197,7 @@ const MOTOR_OPTIONS = [
 		label: 'Set Type',
 		default: 'smart',
 		choices: CHOICES_SET_TYPE,
-		tooltip: 'Smart: The current preset/loop selected\nID: Select a specific loop ID to change',
+		tooltip: 'Smart: The current motor selected\nID: Select a specific motor ID to change',
 	},
 	{
 		type: 'dropdown',
@@ -218,23 +218,7 @@ module.exports = function (self) {
 
 		jogMotor: {
 			name: 'Motor Jog',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'settype',
-					label: 'Set Type',
-					default: 'id',
-					choices: CHOICES_SET_TYPE,
-					tooltip: 'Smart: The current motor selected\nID: Select a specific ID to change',
-				},
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 1,
-					choices: MOTOR_ID,
-					isVisible: (options) => options.settype === 'id',
-				},
+			options: [...MOTOR_OPTIONS,
 				{
 					type: 'dropdown',
 					id: 'id_speed',
@@ -262,13 +246,13 @@ module.exports = function (self) {
 				// gets the label of the motor by the id provided, if none is found it gives 'Unknown'
 				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
 				if (motor_name === 'Unknown') {
-					self.log('error', 'Module: Motor Id: ' + motor_id + ' not fund');
+					self.log('error', 'Module: Motor Id: ' + motor_id + ' not found');
 					return;
 				}
 
 				var motorSpeed = 0
 
-				if (data.options.id_speed === 1) { // If default speed is selected
+				if (data.options.id_speed === 0) { // If default speed is selected
 					var motorInversion = 1
 					var temp = 0
 					temp = self.getVariableValue(`${motor_name}SpeedLimit`)
@@ -320,29 +304,12 @@ module.exports = function (self) {
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-
 				self.sendEmotimoAPICommand('G300 M' + motor_id + ' V0')
 			},
 		},
 		setJogSpeedLimit: {
 			name: 'Set Motor Jog Speed',
-			options: [
-				{
-					type: 'dropdown',
-					id: 'settype',
-					label: 'Set Type',
-					default: 'id',
-					choices: CHOICES_SET_TYPE,
-					tooltip: 'Smart: The current motor selected\nID: Select a specific ID to change',
-				},
-				{
-					type: 'dropdown',
-					id: 'id_mot',
-					label: 'Motor ID',
-					default: 1,
-					choices: MOTOR_ID,
-					isVisible: (options) => options.settype === 'id',
-				},
+			options: [...MOTOR_OPTIONS,
 				{
 					type: 'dropdown',
 					id: 'setopt',
@@ -372,12 +339,16 @@ module.exports = function (self) {
 			],
 			callback: async (data) => {
 				self.log('warn', 'Action: setJogSpeedLimit')
+				if (data.options.settype ===  'id') {
+					var motor_id = data.options.id_mot
+				} else {
+					var motor_id = self.getVariableValue('CurrentMtrSet')
+				}
 
-				const motor_id = data.options.id_mot
 				// gets the label of the motor by the id provided, if none is found it gives 'Unknown'
 				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
 				if (motor_name === 'Unknown') {
-					self.log('error', 'Module: Motor Id: ' + motor_id + ' not fund');
+					self.log('error', 'Module: Motor Id: ' + motor_id + ' not found');
 					return;
 				}
 
@@ -399,9 +370,13 @@ module.exports = function (self) {
 					speedtemp = 0;
 				}
 
-				self.log('debug', 'Motor ID: ' + data.options.id_mot + ' Speed: ' + speedtemp)
+				self.log('debug', 'Motor ID: ' + motor_id + ' Speed: ' + speedtemp)
 
 				self.setVariableValues({ [`${motor_name}SpeedLimit`]: speedtemp })
+
+				if (data.options.settype === 'smart' || motor_id === self.getVariableValue('CurreCurrentMtrSetCurrentMtrSetntLpSet')) {
+					self.setVariableValues({ CurrentMtrSpeed: speedtemp })
+				}
 			}
 		},
 
@@ -435,7 +410,7 @@ module.exports = function (self) {
 				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
 
 				if (motor_name === 'Unknown') {
-					self.log('error', 'Module: Motor Id: ' + motor_id + ' not fund');
+					self.log('error', 'Module: Motor Id: ' + motor_id + ' not found');
 					return;
 				}
 
@@ -874,15 +849,28 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current motor selected\nID: Select a specific motor ID to change',
+				},
+				{
+					type: 'dropdown',
 					id: 'id_mot',
 					label: 'Motor ID',
 					default: 0,
 					choices: MOTOR_ID_UNSET,
+					isVisible: (options) => options.settype === 'id',
 				},
 			],
 			callback: async (data) => {
 				self.log('warn', 'Action: recallStopA')
-				const motor_id = data.options.id_mot
+				if (data.options.settype ===  'id') {
+					var motor_id = data.options.id_mot
+				} else {
+					var motor_id = self.getVariableValue('CurrentMtrSet')
+				}
 
 				if (motor_id == 0) {
 					motor_id = self.getVariableValue('CurrentMtrSet')
@@ -895,15 +883,28 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
+					id: 'settype',
+					label: 'Set Type',
+					default: 'smart',
+					choices: CHOICES_SET_TYPE,
+					tooltip: 'Smart: The current motor selected\nID: Select a specific motor ID to change',
+				},
+				{
+					type: 'dropdown',
 					id: 'id_mot',
 					label: 'Motor ID',
 					default: 0,
 					choices: MOTOR_ID_UNSET,
+					isVisible: (options) => options.settype === 'id',
 				},
 			],
 			callback: async (data) => {
 				self.log('warn', 'Action: recallStopB')
-				const motor_id = data.options.id_mot
+				if (data.options.settype ===  'id') {
+					var motor_id = data.options.id_mot
+				} else {
+					var motor_id = self.getVariableValue('CurrentMtrSet')
+				}
 
 				if (motor_id == 0) {
 					motor_id = self.getVariableValue('CurrentMtrSet')
@@ -938,7 +939,7 @@ module.exports = function (self) {
 				self.sendEmotimoAPICommand('G219 M' + motor_id)
 			}
 		},
-		clearStopByAxis: {
+		clearStopsByAxis: {
 			name: 'Clear Stops by Axis',
 			options: [...MOTOR_OPTIONS],
 			callback: async (data) => {
@@ -1082,16 +1083,6 @@ module.exports = function (self) {
 
 				self.sendEmotimoAPICommand('G102 P' + selProf)
 			}
-		},
-
-		stopCurrentMotor: {
-			name: 'Stop Current Motor',
-			options: [],
-			callback: async () => {
-				self.log('warn', 'Action: stopCurrentMotor')
-				var motor = self.getVariableValue('CurrentMtrSet')
-				self.sendEmotimoAPICommand('G301 M' + motor + ' V0')
-			},
 		},
 
 		zeroMotors: {

@@ -1,41 +1,34 @@
 ![eMotimo Logo](logo.png)
 
-# Important!
+# Important
+
 For labels to line up, Put the slide motor in M3, and the zoom motor in M4.
 If you use a focus motor instead, M4 should work for that instead of zoom.
 I Have not tested with it on focus, use at your own risk!
 
+## Info
 
-## Functions
-**Smart means it applies to the selected attribute**
-* Run time // How fast the preset runs
-* * Run time
-* * Run time set from value
-* * Smart Run Time
-* * Smart Run Time set from value
-###
-* Ramp time // How fast the preset speeds up from a stop
-* * Ramp time
-* * Ramp time set from value
-* * Smart ramp Time
-* * Smart ramp Time set from value
+Run/Ramp Times: 10 = 0.1 seconds, or 100 = 1 second, ect.
 
-## Motor Inversions
+#
+
+Motor Inversions:
 Basically flipps the selected axis. Say if you press pan left, but the camera pans right, you can invert it where left is left and right is right
 
 ## Company Overview
-eMotimo is an industry leader in motion control. We specialize in makes multi axis motion control heads for the cinema space. 
+
+eMotimo is an industry leader in motion control. We specialize in makes multi axis motion control heads for the cinema space.
 
 Our flagship product the [ST4](https://emotimo.com/products/st4?variant=18140355887201) is a proven motion control head that has been used in numerous productions since 2016. With it you can control Pan/Tilt/Slide and a Turntable or a Focus motor. For even more control the upgraded [ST4.3](https://emotimo.com/products/st4?variant=42138608140469) that released mid 2022 frees up the M2 port so that it can be used for the Turntable and includes an additional Expansion Port that integrates with the popular Tilta Nucleus motors giving control of a full FIZ solution.
 
 ![ST4](ST4.jpg)
 
-
 The [SA2.6](https://emotimo.com/pages/sa2point6) is our latest motion control unit that we like to call the conductor. It gives you control of 2 Motor drivers for your Slide and Turntable, 3 Tilta motors for full FIZ control, and seemlessly integrates with DJI's RS3 Pro/RS3/RS2 Gimbals giving you control of Pan/Tilt/Roll and another option for Focus control. The SA2.6 is officially in production now and can be purchased from our [shop](https://emotimo.com/products/sa2-6-controller?_pos=2&_psq=SA&_ss=e&_v=1.0&variant=42925931462837)
 
 ![SA2.6](SA2.6.jpg)
 
-## Setup and Release Notes 
+## Setup and Release Notes
+
 ![StreamdeckArchitecture](StreamDeckArchitecture_092023.jpg)
 This module will allow you to control your [ST4](https://emotimo.com/products/st4?variant=18140355887201)/[ST4.3](https://emotimo.com/products/st4?variant=42138608140469) as well as the brand new [SA2.6](https://emotimo.com/pages/sa2point6)
 
@@ -47,36 +40,41 @@ Check out our knowledge base for guides on customizing your own configurations a
 [support.emotimo.com](https://support.emotimo.com/hc/en-us/categories/360003772632-StreamDeck-and-BitFocus-Companion-with-the-eMotimo-ST4-and-ST4-3)
 
 ## Feature Requests and Bug Tracking
-Send us an email: info@emotimo.com
+
+Send us an email: <info@emotimo.com>
 
 Want to see how far you can push this module:
 
 Check out the [eMotimo API](https://support.emotimo.com/hc/en-us/articles/360007015111-The-eMotimo-ST4-API) and the original modules [Repository](https://github.com/bitfocus/companion-module-emotimo-st4) and this modules (modified) [Repository](https://github.com/GermyCode/companion-module-fm-emotimo) on github
 
-
 # Updates
-## Future:
+
+## Future
+
 * Model specific actions depending what model is selected in the config
-#
-#
+
 ### V2.0.1
+
 * Modern connection system with everything from V2.0.0
 
 ### V2.0.0
+
 * Legacy connection system
-* Merged smart and normal actions into one action. There is now a dropdown to select smart or preset in the action. 
+* Merged smart and normal actions into one action. There is now a dropdown to select smart or preset in the action.
   * Reason: There were lots of actions and it could be confusing on which to use, also added tooltips that might help
 * Fixed preset buttons to use new merged actions
 * When setting up loops it used to send a command everytime a loop action happened, like setting the A or B points. Now it only sends one command on loop recall with the info sotred in this modules variables.
-  * Reason: 
-    1. it just sends so many commands when setting up loops, 
+  * Reason:
+    1. it just sends so many commands when setting up loops,
     2. You cant recall loop info from the emotimo like you can with presets, so theres no reason to always keep it updated when making loops, instead only update it once on recall
 
 ### V1.1.0
+
 * If it disconnects, it doesnt keep piling up requests so it doesnt flood the emotimo and stall it on reconnect
 * removed G900 heartbeat keep-alive command as its not necessary
 
 ### V1.0.4
+
 * added G900 heartbeat keep-alive command
 * added the set run/ramp time by value action for loops
 

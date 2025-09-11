@@ -14,9 +14,9 @@ const MOTOR_ID = [
 	{ id: 2, label: 'Tilt' },
 	{ id: 3, label: 'M3-Slide' },
 	{ id: 4, label: 'M4-Zoom' },
-	{ id: 5, label: 'TN 1' },
-	{ id: 6, label: 'TN 2' },
-	{ id: 7, label: 'TN 3' },
+	{ id: 5, label: 'TN1' },
+	{ id: 6, label: 'TN2' },
+	{ id: 7, label: 'TN3' },
 	{ id: 8, label: 'Roll' },
 	{ id: 9, label: 'Focus' },
 ]
@@ -81,8 +81,8 @@ const VIRTUAL_BUTTON = [
 	{ id: 4, label: 'Left' },
 	{ id: 5, label: 'Back' },
 	{ id: 6, label: 'Enter Held' },
-	{ id: 7, label: 'Empty' },
-	{ id: 8, label: 'Empty' },
+	{ id: 7, label: 'Triangle' },
+	{ id: 8, label: 'Circle' },
 
 ]
 
@@ -201,7 +201,7 @@ const MOTOR_OPTIONS = [
 	},
 	{
 		type: 'dropdown',
-		id: 'id_mot',
+		id: 'id',
 		label: 'Motor ID',
 		default: 1,
 		choices: MOTOR_ID,
@@ -238,7 +238,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: Jog Motors')
 				if (data.options.settype ===  'id') {
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -258,16 +258,11 @@ module.exports = function (self) {
 					temp = self.getVariableValue(`${motor_name}SpeedLimit`)
 					motorInversion = self.getVariableValue(`${motor_name}Inversion`)
 
-					self.log('warn', 'motorInversion: ' + motorInversion);
-					self.log('warn', 'temp: ' + temp);
-
 					if (motor_id < 5 || motor_id == 8) {
 						motorSpeed = motorInversion * data.options.dir * temp / 100.0 * 500.0
 					} else {
 						motorSpeed = motorInversion * data.options.dir * temp / 100.0 * 100.0
 					}
-
-					self.log('warn', 'motorSpeed: ' + motorSpeed);
 
 					self.sendEmotimoAPICommand('G301 M' + motor_id + ' V' + motorSpeed)
 					return;
@@ -290,7 +285,7 @@ module.exports = function (self) {
 				},
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 1,
 					choices: MOTOR_ID,
@@ -300,7 +295,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: Jog Motors STOP')
 				if (data.options.settype ===  'id') {
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -340,7 +335,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: setJogSpeedLimit')
 				if (data.options.settype ===  'id') {
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -361,7 +356,11 @@ module.exports = function (self) {
 				} else if (data.options.setopt === 'down') {
 					speedtemp -= data.options.ammount
 				} else if (data.options.setopt === 'reset') {
-					speedtemp = 100
+					if (data.options.id === 5 || data.options.id === 6 || data.options.id === 7) {
+						speedtemp = 50;
+					} else {
+						speedtemp = 100
+					}
 				}
 
 				if (speedtemp > 100) {
@@ -385,7 +384,7 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 2,
 					choices: MOTOR_ID,
@@ -405,7 +404,7 @@ module.exports = function (self) {
 				var rawMotorSpeed = 0
 				var temp = 0
 
-				const motor_id = data.options.id_mot;
+				const motor_id = data.options.id;
 				// gets the label of the motor by the id provided, if none is found it gives 'Unknown'
 				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
 
@@ -447,7 +446,7 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 1,
 					choices: MOTOR_ID,
@@ -455,27 +454,27 @@ module.exports = function (self) {
 			],
 			callback: async (data) => {
 				self.log('warn', 'Action: resetCruiseSpeed')
-				if (data.options.id_mot == 1) {
+				if (data.options.id == 1) {
 					self.setVariableValues({ PanCruiseSpeed: 0 })
-				} else if (data.options.id_mot == 2) {
+				} else if (data.options.id == 2) {
 					self.setVariableValues({ TiltCruiseSpeed: 0 })
-				} else if (data.options.id_mot == 3) {
+				} else if (data.options.id == 3) {
 					self.setVariableValues({ 'M3-SlideCruiseSpeed': 0 })
-				} else if (data.options.id_mot == 4) {
+				} else if (data.options.id == 4) {
 					self.setVariableValues({ 'M4-ZoomCruiseSpeed': 0 })
-				} else if (data.options.id_mot == 5) {
+				} else if (data.options.id == 5) {
 					self.setVariableValues({ TN1CruiseSpeed: 0 })
-				} else if (data.options.id_mot == 6) {
+				} else if (data.options.id == 6) {
 					self.setVariableValues({ TN2CruiseSpeed: 0 })
-				} else if (data.options.id_mot == 7) {
+				} else if (data.options.id == 7) {
 					self.setVariableValues({ TN3CruiseSpeed: 0 })
-				} else if (data.options.id_mot == 8) {
+				} else if (data.options.id == 8) {
 					self.setVariableValues({ RollCruiseSpeed: 0 })
-				} else if (data.options.id_mot == 9) {
+				} else if (data.options.id == 9) {
 					self.setVariableValues({ FocusCruiseSpeed: 0 })
 				}
 
-				self.sendEmotimoAPICommand('G301 M' + data.options.id_mot + ' V0')
+				self.sendEmotimoAPICommand('G301 M' + data.options.id + ' V0')
 			}
 		},
 
@@ -484,7 +483,7 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 5,
 					choices: TN_MOTOR_ID,
@@ -503,19 +502,19 @@ module.exports = function (self) {
 				var increment = 0
 
 				if (cmd != '') {
-					if (data.options.id_mot == 5) {
+					if (data.options.id == 5) {
 						temp = self.getVariableValue('FPos')
 						increment = self.getVariableValue('FStep')
-					} else if (data.options.id_mot == 6) {
+					} else if (data.options.id == 6) {
 						temp = self.getVariableValue('IPos')
 						increment = self.getVariableValue('IStep')
-					} else if (data.options.id_mot == 7) {
+					} else if (data.options.id == 7) {
 						temp = self.getVariableValue('ZPos')
 						increment = self.getVariableValue('ZStep')
 					}
 
 					temp += (data.options.direction * increment);
-					// self.log('debug', 'Motor ID' + data.options.id_mot + 'Position' + temp)
+					// self.log('debug', 'Motor ID' + data.options.id + 'Position' + temp)
 
 					if (temp > 10000) {
 						temp = 10000;
@@ -523,15 +522,15 @@ module.exports = function (self) {
 						temp = 0;
 					}
 
-					if (data.options.id_mot == 5) {
+					if (data.options.id == 5) {
 						self.setVariableValues({ FPos: temp })
-					} else if (data.options.id_mot == 6) {
+					} else if (data.options.id == 6) {
 						self.setVariableValues({ IPos: temp })
-					} else if (data.options.id_mot == 7) {
+					} else if (data.options.id == 7) {
 						self.setVariableValues({ ZPos: temp })
 					}
 
-					self.sendEmotimoAPICommand('G302 M' + data.options.id_mot + ' P' + temp)
+					self.sendEmotimoAPICommand('G302 M' + data.options.id + ' P' + temp)
 				}
 			},
 		},
@@ -540,7 +539,7 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 1,
 					choices: MOTOR_ID,
@@ -559,58 +558,58 @@ module.exports = function (self) {
 				var temp = 0
 				var increment = 0
 
-				if (data.options.id_mot == 1) {
+				if (data.options.id == 1) {
 					temp = self.getVariableValue('PPos')
 					increment = self.getVariableValue('PStep')
 					cmdParam = 'X'
-				} else if (data.options.id_mot == 2) {
+				} else if (data.options.id == 2) {
 					temp = self.getVariableValue('TPos')
 					increment = self.getVariableValue('TStep')
 					cmdParam = 'Y'
-				} else if (data.options.id_mot == 3) {
+				} else if (data.options.id == 3) {
 					temp = self.getVariableValue('SPos')
 					increment = self.getVariableValue('SStep')
 					cmdParam = 'Z'
-				} else if (data.options.id_mot == 4) {
+				} else if (data.options.id == 4) {
 					temp = self.getVariableValue('MPos')
 					increment = self.getVariableValue('MStep')
 					cmdParam = 'W'
-				} else if (data.options.id_mot == 5) {
+				} else if (data.options.id == 5) {
 					temp = self.getVariableValue('FPos')
 					increment = self.getVariableValue('FStep')
 					cmdParam = 'F'
-				} else if (data.options.id_mot == 6) {
+				} else if (data.options.id == 6) {
 					temp = self.getVariableValue('IPos')
 					increment = self.getVariableValue('IStep')
 					cmdParam = 'I'
-				} else if (data.options.id_mot == 7) {
+				} else if (data.options.id == 7) {
 					temp = self.getVariableValue('ZPos')
 					increment = self.getVariableValue('ZStep')
 					cmdParam = 'C'
-				} else if (data.options.id_mot == 8) {
+				} else if (data.options.id == 8) {
 					temp = self.getVariableValue('RPos')
 					increment = self.getVariableValue('RStep')
 					cmdParam = 'R'
 				}
 
 				temp += (data.options.direction * increment);
-				// self.log('debug', 'Motor ID' + data.options.id_mot + 'Position' + temp)
+				// self.log('debug', 'Motor ID' + data.options.id + 'Position' + temp)
 
-				if (data.options.id_mot == 1) {
+				if (data.options.id == 1) {
 					self.setVariableValues({ PPos: temp })
-				} else if (data.options.id_mot == 2) {
+				} else if (data.options.id == 2) {
 					self.setVariableValues({ TPos: temp })
-				} else if (data.options.id_mot == 3) {
+				} else if (data.options.id == 3) {
 					self.setVariableValues({ SPos: temp })
-				} else if (data.options.id_mot == 4) {
+				} else if (data.options.id == 4) {
 					self.setVariableValues({ MPos: temp })
-				} else if (data.options.id_mot == 5) {
+				} else if (data.options.id == 5) {
 					self.setVariableValues({ FPos: temp })
-				} else if (data.options.id_mot == 6) {
+				} else if (data.options.id == 6) {
 					self.setVariableValues({ IPos: temp })
-				} else if (data.options.id_mot == 7) {
+				} else if (data.options.id == 7) {
 					self.setVariableValues({ ZPos: temp })
-				} else if (data.options.id_mot == 8) {
+				} else if (data.options.id == 8) {
 					self.setVariableValues({ RPos: temp })
 				}
 
@@ -622,7 +621,7 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 5,
 					choices: MOTOR_ID,
@@ -632,25 +631,25 @@ module.exports = function (self) {
 				self.log('warn', 'Action: toggleIncrement')
 				var temp = 0
 
-				if (data.options.id_mot == 1) {
+				if (data.options.id == 1) {
 					temp = self.getVariableValue('PStep')
-				} else if (data.options.id_mot == 2) {
+				} else if (data.options.id == 2) {
 					temp = self.getVariableValue('TStep')
-				} else if (data.options.id_mot == 3) {
+				} else if (data.options.id == 3) {
 					temp = self.getVariableValue('SStep')
-				} else if (data.options.id_mot == 4) {
+				} else if (data.options.id == 4) {
 					temp = self.getVariableValue('MStep')
-				} else if (data.options.id_mot == 5) {
+				} else if (data.options.id == 5) {
 					temp = self.getVariableValue('FStep')
-				} else if (data.options.id_mot == 6) {
+				} else if (data.options.id == 6) {
 					temp = self.getVariableValue('IStep')
-				} else if (data.options.id_mot == 7) {
+				} else if (data.options.id == 7) {
 					temp = self.getVariableValue('ZStep')
-				} else if (data.options.id_mot == 8) {
+				} else if (data.options.id == 8) {
 					temp = self.getVariableValue('RStep')
 				}
 
-				if (data.options.id_mot < 3) {
+				if (data.options.id < 3) {
 					if (self.config.model == 'SA2.6 Conductor') {
 						if (temp == 1) {
 							temp = 10;
@@ -665,13 +664,13 @@ module.exports = function (self) {
 						}
 					}
 
-				} else if (data.options.id_mot < 5) {
+				} else if (data.options.id < 5) {
 					if (temp == 1000) {
 						temp = 10000;
 					} else {
 						temp = 1000;
 					}
-				} else if (data.options.id_mot < 8) {
+				} else if (data.options.id < 8) {
 					if (temp == 200) {
 						temp = 50;
 					} else {
@@ -685,23 +684,23 @@ module.exports = function (self) {
 					}
 				}
 
-				self.log('debug', 'Model: ' + self.config.model + ' Motor ID: ' + data.options.id_mot + ' Increment: ' + temp)
+				self.log('debug', 'Model: ' + self.config.model + ' Motor ID: ' + data.options.id + ' Increment: ' + temp)
 
-				if (data.options.id_mot == 1) {
+				if (data.options.id == 1) {
 					temp = self.setVariableValues({ PStep: temp })
-				} else if (data.options.id_mot == 2) {
+				} else if (data.options.id == 2) {
 					temp = self.setVariableValues({ TStep: temp })
-				} else if (data.options.id_mot == 3) {
+				} else if (data.options.id == 3) {
 					temp = self.setVariableValues({ SStep: temp })
-				} else if (data.options.id_mot == 4) {
+				} else if (data.options.id == 4) {
 					temp = self.setVariableValues({ MStep: temp })
-				} else if (data.options.id_mot == 5) {
+				} else if (data.options.id == 5) {
 					self.setVariableValues({ FStep: temp })
-				} else if (data.options.id_mot == 6) {
+				} else if (data.options.id == 6) {
 					self.setVariableValues({ IStep: temp })
-				} else if (data.options.id_mot == 7) {
+				} else if (data.options.id == 7) {
 					self.setVariableValues({ ZStep: temp })
-				} else if (data.options.id_mot == 8) {
+				} else if (data.options.id == 8) {
 					self.setVariableValues({ RStep: temp })
 				}
 			}
@@ -746,7 +745,7 @@ module.exports = function (self) {
 			options: [
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 5,
 					choices: TN_MOTOR_ID,
@@ -754,7 +753,7 @@ module.exports = function (self) {
 			],
 			callback: async (data) => {
 				self.log('warn', 'Action: calibrateTNMotor')
-				self.sendEmotimoAPICommand('G812 C0 M' + (data.options.id_mot-4))
+				self.sendEmotimoAPICommand('G812 C0 M' + (data.options.id-4))
 			}
 		},
 
@@ -823,7 +822,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: setStopA')
 				if (data.options.settype === 'id') { // Not Smart type
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -836,11 +835,11 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: setStopB')
 				if (data.options.settype === 'id') { // Not Smart type
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G213 M' + motor_id)
+				self.sendEmotimoAPICommand('G214 M' + motor_id)
 			}
 		},
 
@@ -857,7 +856,7 @@ module.exports = function (self) {
 				},
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 0,
 					choices: MOTOR_ID_UNSET,
@@ -867,7 +866,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: recallStopA')
 				if (data.options.settype ===  'id') {
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -891,7 +890,7 @@ module.exports = function (self) {
 				},
 				{
 					type: 'dropdown',
-					id: 'id_mot',
+					id: 'id',
 					label: 'Motor ID',
 					default: 0,
 					choices: MOTOR_ID_UNSET,
@@ -901,7 +900,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: recallStopB')
 				if (data.options.settype ===  'id') {
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -919,7 +918,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: clearStopA')
 				if (data.options.settype === 'id') { // Not Smart type
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -932,7 +931,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: clearStopB')
 				if (data.options.settype === 'id') { // Not Smart type
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -945,7 +944,7 @@ module.exports = function (self) {
 			callback: async (data) => {
 				self.log('warn', 'Action: clearStopByAxis')
 				if (data.options.settype === 'id') { // Not Smart type
-					var motor_id = data.options.id_mot
+					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
@@ -970,82 +969,47 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Direction',
 					default: 1,
-					choices: DIRECTION_ID
+					choices: [...DIRECTION_ID,
+						{ id: 'set', label: 'Set Preset' }
+					]
 				},
+				{
+					id: 'setID',
+					type: 'number',
+					label: 'Set Preset ID',
+					default: 0,
+					min: 0,
+					max: 127,
+					isVisible: (options) => options.direction === 'set'
+				}
 			],
 			callback: async (data) => {
 				self.log('warn', 'Action: setMotorID')
-				var motor = self.getVariableValue('CurrentMtrSet')
-				var motorName = self.getVariableValue('CurrentMtrStr')
-				var motorSpeed = 0
-				var motorInvert = 0
-				var motorPosName = ''
-				var motorNegName = ''
+				var motor_id = self.getVariableValue('CurrentMtrSet')
+				if (data.options.direction === 'set') {
+					motor_id = data.options.setPst
+				} else {
+					motor_id += data.options.direction
+				}
+
+				if (motor_id > 9) {
+					motor_id = 9;
+				} else if (motor_id < 1) {
+					motor_id = 1;
+				}
+
+				// gets the label of the motor by the id provided, if none is found it gives 'Unknown'
+				const motor_name = (MOTOR_ID.find(m => String(m.id) === String(motor_id))?.label) ?? 'Unknown';
+				if (motor_name === 'Unknown') {
+					self.log('error', 'Module: Motor Id: ' + motor_id + ' not found');
+					return;
+				}
+
+				var motorSpeedLimit = self.getVariableValue(`${motor_name}SpeedLimit`)
+				var motorInvert = self.getVariableValue(`${motor_name}Inversion`)
+				var motorPosName = motor_name + ' Pos'
+				var motorNegName = motor_name + ' Neg'
 				var motorInvertName = ''
-
-				motor += data.options.direction
-				
-				if (motor > 9) {
-					motor = 9;
-				} else if (motor < 1) {
-					motor = 1;
-				}
-
-				if (motor == 1) {
-					motorName = 'Pan'
-					motorSpeed = self.getVariableValue('PanSpeedLimit')
-					motorInvert = self.getVariableValue('PanInversion')
-					motorPosName = motorName + ' Right'
-					motorNegName = motorName + ' Left'
-				} else if (motor == 2) {
-					motorName = 'Tilt'
-					motorSpeed = self.getVariableValue('TiltSpeedLimit')
-					motorInvert = self.getVariableValue('TiltInversion')
-					motorPosName = motorName + ' Up'
-					motorNegName = motorName + ' Down'
-				} else if (motor == 3) {
-					motorName = 'Slide'
-					motorSpeed = self.getVariableValue('M3-SlideSpeedLimit')
-					motorInvert = self.getVariableValue('M3-SlideInversion')
-					motorPosName = motorName + ' Pos'
-					motorNegName = motorName + ' Neg'
-				} else if (motor == 4) {
-					motorName = 'M4'
-					motorSpeed = self.getVariableValue('M4-ZoomSpeedLimit')
-					motorInvert = self.getVariableValue('M4-ZoomInversion')
-					motorPosName = motorName + ' Pos'
-					motorNegName = motorName + ' Neg'
-				} else if (motor == 5) {
-					motorName = 'Focus'
-					motorSpeed = self.getVariableValue('TN1SpeedLimit')
-					motorInvert = self.getVariableValue('TN1Inversion')
-					motorPosName = motorName + ' Pos'
-					motorNegName = motorName + ' Neg'
-				} else if (motor == 6) {
-					motorName = 'Iris'
-					motorSpeed = self.getVariableValue('TN2SpeedLimit')
-					motorInvert = self.getVariableValue('TN2Inversion')
-					motorPosName = motorName + ' Pos'
-					motorNegName = motorName + ' Neg'
-				} else if (motor == 7) {
-					motorName = 'Zoom'
-					motorSpeed = self.getVariableValue('TN3SpeedLimit')
-					motorInvert = self.getVariableValue('TN3Inversion')
-					motorPosName = motorName + ' Pos'
-					motorNegName = motorName + ' Neg'
-				} else if (motor == 8) {
-					motorName = 'Roll'
-					motorSpeed = self.getVariableValue('RollSpeedLimit')
-					motorInvert = self.getVariableValue('RollInversion')
-					motorPosName = motorName + ' CW'
-					motorNegName = motorName + ' CCW'
-				} else if (motor == 9) {
-					motorName = 'RS Focus'
-					motorSpeed = self.getVariableValue('FocusSpeedLimit')
-					motorInvert = self.getVariableValue('FocusInversion')
-					motorPosName = motorName + ' Pos'
-					motorNegName = motorName + ' Neg'
-				}
 
 				if (motorInvert == 1) {
 					motorInvertName = 'Normal'
@@ -1053,13 +1017,14 @@ module.exports = function (self) {
 					motorInvertName = 'Inverted'
 				}
 
-				self.setVariableValues({ CurrentMtrSet: motor })
-				self.setVariableValues({ CurrentMtrStr: motorName })
+				self.setVariableValues({ CurrentMtrSet: motor_id })
+				self.setVariableValues({ CurrentMtrStr: motor_name })
 				self.setVariableValues({ CurrentMtrPosStr: motorPosName })
 				self.setVariableValues({ CurrentMtrNegStr: motorNegName })
-				self.setVariableValues({ CurrentMtrSpeed: motorSpeed})
+				self.setVariableValues({ CurrentMtrSpeed: motorSpeedLimit})
 				self.setVariableValues({ CurrentMtrInversion: motorInvertName})
-				
+
+				self.log('debug', `Motor ID: ${motor_id} / Motor Name: ${motor_name} / Motor Pos Name: ${motorPosName} / Motor Neg Name: ${motorNegName} / Motor Speed: ${motorSpeedLimit} / Motor Inversion: ${motorInvertName}`)
 				self.checkFeedbacks("StopAStatusSmart")
 				self.checkFeedbacks("StopBStatusSmart")
 			}

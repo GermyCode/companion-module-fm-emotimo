@@ -65,7 +65,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		}
 
 		this.init_emotimo_variables()
-		this.initPresets()
+		this.initPresets(this)
 
 		// Give socket time to establish
 		if (config.fetch) setTimeout(() => this.fetchStartup(), 1000);

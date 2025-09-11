@@ -1,4 +1,5 @@
 const { combineRgb } = require('@companion-module/base')
+const { COLORS } = require('./color.js')
 
 let { MODELS, SERIES_SPECS } = require('./models.js')
 
@@ -6,19 +7,6 @@ module.exports = {
 	initPresets: function () {
 		let presets = {}
 		let SERIES = {}
-
-		const colorWhite = combineRgb(255, 255, 255)
-		const colorBlack = combineRgb(0, 0, 0)
-		const colorRed = combineRgb(255, 0, 0)
-		const colorDarkRed = combineRgb(100, 0, 0)
-		const colorOrange = combineRgb(255, 102, 0)
-		const colorGreen = combineRgb(0, 255, 0)
-		const colorDarkGreen = combineRgb(0, 127, 0)
-		const colorDarkDarkGreen = combineRgb(50, 50, 0)
-		const colorDarkBlue = combineRgb(0, 0, 100)
-		const colorDarkLightBlue = combineRgb(0, 50, 100)
-		const colorDarkPurple = combineRgb(50, 0, 100)
-		const colorTeal = combineRgb(0, 90, 100)
 
 		// Variables for Base64 image data do not edit
 		let image_up =
@@ -41,173 +29,7 @@ module.exports = {
 		let motorNames = ['Pan', 'Tilt', 'Slide', 'M4', 'TN Focus', 'TN Iris', 'TN Zoom', 'Roll', 'RS Focus']
 
 		// ########################
-		// #### System Presets ####
-		// ########################
-		presets.VirtUp = {
-			category: 'UI Navigation',
-			type: 'button',
-			name: 'Nav Up',
-			style: {
-				text: 'Up\\n',
-				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 1,
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.VirtRight = {
-			category: 'UI Navigation',
-			type: 'button',
-			name: 'Nav Right',
-			style: {
-				text: 'Right\\n',
-				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 2,
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.VirtDown = {
-			category: 'UI Navigation',
-			type: 'button',
-			name: 'Nav Down',
-			style: {
-				text: 'Down\\n',
-				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 3,
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.VirtLeft = {
-			category: 'UI Navigation',
-			type: 'button',
-			name: 'Nav Left',
-			style: {
-				text: 'Left\\n',
-				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 4,
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.VirtEnter = {
-			category: 'UI Navigation',
-			type: 'button',
-			name: 'Nav Enter',
-			style: {
-				text: 'Select\\n',
-				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 0,
-							}
-						},
-						{
-							// actionId: 'virtualInput',
-							// delay: 2000,
-							// options: {
-							//	 vbutton: 6,
-							// }
-						},
-					],
-					up: [
-						//Abort Delayed Actions Here
-					],
-					2000: { //Duration Group Example
-						options: {
-							runWhileHeld: true,
-						},
-						actions: [
-							{
-								actionId: 'virtualInput',
-								options: {
-									vbutton: 6,
-								},
-								delay: 0,
-							},
-						],
-					},
-				},
-			],
-		},
-		presets.VirtBack = {
-			category: 'UI Navigation',
-			type: 'button',
-			name: 'Nav Back',
-			style: {
-				text: 'Escape\\n',
-				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 5,
-							}
-						}
-					],
-				},
-			],
-		},
-
-		// ########################
-		// ####	Smart Motor	 ####
+		// ##### Smart Motor #####
 		// ########################
 		presets.MotorHeader1 = {
 			category: 'Motors',
@@ -223,8 +45,8 @@ module.exports = {
 			style: {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrNegStr)\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -256,8 +78,8 @@ module.exports = {
 			style: {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrPosStr)\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -289,8 +111,8 @@ module.exports = {
 			style: {
 				text: 'Direction:\\n$(companion-module-emotimo-st4-3:CurrentMtrInversion)',
 				size: '14',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -308,8 +130,8 @@ module.exports = {
 			name: 'Current Motor Increment',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_BLUE,
 				},
 			steps: [
 				{
@@ -319,7 +141,7 @@ module.exports = {
 							options: {
 								settype: 'smart',
 								setopt: 'up',
-								ammount: 1
+								ammount: 5
 							}
 						}
 					],
@@ -340,8 +162,8 @@ module.exports = {
 			name: 'Increase Motor ID',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkDarkGreen,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_DARK_GREEN,
 				},
 			steps: [
 				{
@@ -362,8 +184,8 @@ module.exports = {
 			name: 'Selected Motor',
 			style: {
 				text: 'Motor\\nID:\\n$(companion-module-emotimo-st4-3:CurrentMtrSet)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [{}],
 		},
@@ -373,8 +195,8 @@ module.exports = {
 			name: 'Decrease Motor ID',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkDarkGreen,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_DARK_GREEN,
 				},
 			steps: [
 				{
@@ -395,8 +217,8 @@ module.exports = {
 			name: 'Current Motor Speed',
 			style: {
 				text: 'Speed:\\n$(companion-module-emotimo-st4-3:CurrentMtrSpeed)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -426,14 +248,11 @@ module.exports = {
 			name: 'Current Motor Stop A',
 			style: {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrStr) Stop A',
-				color: colorWhite,
+				color: COLORS.WHITE,
 				bgcolor: combineRgb(127, 0, 0),
 				},
 			steps: [
 				{
-					down: [
-						 
-					],
 					up: [
 						{
 							actionId: 'setStopA',
@@ -461,8 +280,8 @@ module.exports = {
 				{
 					feedbackId: 'StopAStatusSmart',
 					style: {
-						bgcolor: colorDarkGreen,
-						color: colorBlack,
+						bgcolor: COLORS.DARK_GREEN,
+						color: COLORS.BLACK,
 					},
 				}
 			]
@@ -473,8 +292,8 @@ module.exports = {
 			name: 'Clear Current Motor Stops',
 			style: {
 				text: 'Clear $(companion-module-emotimo-st4-3:CurrentMtrStr) Stops',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 				},
 			steps: [
 				{
@@ -500,7 +319,7 @@ module.exports = {
 			name: 'Current Motor Stop B',
 			style: {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrStr) Stop B',
-				color: colorWhite,
+				color: COLORS.WHITE,
 				bgcolor: combineRgb(127, 0, 0),
 				},
 			steps: [
@@ -535,8 +354,8 @@ module.exports = {
 				{
 					feedbackId: 'StopBStatusSmart',
 					style: {
-						bgcolor: colorDarkGreen,
-						color: colorBlack,
+						bgcolor: COLORS.DARK_GREEN,
+						color: COLORS.BLACK,
 					},
 				}
 			]
@@ -547,8 +366,8 @@ module.exports = {
 			name: 'Current Motor Decrement',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_BLUE,
 				},
 			steps: [
 				{
@@ -558,7 +377,7 @@ module.exports = {
 							options: {
 								settype: 'smart',
 								setopt: 'down',
-								ammount: 1
+								ammount: 5
 							}
 						}
 					],
@@ -580,8 +399,8 @@ module.exports = {
 			options: { rotaryActions: true },
 			style: {
 				text: 'Motor ID Rotary',
-				color: colorWhite,
-				bgcolor: colorDarkDarkGreen,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_DARK_GREEN,
 			},
 			steps: [
 				{
@@ -600,9 +419,6 @@ module.exports = {
 								direction: 1
 							}
 						}
-					],
-					down: [
-						 
 					],
 				},
 			],
@@ -614,30 +430,38 @@ module.exports = {
 			options: { rotaryActions: true },
 			style: {
 				text: 'Motor Speed Rotary',
-				color: colorWhite,
-				bgcolor: colorDarkBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_BLUE,
 			},
 			steps: [
 				{
 					rotate_left: [
 						{
-							actionId: 'setJogSpeedLimitSmart',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								direction: -1
+								settype: 'smart',
+								setopt: 'down',
+								ammount: 1
 							}
 						}
 					],
 					rotate_right: [
 						{
-							actionId: 'setJogSpeedLimitSmart',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								direction: 1
+								settype: 'smart',
+								setopt: 'up',
+								ammount: 1
 							}
 						}
 					],
 					down: [
 						{
-							actionId: 'resetJogSpeedLimitSmart'
+							actionId: 'setJogSpeedLimit',
+							options: {
+								settype: 'smart',
+								setopt: 'reset'
+							}
 						}
 					],
 				},
@@ -662,51 +486,46 @@ module.exports = {
 				text: '',
 				png64: image_up_left,
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
-								direction: -1,
+								settype: 'id',
+								id: 1,
+								id_speed: 0,
+								dir: -1
 							}
 						},
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
-								direction: 1,
+								settype: 'id',
+								id: 2,
+								id_speed: 0,
+								dir: 1
 							}
 						}
 					],
 					up: [
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 1,
-								id_speed: 0,
+								settype: 'id',
+								id: 1,
 							}
 						},
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 2,
-								id_speed: 0,
+								settype: 'id',
+								id: 2,
 							}
-						}
+						},
 					],
 				},
 			],
@@ -719,37 +538,30 @@ module.exports = {
 				text: '',
 				png64: image_up,
 				size: '18',
-				color: colorWhite,
-				bgcolor: combineRgb(204, 0, 204),
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 2,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
-								direction: 1,
+								settype: 'id',
+								id: 2,
+								id_speed: 0,
+								dir: 1
 							}
 						}
 					],
 					up: [
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 2,
-								id_speed: 0,
+								settype: 'id',
+								id: 2,
 							}
-						}
+						},
 					],
 				},
 			],
@@ -762,55 +574,51 @@ module.exports = {
 				text: '',
 				png64: image_up_right,
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
-								direction: 1,
+								settype: 'id',
+								id: 1,
+								id_speed: 0,
+								dir: 1
 							}
 						},
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
-								direction: 1,
+								settype: 'id',
+								id: 2,
+								id_speed: 0,
+								dir: 1
 							}
 						}
 					],
 					up: [
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 1,
-								id_speed: 0,
+								settype: 'id',
+								id: 1,
 							}
 						},
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 2,
-								id_speed: 0,
+								settype: 'id',
+								id: 2,
 							}
-						}
+						},
 					],
 				},
 			],
 		},
+
 		presets.MotorLineBreak3 = {
 			category: 'Motors',
 			name: '',
@@ -826,37 +634,30 @@ module.exports = {
 				text: '',
 				png64: image_left,
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 1,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
+								settype: 'id',
+								id: 1,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 1,
+							}
+						},
 					],
 				},
 			],
@@ -868,8 +669,8 @@ module.exports = {
 			style: {
 				text: 'E-Stop\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.RED,
 			},
 			steps: [
 				{
@@ -894,41 +695,35 @@ module.exports = {
 				text: '',
 				png64: image_right,
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 1,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
+								settype: 'id',
+								id: 1,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 1,
+							}
+						},
 					],
 				},
 			],
 		},
+
 		presets.MotorLineBreak4 = {
 			category: 'Motors',
 			name: '',
@@ -944,51 +739,46 @@ module.exports = {
 				text: '',
 				png64: image_down_left,
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
-								direction: -1,
+								settype: 'id',
+								id: 1,
+								id_speed: 0,
+								dir: -1
 							}
 						},
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
-								direction: -1,
+								settype: 'id',
+								id: 2,
+								id_speed: 0,
+								dir: -1
 							}
 						}
 					],
 					up: [
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 1,
-								id_speed: 0,
+								settype: 'id',
+								id: 1,
 							}
 						},
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 2,
-								id_speed: 0,
+								settype: 'id',
+								id: 2,
 							}
-						}
+						},
 					],
 				},
 			],
@@ -1001,37 +791,30 @@ module.exports = {
 				text: '',
 				png64: image_down,
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 2,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
-								direction: -1,
+								settype: 'id',
+								id: 2,
+								id_speed: 0,
+								dir: -1
 							}
 						}
 					],
 					up: [
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 2,
-								id_speed: 0,
+								settype: 'id',
+								id: 2,
 							}
-						}
+						},
 					],
 				},
 			],
@@ -1044,441 +827,445 @@ module.exports = {
 				text: '',
 				png64: image_down_right,
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
-								direction: 1,
+								settype: 'id',
+								id: 1,
+								id_speed: 0,
+								dir: 1
 							}
 						},
 						{
-							actionId: 'jogMotorSmart',
+							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
-								direction: -1,
+								settype: 'id',
+								id: 2,
+								id_speed: 0,
+								dir: -1
 							}
 						}
 					],
 					up: [
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 1,
-								id_speed: 0,
+								settype: 'id',
+								id: 1,
 							}
 						},
 						{
-							actionId: 'jogMotor',
+							actionId: 'jogMotorStop',
 							options: {
-								id_mot: 2,
-								id_speed: 0,
+								settype: 'id',
+								id: 2,
 							}
-						}
+						},
 					],
 				},
 			],
 		},
 
-		presets.MotorHeader4 = {
-			category: 'Motors',
-			name: 'Position Control',
-			type: 'text',
-			text: 'These are Rotary Encoder Commands that give you Position Control of the Specified Axis.\nThese are only available for Surfaces that support Rotary Encoders (Ex. Streamdeck+)'
-		},
-		presets.FocusPositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Focus Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'Focus Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 5,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 5,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 5
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.IrisPositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Iris Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'Iris Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 6,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 6,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 6
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.ZoomPositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Zoom Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'Zoom Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 7,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 7,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 7
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.PanPositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Pan Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'Pan Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 1,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 1,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 1
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.TiltPositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Tilt Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'Tilt Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 2,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 2,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 2
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.SlidePositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Slide Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'Slide Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 3,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 3,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 3
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.M4PositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'M4 Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'M4 Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 4,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 4,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 4
-							}
-						}
-					],
-				},
-			],
-		},
-		presets.RollPositionControl = {
-			category: 'Motors',
-			type: 'button',
-			name: 'Roll Position Control',
-			options: { rotaryActions: true },
-			style: {
-				text: 'Roll Pos. Rotary',
-				color: colorWhite,
-				bgcolor: combineRgb(0, 0, 50),
-			},
-			steps: [
-				{
-					rotate_left: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 8,
-								direction: -1
-							}
-						}
-					],
-					rotate_right: [
-						{
-							actionId: 'positionDrive',
-							options: {
-								id_mot: 8,
-								direction: 1
-							}
-						}
-					],
-					down: [
-						{
-							actionId: 'toggleIncrement',
-							options: {
-								id_mot: 8
-							}
-						}
-					],
-				},
-			],
-		},
+		// ########################
+		// #### Motor	Rotary	####
+		// ########################
 
-		presets.MotorHeader8 = {
-			category: 'Motors',
-			name: 'Velocity Control',
-			type: 'text',
-			text: 'These can be used to set a cruise control Speed. The motor will not stop until it reaches a Virtual Limit or the cruise speed is cleared. These are only available for Surfaces that support Rotary Encoders (Ex. Streamdeck+)'
-		}
-		for (let inc = 1; inc < 10; inc++) {
-			presets[motorNames[inc-1] + 'CruiseSpeed'] = {
-				category: 'Motors',
-				type: 'button',
-				name: motorNames[inc-1] + ' Velocity Control',
-				options: { rotaryActions: true },
-				style: {
-					text: motorNames[inc-1] + ' Vel. Rotary',
-					color: colorWhite,
-					bgcolor: combineRgb(0, 0, 50),
-				},
-				steps: [
-					{
-						rotate_left: [
-							{
-								actionId: 'setCruiseSpeed',
-								options: {
-									id_mot: inc,
-									direction: -1
-								}
-							}
-						],
-						rotate_right: [
-							{
-								actionId: 'setCruiseSpeed',
-								options: {
-									id_mot: inc,
-									direction: 1
-								}
-							}
-						],
-						down: [
-							{
-								actionId: 'resetCruiseSpeed',
-								options: {
-									id_mot: inc
-								}
-							}
-						],
-					},
-				],
-			}
-		}
+		// presets.MotorHeader4 = {
+		// 	category: 'Motors',
+		// 	name: 'Position Control',
+		// 	type: 'text',
+		// 	text: 'These are Rotary Encoder Commands that give you Position Control of the Specified Axis.\nThese are only available for Surfaces that support Rotary Encoders (Ex. Streamdeck+)'
+		// },
+
+		// presets.FocusPositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'Focus Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'Focus Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 5,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 5,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 5
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+		// presets.IrisPositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'Iris Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'Iris Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 6,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 6,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 6
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+		// presets.ZoomPositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'Zoom Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'Zoom Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 7,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 7,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 7
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+		// presets.PanPositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'Pan Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'Pan Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 1,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 1,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 1
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+		// presets.TiltPositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'Tilt Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'Tilt Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 2,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 2,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 2
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+		// presets.SlidePositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'Slide Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'Slide Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 3,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 3,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 3
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+		// presets.M4PositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'M4 Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'M4 Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 4,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 4,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 4
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+		// presets.RollPositionControl = {
+		// 	category: 'Motors',
+		// 	type: 'button',
+		// 	name: 'Roll Position Control',
+		// 	options: { rotaryActions: true },
+		// 	style: {
+		// 		text: 'Roll Pos. Rotary',
+		// 		color: COLORS.WHITE,
+		// 		bgcolor: COLORS.DARK_DARK_BLUE,
+		// 	},
+		// 	steps: [
+		// 		{
+		// 			rotate_left: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 8,
+		// 						direction: -1
+		// 					}
+		// 				}
+		// 			],
+		// 			rotate_right: [
+		// 				{
+		// 					actionId: 'positionDrive',
+		// 					options: {
+		// 						id_mot: 8,
+		// 						direction: 1
+		// 					}
+		// 				}
+		// 			],
+		// 			down: [
+		// 				{
+		// 					actionId: 'toggleIncrement',
+		// 					options: {
+		// 						id_mot: 8
+		// 					}
+		// 				}
+		// 			],
+		// 		},
+		// 	],
+		// },
+
+		// presets.MotorHeader8 = {
+		// 	category: 'Motors',
+		// 	name: 'Velocity Control',
+		// 	type: 'text',
+		// 	text: 'These can be used to set a cruise control Speed. The motor will not stop until it reaches a Virtual Limit or the cruise speed is cleared. These are only available for Surfaces that support Rotary Encoders (Ex. Streamdeck+)'
+		// }
+		// for (let inc = 1; inc < 10; inc++) {
+		// 	presets[motorNames[inc-1] + 'CruiseSpeed'] = {
+		// 		category: 'Motors',
+		// 		type: 'button',
+		// 		name: motorNames[inc-1] + ' Velocity Control',
+		// 		options: { rotaryActions: true },
+		// 		style: {
+		// 			text: motorNames[inc-1] + ' Vel. Rotary',
+		// 			color: COLORS.WHITE,
+		// 			bgcolor: COLORS.DARK_DARK_BLUE,
+		// 		},
+		// 		steps: [
+		// 			{
+		// 				rotate_left: [
+		// 					{
+		// 						actionId: 'setCruiseSpeed',
+		// 						options: {
+		// 							id_mot: inc,
+		// 							direction: -1
+		// 						}
+		// 					}
+		// 				],
+		// 				rotate_right: [
+		// 					{
+		// 						actionId: 'setCruiseSpeed',
+		// 						options: {
+		// 							id_mot: inc,
+		// 							direction: 1
+		// 						}
+		// 					}
+		// 				],
+		// 				down: [
+		// 					{
+		// 						actionId: 'resetCruiseSpeed',
+		// 						options: {
+		// 							id_mot: inc
+		// 						}
+		// 					}
+		// 				],
+		// 			},
+		// 		],
+		// 	}
+		// }
 		
+		// ########################
+		// #### Motor	Speeds	####
+		// ########################
+
 		presets.MotorHeader5 = {
 			category: 'Motors',
 			name: 'Axis Speed Limit',
@@ -1492,8 +1279,8 @@ module.exports = {
 				name: motorNames[inc-1] + ' Increment',
 				style: {
 					text: '⬆️',
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -1501,21 +1288,15 @@ module.exports = {
 							{
 								actionId: 'setJogSpeedLimit',
 								options: {
-									id_mot: inc,
-									direction: 1
+									settype: 'id',
+									id: inc,
+									setopt: 'up',
+									ammount: 5
 								}
 							}
 						],
 					}
 				],
-				feedbacks: [
-					{
-						style: {
-							color: colorWhite,
-							bgcolor: colorRed,
-						}
-					}
-				]
 			}
 		}
 		presets.MotorLineBreak5 = {
@@ -1525,25 +1306,24 @@ module.exports = {
 			text: ''
 		},
 
-		// ########################
-		// #### Motor	Speeds	####
-		// ########################
 		presets.panSpeedLimit = {
 			category: 'Motors',
 			type: 'button',
 			name: 'Pan Speed',
 			style: {
 				text: 'Pan\\nSpeed:\\n$(companion-module-emotimo-st4-3:PanSpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 1
+								settype: 'id',
+								id: 1,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1556,16 +1336,18 @@ module.exports = {
 			name: 'Tilt Speed',
 			style: {
 				text: 'Tilt\\nSpeed:\\n$(companion-module-emotimo-st4-3:TiltSpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 2
+								settype: 'id',
+								id: 2,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1577,17 +1359,19 @@ module.exports = {
 			type: 'button',
 			name: 'M3 Speed',
 			style: {
-				text: 'Slide\\nSpeed:\\n$(companion-module-emotimo-st4-3:M3SpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				text: 'Slide\\nSpeed:\\n$(companion-module-emotimo-st4-3:M3-SlideSpeedLimit)',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 3
+								settype: 'id',
+								id: 3,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1599,17 +1383,19 @@ module.exports = {
 			type: 'button',
 			name: 'M4 Speed',
 			style: {
-				text: 'M4\\nSpeed:\\n$(companion-module-emotimo-st4-3:M4SpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				text: 'M4\\nSpeed:\\n$(companion-module-emotimo-st4-3:M4-ZoomSpeedLimit)',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 4
+								settype: 'id',
+								id: 4,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1622,16 +1408,18 @@ module.exports = {
 			name: 'Focus Speed',
 			style: {
 				text: 'Focus\\nSpeed:\\n$(companion-module-emotimo-st4-3:TN1SpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 5
+								settype: 'id',
+								id: 5,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1644,16 +1432,18 @@ module.exports = {
 			name: 'Iris Speed',
 			style: {
 				text: 'Iris\\nSpeed:\\n$(companion-module-emotimo-st4-3:TN2SpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 6
+								settype: 'id',
+								id: 6,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1666,16 +1456,18 @@ module.exports = {
 			name: 'Zoom Speed',
 			style: {
 				text: 'Zoom\\nSpeed:\\n$(companion-module-emotimo-st4-3:TN3SpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 7
+								settype: 'id',
+								id: 7,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1688,16 +1480,18 @@ module.exports = {
 			name: 'Roll Speed',
 			style: {
 				text: 'Roll\\nSpeed:\\n$(companion-module-emotimo-st4-3:RollSpeedLimit)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'resetJogSpeedLimit',
+							actionId: 'setJogSpeedLimit',
 							options: {
-								id_mot: 8
+								settype: 'id',
+								id: 8,
+								setopt: 'reset',
 							}
 						}
 					],
@@ -1718,8 +1512,8 @@ module.exports = {
 					name: motorNames[inc-1] + ' Decrement',
 					style: {
 						text: '⬇️',
-						color: colorWhite,
-						bgcolor: colorDarkBlue,
+						color: COLORS.WHITE,
+						bgcolor: COLORS.DARK_BLUE,
 						},
 					steps: [
 						{
@@ -1727,21 +1521,15 @@ module.exports = {
 								{
 									actionId: 'setJogSpeedLimit',
 									options: {
-										id_mot: inc,
-										direction: -1
+										settype: 'id',
+										id: inc,
+										setopt: 'down',
+										ammount: 5
 									}
 								}
 							],
 						}
 					],
-					feedbacks: [
-						{
-							style: {
-								color: colorWhite,
-								bgcolor: colorRed,
-							}
-						}
-					]
 				}
 		}
 
@@ -1754,6 +1542,7 @@ module.exports = {
 			type: 'text',
 			text: 'These buttons can be used for Live Velocity Control of the Specified Axis'
 		}
+
 		presets.MotPanNeg = {
 			category: 'Motors',
 			type: 'button',
@@ -1761,37 +1550,30 @@ module.exports = {
 			style: {
 				text: 'Pan Left\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 1,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
+								settype: 'id',
+								id: 1,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 1,
+							}
+						},
 					],
 				},
 			],
@@ -1803,37 +1585,30 @@ module.exports = {
 			style: {
 				text: 'Pan Right\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 1,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 1,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 1,
+								settype: 'id',
+								id: 1,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 1,
+							}
+						},
 					],
 				},
 			],
@@ -1846,37 +1621,30 @@ module.exports = {
 			style: {
 				text: 'Tilt Down\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 2,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 2,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
+								settype: 'id',
+								id: 2,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 2,
+							}
+						},
 					],
 				},
 			],
@@ -1888,37 +1656,30 @@ module.exports = {
 			style: {
 				text: 'Tilt Up\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 2,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 2,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 2,
+								settype: 'id',
+								id: 2,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 2,
+							}
+						},
 					],
 				},
 			],
@@ -1931,37 +1692,30 @@ module.exports = {
 			style: {
 				text: 'Slide Neg\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 3,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 3,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 3,
+								settype: 'id',
+								id: 3,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 3,
+							}
+						},
 					],
 				},
 			],
@@ -1973,37 +1727,30 @@ module.exports = {
 			style: {
 				text: 'Slide Pos\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 3,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 3,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 3,
+								settype: 'id',
+								id: 3,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 3,
+							}
+						},
 					],
 				},
 			],
@@ -2016,37 +1763,30 @@ module.exports = {
 			style: {
 				text: 'M4/Zoom Neg\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 4,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 4,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 4,
+								settype: 'id',
+								id: 4,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 4,
+							}
+						},
 					],
 				},
 			],
@@ -2058,37 +1798,30 @@ module.exports = {
 			style: {
 				text: 'M4/Zoom Pos\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 4,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 4,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 4,
+								settype: 'id',
+								id: 4,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 4,
+							}
+						},
 					],
 				},
 			],
@@ -2101,37 +1834,30 @@ module.exports = {
 			style: {
 				text: 'Focus Neg\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 5,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 5,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 5,
+								settype: 'id',
+								id: 5,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 5,
+							}
+						},
 					],
 				},
 			],
@@ -2143,37 +1869,30 @@ module.exports = {
 			style: {
 				text: 'Focus Pos\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 5,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 5,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 5,
+								settype: 'id',
+								id: 5,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 5,
+							}
+						},
 					],
 				},
 			],
@@ -2186,37 +1905,30 @@ module.exports = {
 			style: {
 				text: 'Iris Neg\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 6,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 6,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 6,
+								settype: 'id',
+								id: 6,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 6,
+							}
+						},
 					],
 				},
 			],
@@ -2228,37 +1940,30 @@ module.exports = {
 			style: {
 				text: 'Iris Pos\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 6,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 6,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 6,
+								settype: 'id',
+								id: 6,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 6,
+							}
+						},
 					],
 				},
 			],
@@ -2271,37 +1976,30 @@ module.exports = {
 			style: {
 				text: 'Zoom Neg\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 7,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 7,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 7,
+								settype: 'id',
+								id: 7,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 7,
+							}
+						},
 					],
 				},
 			],
@@ -2313,37 +2011,30 @@ module.exports = {
 			style: {
 				text: 'Zoom Pos\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 7,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 7,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 7,
+								settype: 'id',
+								id: 7,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 7,
+							}
+						},
 					],
 				},
 			],
@@ -2356,37 +2047,30 @@ module.exports = {
 			style: {
 				text: 'Roll Neg\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 8,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 8,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 8,
+								settype: 'id',
+								id: 8,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 8,
+							}
+						},
 					],
 				},
 			],
@@ -2398,37 +2082,30 @@ module.exports = {
 			style: {
 				text: 'Roll Pos\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 8,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 8,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 8,
+								settype: 'id',
+								id: 8,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 8,
+							}
+						},
 					],
 				},
 			],
@@ -2441,37 +2118,30 @@ module.exports = {
 			style: {
 				text: 'RSFocus Neg\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 9,
-					//			 id_speed: -50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 9,
-								direction: -1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 9,
+								settype: 'id',
+								id: 9,
 								id_speed: 0,
+								dir: -1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 9,
+							}
+						},
 					],
 				},
 			],
@@ -2483,37 +2153,30 @@ module.exports = {
 			style: {
 				text: 'RSFocus Pos\\n',
 				size: '18',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
-					// down: [
-					//	 {
-					//		 actionId: 'jogMotor',
-					//		 options: {
-					//			 id_mot: 9,
-					//			 id_speed: 50000,
-					//		 }
-					//	 }
-					// ],
 					down: [
-						{
-							actionId: 'jogMotorSmart',
-							options: {
-								id_mot: 9,
-								direction: 1,
-							}
-						}
-					],
-					up: [
 						{
 							actionId: 'jogMotor',
 							options: {
-								id_mot: 9,
+								settype: 'id',
+								id: 9,
 								id_speed: 0,
+								dir: 1
 							}
-						}
+						},
+					],
+					up: [
+						{
+							actionId: 'jogMotorStop',
+							options: {
+								settype: 'id',
+								id: 9,
+							}
+						},
 					],
 				},
 			],
@@ -2528,6 +2191,7 @@ module.exports = {
 			type: 'text',
 			text: 'These buttons can be used to Set/Clear the Virtual Limits for the Specified Axis'
 		}
+
 		for (let inc = 1; inc < 9; inc++) {
 			presets['setStopA' + inc] = {
 				category: 'Motors',
@@ -2535,19 +2199,17 @@ module.exports = {
 				name: motorNames[inc-1] + ' Stop A',
 				style: {
 					text: motorNames[inc-1] + ' Stop A',
-					color: colorWhite,
+					color: COLORS.WHITE,
 					bgcolor: combineRgb(127, 0, 0),
-					},
+				},
 				steps: [
 					{
-						down: [
-							 
-						],
 						up: [
 							{
 								actionId: 'setStopA',
 								options: {
-									id_mot: inc,
+									settype: 'id',
+									id: inc
 								}
 							}
 						],
@@ -2559,9 +2221,9 @@ module.exports = {
 								{
 									actionId: 'recallStopA',
 									options: {
-										id_mot: inc,
+										settype: 'id',
+										id: inc
 									},
-									delay: 0,
 								},
 							],
 						},
@@ -2574,8 +2236,8 @@ module.exports = {
 							id_mot: inc,
 						},
 						style: {
-							bgcolor: colorDarkGreen,
-							color: colorBlack,
+							bgcolor: COLORS.DARK_GREEN,
+							color: COLORS.BLACK,
 						},
 					}
 				]
@@ -2586,19 +2248,17 @@ module.exports = {
 				name: motorNames[inc-1] + ' Stop B',
 				style: {
 					text: motorNames[inc-1] + ' Stop B',
-					color: colorWhite,
+					color: COLORS.WHITE,
 					bgcolor: combineRgb(127, 0, 0),
 					},
 				steps: [
 					{
-						down: [
-							 
-						],
 						up: [
 							{
 								actionId: 'setStopB',
 								options: {
-									id_mot: inc,
+									settype: 'id',
+									id: inc
 								}
 							}
 						],
@@ -2610,9 +2270,9 @@ module.exports = {
 								{
 									actionId: 'recallStopB',
 									options: {
-										id_mot: inc,
+										settype: 'id',
+										id: inc
 									},
-									delay: 0,
 								},
 							],
 						},
@@ -2625,8 +2285,8 @@ module.exports = {
 							id_mot: inc,
 						},
 						style: {
-							bgcolor: colorDarkGreen,
-							color: colorBlack,
+							bgcolor: COLORS.DARK_GREEN,
+							color: COLORS.BLACK,
 						},
 					}
 				]
@@ -2637,8 +2297,8 @@ module.exports = {
 				name: 'Clear ' + motorNames[inc-1] + ' Stops',
 				style: {
 					text: 'Clear ' + motorNames[inc-1] + ' Stops',
-					color: colorWhite,
-					bgcolor: colorBlack,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
 					},
 				steps: [
 					{
@@ -2648,11 +2308,11 @@ module.exports = {
 							},
 							actions: [
 								{
-									actionId: 'clearStopByAxis',
+									actionId: 'clearStopsByAxis',
 									options: {
-										id_mot: inc,
-									},
-									delay: 0,
+										settype: 'id',
+										id: inc
+									}
 								},
 							],
 						},
@@ -2661,8 +2321,8 @@ module.exports = {
 				feedbacks: [
 					{
 						style: {
-							color: colorWhite,
-							bgcolor: colorRed,
+							color: COLORS.WHITE,
+							bgcolor: COLORS.RED,
 						}
 					}
 				]
@@ -2675,8 +2335,8 @@ module.exports = {
 			name: 'Clear All Stops',
 			style: {
 				text: 'Clear All Stops',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 				},
 			steps: [
 				{
@@ -2690,7 +2350,6 @@ module.exports = {
 						actions: [
 							{
 								actionId: 'clearAllStops',
-								delay: 0,
 							},
 						],
 					},
@@ -2715,8 +2374,8 @@ module.exports = {
 			name: 'Increase Preset ID',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkDarkGreen,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_DARK_GREEN,
 				},
 			steps: [
 				{
@@ -2737,8 +2396,8 @@ module.exports = {
 			name: 'Increase RunTime',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 				},
 			steps: [
 				{
@@ -2761,8 +2420,8 @@ module.exports = {
 			name: 'Increase RampTime',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkPurple,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_PURPLE,
 				},
 			steps: [
 				{
@@ -2793,8 +2452,8 @@ module.exports = {
 			name: 'Selected Preset',
 			style: {
 				text: 'Preset\\nID:\\n$(companion-module-emotimo-st4-3:CurrentPstSet)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -2810,8 +2469,8 @@ module.exports = {
 			name: 'Selected Preset Run',
 			style: {
 				text: 'Run:\\n$(companion-module-emotimo-st4-3:CurrentPstSetRun)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -2833,8 +2492,8 @@ module.exports = {
 			name: 'Selected Preset Ramp',
 			style: {
 				text: 'Ramp:\\n$(companion-module-emotimo-st4-3:CurrentPstSetRamp)',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -2864,8 +2523,8 @@ module.exports = {
 			name: 'Decrease Preset ID',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkDarkGreen,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_DARK_GREEN,
 				},
 			steps: [
 				{
@@ -2886,8 +2545,8 @@ module.exports = {
 			name: 'Decrease RunTime',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 				},
 			steps: [
 				{
@@ -2910,8 +2569,8 @@ module.exports = {
 			name: 'Decrease RampTime',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkPurple,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_PURPLE,
 				},
 			steps: [
 				{
@@ -2934,8 +2593,8 @@ module.exports = {
 			name: 'Preset Smart Recall',
 			style: {
 				text: 'Pre $(companion-module-emotimo-st4-3:CurrentPstSet)',
-				color: colorWhite,
-				bgcolor: colorDarkRed,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_RED,
 				},
 			steps: [
 				{
@@ -2970,8 +2629,8 @@ module.exports = {
 						
 					},
 					style: {
-						bgcolor: colorDarkGreen,
-						color: colorBlack,
+						bgcolor: COLORS.DARK_GREEN,
+						color: COLORS.BLACK,
 					},
 				},
 			]
@@ -2991,8 +2650,8 @@ module.exports = {
 			options: { rotaryActions: true },
 			style: {
 				text: 'Preset Run Time Rotary',
-				color: colorWhite,
-				bgcolor: colorTeal,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.TEAL,
 			},
 			steps: [
 				{
@@ -3035,8 +2694,8 @@ module.exports = {
 			options: { rotaryActions: true },
 			style: {
 				text: 'Preset Ramp Time Rotary',
-				color: colorWhite,
-				bgcolor: colorTeal,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.TEAL,
 			},
 			steps: [
 				{
@@ -3087,8 +2746,8 @@ module.exports = {
 				name: 'Increase RunTime Preset ' + inc,
 				style: {
 					text: '⬆️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3112,8 +2771,8 @@ module.exports = {
 				name: 'Increase RampTime Preset ' + inc,
 				style: {
 					text: '⬆️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3145,8 +2804,8 @@ module.exports = {
 				name: 'Preset Run Time ' + inc,
 				style: {
 					text: 'Pst\\nRunT:\\n$(companion-module-emotimo-st4-3:Pst' + inc + 'RunT)',
-					color: colorWhite,
-					bgcolor: colorBlack,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
 				},
 				steps: [
 					{
@@ -3169,8 +2828,8 @@ module.exports = {
 				name: 'Preset Ramp Time ' + inc,
 				style: {
 					text: 'Pst\\nRampT:\\n$(companion-module-emotimo-st4-3:Pst' + inc + 'RampT)',
-					color: colorWhite,
-					bgcolor: colorBlack,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
 				},
 				steps: [
 					{
@@ -3201,8 +2860,8 @@ module.exports = {
 				name: 'Decrease RunTime Preset ' + inc,
 				style: {
 					text: '⬇️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3226,8 +2885,8 @@ module.exports = {
 				name: 'Decrease RampTime Preset ' + inc,
 				style: {
 					text: '⬇️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3252,8 +2911,8 @@ module.exports = {
 				name: 'Preset ' + inc,
 				style: {
 					text: 'Pre ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkRed,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
 					},
 				steps: [
 					{
@@ -3292,8 +2951,8 @@ module.exports = {
 							presetNum: inc
 						},
 						style: {
-							bgcolor: colorDarkGreen,
-							color: colorBlack,
+							bgcolor: COLORS.DARK_GREEN,
+							color: COLORS.BLACK,
 						},
 					},
 				]
@@ -3316,8 +2975,8 @@ module.exports = {
 			name: 'Increase Loop ID',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkDarkGreen,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_DARK_GREEN,
 			},
 			steps: [
 				{
@@ -3339,8 +2998,8 @@ module.exports = {
 			name: 'Increase Loop A Point',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 				},
 			steps: [
 				{
@@ -3362,8 +3021,8 @@ module.exports = {
 			name: 'Increase Loop B Point',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorTeal,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.TEAL,
 				},
 			steps: [
 				{
@@ -3386,8 +3045,8 @@ module.exports = {
 			name: 'Increase Loop RunTime',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 				},
 			steps: [
 				{
@@ -3410,8 +3069,8 @@ module.exports = {
 			name: 'Increase Loop RampTime',
 			style: {
 				text: '⬆️',
-				color: colorWhite,
-				bgcolor: colorDarkPurple,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_PURPLE,
 				},
 			steps: [
 				{
@@ -3443,8 +3102,8 @@ module.exports = {
 			style: {
 				text: 'Loop\\nID:\\n$(companion-module-emotimo-st4-3:CurrentLpSet)',
 				size: 18,
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [{}]
 		},
@@ -3455,8 +3114,8 @@ module.exports = {
 			style: {
 				text: 'Loop A Point:\\n$(companion-module-emotimo-st4-3:CurrentLpA)',
 				size: 18,
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [{}],
 		},
@@ -3467,8 +3126,8 @@ module.exports = {
 			style: {
 				text: 'Loop B Point:\\n$(companion-module-emotimo-st4-3:CurrentLpB)',
 				size: 18,
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [{}],
 		},
@@ -3479,8 +3138,8 @@ module.exports = {
 			style: {
 				text: 'Loop Run:\\n$(companion-module-emotimo-st4-3:CurrentLpRun)',
 				size: 18,
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -3503,8 +3162,8 @@ module.exports = {
 			style: {
 				text: 'Loop Ramp:\\n$(companion-module-emotimo-st4-3:CurrentLpRamp)',
 				size: 18,
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -3534,8 +3193,8 @@ module.exports = {
 			name: 'Decrease Loop ID',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkDarkGreen,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_DARK_GREEN,
 				},
 			steps: [
 				{
@@ -3556,8 +3215,8 @@ module.exports = {
 			name: 'Decrease Loop A Point',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 				},
 			steps: [
 				{
@@ -3579,8 +3238,8 @@ module.exports = {
 			name: 'Decrease Loop B Point',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorTeal,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.TEAL,
 				},
 			steps: [
 				{
@@ -3603,8 +3262,8 @@ module.exports = {
 			name: 'Decrease Loop RunTime',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 				},
 			steps: [
 				{
@@ -3627,8 +3286,8 @@ module.exports = {
 			name: 'Decrease Loop RampTime',
 			style: {
 				text: '⬇️',
-				color: colorWhite,
-				bgcolor: colorDarkPurple,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_PURPLE,
 				},
 			steps: [
 				{
@@ -3652,8 +3311,8 @@ module.exports = {
 			name: 'Loop Smart Recall',
 			style: {
 				text: 'Loop\\n$(companion-module-emotimo-st4-3:CurrentLpSet)\\nRecall',
-				color: colorWhite,
-				bgcolor: colorDarkRed,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_RED,
 				},
 			steps: [
 				{
@@ -3672,8 +3331,8 @@ module.exports = {
 					feedbackId: 'LoopStatus',
 					options: {},
 					style: {
-						bgcolor: colorDarkGreen,
-						color: colorBlack,
+						bgcolor: COLORS.DARK_GREEN,
+						color: COLORS.BLACK,
 					},
 				},
 			]
@@ -3693,8 +3352,8 @@ module.exports = {
 				name: 'Loop ' + inc + ' Recall',
 				style: {
 					text: 'Loop\\n' + inc + '\\nRecall',
-					color: colorWhite,
-					bgcolor: colorDarkRed,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
 				},
 				steps: [
 					{
@@ -3726,8 +3385,8 @@ module.exports = {
 			options: { rotaryActions: true },
 			style: {
 				text: 'Loop Run Time Rotary',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 			},
 			steps: [
 				{
@@ -3770,8 +3429,8 @@ module.exports = {
 			options: { rotaryActions: true },
 			style: {
 				text: 'Loop Ramp Time Rotary',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 			},
 			steps: [
 				{
@@ -3815,8 +3474,8 @@ module.exports = {
 			style: {
 				text: 'Loop A Point Rotary',
 				size: '14',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 			},
 			steps: [
 				{
@@ -3849,8 +3508,8 @@ module.exports = {
 			style: {
 				text: 'Loop B Point Rotary',
 				size: '14',
-				color: colorWhite,
-				bgcolor: colorDarkLightBlue,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.DARK_LIGHT_BLUE,
 			},
 			steps: [
 				{
@@ -3890,8 +3549,8 @@ module.exports = {
 				name: 'Increase RunTime Loop ' + inc,
 				style: {
 					text: '⬆️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3915,8 +3574,8 @@ module.exports = {
 				name: 'Increase RampTime Loop ' + inc,
 				style: {
 					text: '⬆️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3941,8 +3600,8 @@ module.exports = {
 				name: 'Loop ' + inc + ' A Point Inc',
 				style: {
 					text: '⬆️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3965,8 +3624,8 @@ module.exports = {
 				name: 'Loop ' + inc + ' B Point Inc',
 				style: {
 					text: '⬆️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -3997,8 +3656,8 @@ module.exports = {
 				name: 'Loop Run Time ' + inc,
 				style: {
 					text: 'Loop\\nRunT:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'RunT)',
-					color: colorWhite,
-					bgcolor: colorBlack,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
 				},
 				steps: [
 					{
@@ -4021,8 +3680,8 @@ module.exports = {
 				name: 'Loop Ramp Time ' + inc,
 				style: {
 					text: 'Loop\\nRampT:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'RampT)',
-					color: colorWhite,
-					bgcolor: colorBlack,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
 				},
 				steps: [
 					{
@@ -4046,8 +3705,8 @@ module.exports = {
 				name: 'Loop A Point ' + inc,
 				style: {
 					text: 'Loop\\nA Point:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'APoint)',
-					color: colorWhite,
-					bgcolor: colorBlack,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
 				},
 				steps: [{}]
 			},
@@ -4057,8 +3716,8 @@ module.exports = {
 				name: 'Loop B Point ' + inc,
 				style: {
 					text: 'Loop\\nB Point:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'BPoint)',
-					color: colorWhite,
-					bgcolor: colorBlack,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
 				},
 				steps: [{}],
 			},
@@ -4076,8 +3735,8 @@ module.exports = {
 				name: 'Decrease RunTime Loop ' + inc,
 				style: {
 					text: '⬇️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -4101,8 +3760,8 @@ module.exports = {
 				name: 'Decrease RampTime Loop ' + inc,
 				style: {
 					text: '⬇️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -4127,8 +3786,8 @@ module.exports = {
 				name: 'Loop ' + inc + ' A Point Dec',
 				style: {
 					text: '⬇️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 					},
 				steps: [
 					{
@@ -4151,8 +3810,8 @@ module.exports = {
 				name: 'Loop ' + inc + ' B Point Dec',
 				style: {
 					text: '⬇️ ' + inc,
-					color: colorWhite,
-					bgcolor: colorDarkBlue,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
 				},
 				steps: [
 					{
@@ -4176,8 +3835,8 @@ module.exports = {
 				name: 'Loop ' + inc + ' Recall',
 				style: {
 					text: 'Loop\\n' + inc + '\\nRecall',
-					color: colorWhite,
-					bgcolor: colorDarkRed,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
 				},
 				steps: [
 					{
@@ -4198,20 +3857,24 @@ module.exports = {
 		// ########################
 		// ####	 Other		####
 		// ########################
+
 		presets.rsHome = {
 			category: 'Other',
 			type: 'button',
 			name: 'Center RS',
 			style: {
 				text: 'Center RS',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
-							actionId: 'homeRS'
+							actionId: 'homeRS',
+							options: {
+								id_end: '\n'
+							}
 						}
 					],
 				},
@@ -4223,15 +3886,17 @@ module.exports = {
 			name: 'Calibrate TN Motor',
 			style: {
 				text: 'Cal. TN Motor',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
 					down: [
 						{
 							actionId: 'calibrateTNMotor',
-							id_mot: 5
+							options: {
+							id: 5
+							}
 						}
 					],
 				},
@@ -4243,8 +3908,8 @@ module.exports = {
 			name: 'Calibrate All TN',
 			style: {
 				text: 'Cal. All TN',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -4262,8 +3927,8 @@ module.exports = {
 			name: 'Zero Motors',
 			style: {
 				text: 'Zero Motors',
-				color: colorWhite,
-				bgcolor: colorBlack,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
 			},
 			steps: [
 				{
@@ -4275,6 +3940,164 @@ module.exports = {
 				},
 			],
 		},
+
+		// ########################
+		// #### UI Navigation ####
+		// ########################
+
+		presets.VirtUp = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Up',
+			style: {
+				text: 'Up\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 1,
+							}
+						}
+					],
+				},
+			],
+		},
+		presets.VirtRight = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Right',
+			style: {
+				text: 'Right\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 2,
+							}
+						}
+					],
+				},
+			],
+		},
+		presets.VirtDown = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Down',
+			style: {
+				text: 'Down\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 3,
+							}
+						}
+					],
+				},
+			],
+		},
+		presets.VirtLeft = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Left',
+			style: {
+				text: 'Left\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 4,
+							}
+						}
+					],
+				},
+			],
+		},
+		presets.VirtEnter = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Enter',
+			style: {
+				text: 'Select\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 0,
+							}
+						},
+					],
+					2000: {
+						options: {
+							runWhileHeld: true,
+						},
+						actions: [
+							{
+								actionId: 'virtualInput',
+								options: {
+									vbutton: 6,
+								},
+								delay: 0,
+							},
+						],
+					},
+				},
+			],
+		},
+		presets.VirtBack = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Back',
+			style: {
+				text: 'Escape\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 5,
+							}
+						}
+					],
+				},
+			],
+		},
+
 
 		this.setPresetDefinitions(presets);
 	}

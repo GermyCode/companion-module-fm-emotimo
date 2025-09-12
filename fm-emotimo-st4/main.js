@@ -1,4 +1,4 @@
-const { InstanceBase, Regex, runEntrypoint, InstanceStatus, TCPHelper } = require('@companion-module/base')
+const { InstanceBase, runEntrypoint, InstanceStatus, TCPHelper } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
 const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
@@ -9,7 +9,6 @@ const { variableList } = require('./variables')
 const presets = require('./presets')
 
 const config = require('./config')
-const { MODELS } = require('./models.js')
 
 class eMotimoModuleInstance extends InstanceBase {
 	constructor(internal) {
@@ -17,7 +16,7 @@ class eMotimoModuleInstance extends InstanceBase {
 
 		// Assign the methods from the listed files to this class
 		Object.assign(this, {
-			// 	...config,
+				...config,
 			// 	...UpdateActions,
 			// 	...UpdateFeedbacks,
 			// ...UpdateVariableDefinitions,
@@ -28,7 +27,6 @@ class eMotimoModuleInstance extends InstanceBase {
 	async init(config) {
 		this.config = config
 		this.log('debug', 'Instance Init');
-		// this.updateStatus(InstanceStatus.Ok)
 
 		this.updateActions() // export actions
 		this.updateFeedbacks() // export feedbacks
@@ -58,6 +56,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.config.startupPstAmount = this.config.startupPstAmount || 30
 		this.config.interval = this.config.interval || 5000
 		this.config.prot = 'tcp'
+		this.fetchPstsStat = false
 
 		if (this.config.prot == 'tcp') {
 			this.init_tcp()
@@ -65,120 +64,11 @@ class eMotimoModuleInstance extends InstanceBase {
 			this.init_tcp_variables()
 		}
 
-		this.init_emotimo_variables() //Moved this all to variables.js
-		this.initPresets()
+		this.init_emotimo_variables()
+		this.initPresets(this)
 
 		// Give socket time to establish
-		setTimeout(() => this.fetchAllPresets(), 1000)
-	}
-
-	// // Return config fields for web config
-	// getConfigFields() {
-	// 	return [
-	// 		{
-	// 			type: 'textinput',
-	// 			id: 'host',
-	// 			label: 'Target IP',
-	// 			width: 8,
-	// 			regex: Regex.IP,
-	// 		},
-	// 		{
-	// 			type: 'textinput',
-	// 			id: 'port',
-	// 			label: 'Target Port',
-	// 			width: 4,
-	// 			regex: Regex.PORT,
-	// 		},
-	// 	]
-	// }
-	getConfigFields() {
-		return [
-			{
-				type: 'static-text',
-				id: 'info',
-				width: 12,
-				label: 'Information',
-				value:
-					"This module controls the ST4, ST4.3 and SA2.6",
-			},
-			{
-				type: 'textinput',
-				id: 'host',
-				label: 'Target IP',
-				width: 4,
-				regex: Regex.IP,
-			},
-			{
-				type: 'textinput',
-				id: 'port',
-				label: 'Target Port',
-				width: 4,
-				default: 5000,
-				regex: Regex.PORT,
-			},
-			{
-				type: 'dropdown',
-				id: 'prot',
-				label: 'Connect with TCP / UDP',
-				default: 'tcp',
-				choices: [
-					{ id: 'tcp', label: 'TCP' },
-					{ id: 'udp', label: 'UDP' },
-				],
-			},
-			{
-				type: 'static-text',
-				id: 'modelInfo',
-				width: 12,
-				label: 'Camera Model',
-				value: 'Please Select the camera model.',
-			},
-			{
-				type: 'dropdown',
-				id: 'model',
-				label: 'Select Your Camera Model',
-				width: 6,
-				default: MODELS[0].id,
-				choices: MODELS,
-				minChoicesForSearch: 5,
-			},
-			{
-				type: 'static-text',
-				id: 'startupPstAmountInfo',
-				width: 12,
-				label: 'Startup Preset Fetch',
-				value: 'Fetches the first X presets on startup. If the positions are all 0, then it doesn\'t store it.',
-			},
-			{
-				type: 'textinput',
-				id: 'startupPstAmount',
-				label: 'Fetch amount',
-				width: 3,
-				default: 30,
-			},
-			{
-				type: 'static-text',
-				id: 'intervalInfo',
-				width: 12,
-				label: 'Update Interval',
-				value:
-					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable. Recomended 2000ms to get acurate positions.',
-			},
-			{
-				type: 'textinput',
-				id: 'interval',
-				label: 'Update Interval',
-				width: 3,
-				default: 5000,
-			},
-			{
-				type: 'static-text',
-				id: 'dummy2',
-				width: 12,
-				label: ' ',
-				value: ' ',
-			},
-		]
+		if (config.fetch) setTimeout(() => this.fetchStartup(), 1000);
 	}
 
 	updateActions() {
@@ -198,32 +88,164 @@ class eMotimoModuleInstance extends InstanceBase {
 	}
 
 	sendEmotimoAPICommand = function (str) {
-		var self = this;
+		/*
+		* create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
+		* sending a string assumes 'utf8' encoding
+		* which then escapes character values over 0x7F
+		* and destroys the 'binary' content
+		*/
 
-		const sendBuf = Buffer.from(str, 'latin1')
+		if (this.pending) return
 
-		if (self.config.prot == 'tcp') {
-			self.log('debug', 'sending to ' + self.config.host + ': ' + sendBuf.toString())
+		const sendBuf = Buffer.from(str + '\n', 'latin1')
 
-			if (self.socket !== undefined && self.socket.isConnected) {
-				self.socket.send(sendBuf)
-			} else {
-				self.log('debug', 'Socket not connected :(')
-			}
+		this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
+
+		if (this.socket !== undefined && this.socket.isConnected) {
+			this.socket.send(sendBuf)
+		} else {
+			this.log('error', 'Module: Socket not connected :(')
 		}
 	};
+
+	init_tcp() {
+		this.log('debug', "Init TCP");
+		// if theres a socket already connected, remove it
+		if (this.socket) {
+			this.socket.destroy()
+			delete this.socket
+		}
+
+		this.updateStatus(InstanceStatus.Connecting)
+
+		// if the host ip config feild is empty, return
+		if (!this.config.host) {
+			this.updateStatus(InstanceStatus.BadConfig)
+			return;
+		}
+		this.log('debug', "Opening TCP:" + this.config.host.toString() + ":" + this.config.port.toString());
+		this.socket = new TCPHelper(this.config.host, this.config.port)
+		if (this.config.host == '') {
+			this.socket.isConnected == false
+		}
+
+		this.socket.on('status_change', (status, message) => {
+			this.updateStatus(status, message)
+		})
+
+		this.socket.on('error', (err) => {
+			this.updateStatus(InstanceStatus.ConnectionFailure, err.message)
+			this.log('error', 'Module: Network error: ' + err.message)
+			// restart the whole module
+			this._onDead('Network error: ' + err.message)
+		})
+
+		this.socket.on('close', (res) => {
+			this.updateStatus(InstanceStatus.ConnectionFailure, res.message)
+			this.log('error', 'Module: Network error: ' + res.message)
+			// restart the whole module
+			this._onDead('Connection closed by emotimo: ' + res.message)
+		})
+
+		/*
+		States that when data is recieved, do this,
+		if the save response config is enabled then it saves the response as a variable in companion
+		then send the data recieved to get delt with
+		*/
+		this.socket.on('data', (data) => {
+			this.log('debug', 'Response: ' + data.toString());
+			if (this.config.saveresponse) {
+				let dataResponse = data
+
+				if (this.config.convertresponse == 'string') {
+					dataResponse = data.toString()
+				} else if (this.config.convertresponse == 'hex') {
+					dataResponse = data.toString('hex')
+				}
+
+				this.setVariableValues({ tcp_response: dataResponse })
+
+			}
+			//Insert TCP Parsing Here
+			this.handleTCPResponse(data)
+		})
+
+		// if there is still a heartbeat going, remove it
+		if (this.heartbeatInterval) {
+			clearInterval(this.heartbeatInterval)
+		}
+
+		// this._markRx() // mark the last response date
+		this.pending = false // not currently waiting on a response
+
+		// initialize new heartbeat
+		this.heartbeatInterval = setInterval(() => {
+			if (!this.socket?.isConnected) { // if the socket is not connected
+				this.log('error', 'Module: Socket not connected for heartbeat :(')
+				return;
+			}
+			if (this.retryCount > 5) {
+				this.retryCount = 0
+				this._onDead('Retry cap reached')
+				return;
+			}
+			if (this.pending) { // if were already waiting on a response dont send another
+				this.log('debug', 'Already waiting on a heartbeat response')
+				this.updateStatus(InstanceStatus.Connecting, 'Lost connection, trying to reconnect');
+				this.retryCount++;
+				return; 
+			}
+			this.pending = true;
+			const sendBuf = Buffer.from('G500' + '\n', 'latin1')
+			this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
+			this.retryCount = 0
+			this.socket.send(sendBuf)
+		}, this.config.interval)
+		this.log('debug', "Heartbeat Initialized");
+	}
+
+	_cleanupSocket() {
+		if (this.heartbeatInterval) { clearInterval(this.heartbeatInterval); this.heartbeatInterval = null }
+
+		if (this.socket) {
+			try { this.socket.removeAllListeners() } catch {}
+			try { this.socket.destroy() } catch {}
+			this.socket = null
+		}
+	}
+
+	_scheduleReconnect(reason = 'unknown') {
+		if (this._reconnectTimer) return // already scheduled
+		if (!this._backoff) this._backoff = 2000 // starts at 2s then doubles every try
+		const delay = this._backoff
+		this._backoff = Math.min(this._backoff * 2, 10000) // cap at 10s
+		this.log('error', `Reconnecting (reason: ${reason}) in ${delay}ms`)
+		this._reconnectTimer = setTimeout(() => {
+			this._reconnectTimer = null
+			this.init_tcp()
+		}, delay)
+	}
+
+	_onDead(origin = 'unknown') {
+		this.log('error', `Connection marked dead via ${origin}`)
+		this._cleanupSocket()
+		this._scheduleReconnect(origin)
+	}
 
 	handleTCPResponse = function (dataPacket) {
 		var tokens = dataPacket.toString().split(':')
 
 		this.log('debug', "Parse:" + tokens[0]);
+		// Mainly for the fetch preset thing when it connects
+		// response for the G752 Command
 		if (tokens[0].startsWith('Preset ') && !tokens[0].startsWith('Preset Set')) {
 			const line = dataPacket.toString()
 			const match = line.match(/Preset (\d+): X(-?\d+)\s+Y(-?\d+)\s+Z(-?\d+)\s+W(-?\d+).*?RunTime:\s*(\d+)\s+RampTime:\s*(\d+)/)
 		
 			if (match) {
+				this.pending = false
 				const [, preset, pan, tilt, m3, m4, run, ramp] = match.map(Number)
-				
+
 				// Check if it's an "active" preset
 				const isActive = pan !== 0 || tilt !== 0 || m3 !== 0 || m4 !== 0 || run !== 50 || ramp !== 10
 
@@ -274,7 +296,12 @@ class eMotimoModuleInstance extends InstanceBase {
 		}
 		else {
 			switch (tokens[0]) {
+				// response from the G500 command
 				case 'Positions':
+					if (this.pending) {
+						this.pending = false;
+						this.updateStatus(InstanceStatus.Ok, 'Connection Active')
+					}
 					var data = tokens[1].split(',')
 					// this.log('debug', "Position Update:" + data[0] + ":" + data[1]); //Data[0] has movement flags led by a space data[1] is Pan Position
 					if (parseInt(data[0]) !== 0) {
@@ -287,7 +314,7 @@ class eMotimoModuleInstance extends InstanceBase {
 					this.setVariableValues({ PPos: Number(data[1])})
 					this.setVariableValues({ TPos: Number(data[2])})
 					this.setVariableValues({ SPos: Number(data[3])})
-					this.setVariableValues({ MPos: Number(data[4])})
+					this.setVariableValues({ ZPos: Number(data[4])})
 					this.setVariableValues({ FPos: Number(data[5])})
 					this.setVariableValues({ IPos: Number(data[6])})
 					this.setVariableValues({ ZPos: Number(data[7])})
@@ -318,7 +345,7 @@ class eMotimoModuleInstance extends InstanceBase {
 						var panpos = this.getVariableValue('PPos')
 						var tiltpos = this.getVariableValue('TPos')
 						var m3pos = this.getVariableValue('SPos')
-						var m4pos = this.getVariableValue('MPos')
+						var m4pos = this.getVariableValue('ZPos')
 
 						this.setVariableValues({ [`Pst${presetId}PanPos`]: panpos })
 						this.setVariableValues({ [`Pst${presetId}TiltPos`]: tiltpos })
@@ -343,6 +370,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				case 'Stop All Initiated':
 					this.setVariableValues({ LpActive: -1 })
 					this.checkFeedbacks("LoopStatus")
+					this.setVariableValues({ LastPstID: -1 })
 					break
 				case 'Reset Stops':
 					var data = tokens[1]
@@ -355,11 +383,11 @@ class eMotimoModuleInstance extends InstanceBase {
 						this.setVariableValues({ TiltStopA: 0 })
 						this.setVariableValues({ TiltStopB: 0 })
 					} else if (data == 3) {
-						this.setVariableValues({ M3StopA: 0 })
-						this.setVariableValues({ M3StopB: 0 })
+						this.setVariableValues({ 'M3-SlideStopA': 0 })
+						this.setVariableValues({ 'M3-SlideStopB': 0 })
 					} else if (data == 4) {
-						this.setVariableValues({ M4StopA: 0 })
-						this.setVariableValues({ M4StopB: 0 })
+						this.setVariableValues({ 'M4-ZoomStopA': 0 })
+						this.setVariableValues({ 'M4-ZoomStopB': 0 })
 					} else if (data == 5) {
 						this.setVariableValues({ TNFocusStopA: 0 })
 						this.setVariableValues({ TNFocusStopB: 0 })
@@ -394,9 +422,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopA: 1 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopA: 1 })
+							this.setVariableValues({ 'M3-SlideStopA': 1 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopA: 1 })
+							this.setVariableValues({ 'M4-ZoomStopA': 1 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopA: 1 })
 						} else if (motor == 6) {
@@ -414,9 +442,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopA: 0 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopA: 0 })
+							this.setVariableValues({ 'M3-SlideStopA': 0 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopA: 0 })
+							this.setVariableValues({ 'M4-ZoomStopA': 0 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopA: 0 })
 						} else if (motor == 6) {
@@ -443,9 +471,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopB: 1 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopB: 1 })
+							this.setVariableValues({ 'M3-SlideStopB': 1 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopB: 1 })
+							this.setVariableValues({ 'M4-ZoomStopB': 1 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopB: 1 })
 						} else if (motor == 6) {
@@ -463,9 +491,9 @@ class eMotimoModuleInstance extends InstanceBase {
 						} else if (motor == 2) {
 							this.setVariableValues({ TiltStopB: 0 })
 						} else if (motor == 3) {
-							this.setVariableValues({ M3StopB: 0 })
+							this.setVariableValues({ 'M3-SlideStopB': 0 })
 						} else if (motor == 4) {
-							this.setVariableValues({ M4StopB: 0 })
+							this.setVariableValues({ 'M4-ZoomStopB': 0 })
 						} else if (motor == 5) {
 							this.setVariableValues({ TNFocusStopB: 0 })
 						} else if (motor == 6) {
@@ -486,10 +514,10 @@ class eMotimoModuleInstance extends InstanceBase {
 					this.setVariableValues({ PanStopB: 0 })
 					this.setVariableValues({ TiltStopA: 0 })
 					this.setVariableValues({ TiltStopB: 0 })
-					this.setVariableValues({ M3StopA: 0 })
-					this.setVariableValues({ M3StopB: 0 })
-					this.setVariableValues({ M4StopA: 0 })
-					this.setVariableValues({ M4StopB: 0 })
+					this.setVariableValues({ 'M3-SlideStopA': 0 })
+					this.setVariableValues({ 'M3-SlideStopB': 0 })
+					this.setVariableValues({ 'M4-ZoomStopA': 0 })
+					this.setVariableValues({ 'M4-ZoomStopB': 0 })
 					this.setVariableValues({ TNFocusStopA: 0 })
 					this.setVariableValues({ TNFocusStopB: 0 })
 					this.setVariableValues({ TNIrisStopA: 0 })
@@ -511,63 +539,6 @@ class eMotimoModuleInstance extends InstanceBase {
 		}
 	}
 
-	init_tcp() {
-		this.log('debug', "Init TCP");
-		if (this.socket) {
-			this.socket.destroy()
-			delete this.socket
-		}
-
-		this.updateStatus(InstanceStatus.Connecting)
-
-		if (this.config.host) {
-			this.log('debug', "Opening TCP:" + this.config.host.toString() + ":" + this.config.port.toString());
-			this.socket = new TCPHelper(this.config.host, this.config.port)
-
-			this.socket.on('status_change', (status, message) => {
-				this.updateStatus(status, message)
-			})
-
-			this.socket.on('error', (err) => {
-				this.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-				this.log('error', 'Network error: ' + err.message)
-			})
-
-			this.socket.on('data', (data) => {
-				this.log('debug', 'Response: ' + data.toString());
-				if (this.config.saveresponse) {
-					let dataResponse = data
-
-					if (this.config.convertresponse == 'string') {
-						dataResponse = data.toString()
-					} else if (this.config.convertresponse == 'hex') {
-						dataResponse = data.toString('hex')
-					}
-
-					this.setVariableValues({ tcp_response: dataResponse })
-
-				}
-				//Insert TCP Parsing Here
-				this.handleTCPResponse(data)
-			})
-
-			// clear old heartbeat
-			if (this.heartbeatInterval) {
-				clearInterval(this.heartbeatInterval)
-			}
-
-			this.log('debug', "Heartbeat Initialized");
-			this.heartbeatInterval = setInterval(() => {
-				var cmd = 'G500\n';
-				// var cmd = '\x45\x4D\x07\x00\x00\xC1\xA4';
-				this.sendEmotimoAPICommand(cmd);
-			}, this.config.interval)
-
-		} else {
-			this.updateStatus(InstanceStatus.BadConfig)
-		}
-	}
-
 	init_tcp_variables() {
 		// this.setVariableDefinitions([{ name: 'Last TCP Response', variableId: 'tcp_response' }]) //Calling this function overwrites other variables already declared we want to declare them all in variables.js
 
@@ -575,16 +546,10 @@ class eMotimoModuleInstance extends InstanceBase {
 	}
 
 	init_emotimo_variables() {
-		// this.setVariableDefinitions([
-		// 	{ name: 'FocusPosition', variableId: 'FPos' },
-		// 	{ name: 'IrisPosition', variableId: 'IPos' },
-		// 	{ name: 'ZoomPosition', variableId: 'ZPos' },
-		// ])
-
 		this.setVariableValues({ PPos: 0 })
 		this.setVariableValues({ TPos: 0 })
 		this.setVariableValues({ SPos: 0 })
-		this.setVariableValues({ MPos: 0 })
+		this.setVariableValues({ ZPos: 0 })
 		this.setVariableValues({ FPos: 5000 })
 		this.setVariableValues({ IPos: 5000 })
 		this.setVariableValues({ ZPos: 5000 })
@@ -597,15 +562,15 @@ class eMotimoModuleInstance extends InstanceBase {
 			this.setVariableValues({ PStep: 1000 })
 		}
 		this.setVariableValues({ SStep: 1000 })
-		this.setVariableValues({ MStep: 1000 })
+		this.setVariableValues({ ZStep: 1000 })
 		this.setVariableValues({ FStep: 50 })
 		this.setVariableValues({ IStep: 50 })
 		this.setVariableValues({ ZStep: 50 })
 		this.setVariableValues({ RStep: 1 })
 		this.setVariableValues({ PanSpeedLimit: 100 })
 		this.setVariableValues({ TiltSpeedLimit: 100 })
-		this.setVariableValues({ M3SpeedLimit: 100 })
-		this.setVariableValues({ M4SpeedLimit: 100 })
+		this.setVariableValues({ 'M3-SlideSpeedLimit': 100 })
+		this.setVariableValues({ 'M4-ZoomSpeedLimit': 100 })
 		this.setVariableValues({ TN1SpeedLimit: 50 })
 		this.setVariableValues({ TN2SpeedLimit: 50 })
 		this.setVariableValues({ TN3SpeedLimit: 50 })
@@ -613,8 +578,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ FocusSpeedLimit: 100 })
 		this.setVariableValues({ PanCruiseSpeed: 0 })
 		this.setVariableValues({ TiltCruiseSpeed: 0 })
-		this.setVariableValues({ M3CruiseSpeed: 0 })
-		this.setVariableValues({ M4CruiseSpeed: 0 })
+		this.setVariableValues({ 'M3-SlideCruiseSpeed': 0 })
+		this.setVariableValues({ 'M4-ZoomCruiseSpeed': 0 })
 		this.setVariableValues({ TN1CruiseSpeed: 0 })
 		this.setVariableValues({ TN2CruiseSpeed: 0 })
 		this.setVariableValues({ TN3CruiseSpeed: 0 })
@@ -632,10 +597,10 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ PanStopB: 0 })
 		this.setVariableValues({ TiltStopA: 0 })
 		this.setVariableValues({ TiltStopB: 0 })
-		this.setVariableValues({ M3StopA: 0 })
-		this.setVariableValues({ M3StopB: 0 })
-		this.setVariableValues({ M4StopA: 0 })
-		this.setVariableValues({ M4StopB: 0 })
+		this.setVariableValues({ 'M3-SlideStopA': 0 })
+		this.setVariableValues({ 'M3-SlideStopB': 0 })
+		this.setVariableValues({ 'M4-ZoomStopA': 0 })
+		this.setVariableValues({ 'M4-ZoomStopB': 0 })
 		this.setVariableValues({ TNFocusStopA: 0 })
 		this.setVariableValues({ TNFocusStopB: 0 })
 		this.setVariableValues({ TNIrisStopA: 0 })
@@ -661,8 +626,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ CurrentMtrSpeed: 100 })
 		this.setVariableValues({ PanInversion: 1 })
 		this.setVariableValues({ TiltInversion: 1 })
-		this.setVariableValues({ M3Inversion: 1 })
-		this.setVariableValues({ M4Inversion: 1 })
+		this.setVariableValues({ 'M3-SlideInversion': 1 })
+		this.setVariableValues({ 'M4-ZoomInversion': 1 })
 		this.setVariableValues({ TN1Inversion: 1 })
 		this.setVariableValues({ TN2Inversion: 1 })
 		this.setVariableValues({ TN3Inversion: 1 })
@@ -671,58 +636,59 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ CurrentMtrInversion: 'Normal' })
 		this.setVariableValues({ LastPstID: -1 })
 		this.setVariableValues({ CurrentMtrProf: -1 })
+		this.setVariableValues({ SetLps: "[0]" })
 	}
 
-	fetchAllPresets() {
+	fetchStartup() {
 		let i = 0
+		this.fetchPstsStat = true
 
 		const sendNext = () => {
 			if (i >= 128) {
 				this.log('debug', 'Finished fetching all presets')
 				return
 			}
-
-			const cmd = `G752 P${i}\n`
-			const sendBuf = Buffer.from(cmd, 'latin1')
-			this.log('debug', `Sending: ${cmd.trim()}`)
-	
-			if (this.socket && this.socket.isConnected) {
-				this.socket.once('data', (data) => {
-					const str = data.toString().trim()
-
-					// Check for default (empty) preset
-					if (str === `Preset ${i}: X0 Y0 Z0 W0 F0 I0 C0 RunTime: 50 RampTime: 10`) {
-						if (i <= this.config.startupPstAmount ) {
-							this.log('debug', `Preset ${i} is empty.`)
-						}
-						var preset = this.getVariableValue('CurrentPstSet')
-						var panpos = this.getVariableValue('Pst' + preset + 'PanPos')
-						var tiltpos = this.getVariableValue('Pst' + preset + 'TiltPos')
-						var m3pos = this.getVariableValue('Pst' + preset + 'M3Pos')
-						var m4pos = this.getVariableValue('Pst' + preset + 'M4Pos')
-						this.setVariableValues({ CurrentPstPanPos: panpos })
-						this.setVariableValues({ CurrentPstTiltPos: tiltpos })
-						this.setVariableValues({ CurrentPstM3Pos: m3pos })
-						this.setVariableValues({ CurrentPstM4Pos: m4pos })
-						if (i >= this.config.startupPstAmount) {
-							this.log('debug', `Finished fetching startup presets.`)
-							return
-						}
-					}
-
-					// Continue processing
-					this.handleTCPResponse(data)
-	
-					i++
-					setTimeout(sendNext, 100)
-				})
-				this.socket.send(sendBuf)
-			} else {
-				this.log('warn', 'Socket not connected')
+			if (!this.socket && !this.socket?.isConnected) {
+				this.log('error', 'Module: Socket not connected');
+				return;
 			}
-		}
+			this.socket.once('data', (data) => {
+				const str = data.toString().trim()
 
+				// Check for default (empty) preset
+				if (str === `Preset ${i}: X0 Y0 Z0 W0 F0 I0 C0 RunTime: 50 RampTime: 10`) {
+					if (i <= this.config.startupPstAmount ) {
+						this.log('debug', `Preset ${i} is empty.`)
+					}
+					var preset = this.getVariableValue('CurrentPstSet')
+					var panpos = this.getVariableValue('Pst' + preset + 'PanPos')
+					var tiltpos = this.getVariableValue('Pst' + preset + 'TiltPos')
+					var m3pos = this.getVariableValue('Pst' + preset + 'M3Pos')
+					var m4pos = this.getVariableValue('Pst' + preset + 'M4Pos')
+					this.setVariableValues({ CurrentPstPanPos: panpos })
+					this.setVariableValues({ CurrentPstTiltPos: tiltpos })
+					this.setVariableValues({ CurrentPstM3Pos: m3pos })
+					this.setVariableValues({ CurrentPstM4Pos: m4pos })
+					if (i >= this.config.startupPstAmount) {
+						this.log('debug', `Finished fetching startup presets.`)
+						return
+					}
+				}
+
+				// Continue processing
+				this.handleTCPResponse(data)
+
+				i++
+				setTimeout(sendNext, 100)
+			})
+			this.sendEmotimoAPICommand(`G752 P${i}`)
+		}
 		sendNext()
+		this.fetchPstsStat = false
+
+		// TO-DO
+		// G101 -> get motor performance
+		// G215 & G216 -> get stop A get stop B
 	}
 }
 

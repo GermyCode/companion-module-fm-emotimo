@@ -3,7 +3,7 @@
 	"name": "fm-emotimo-st4",
 	"shortname": "fm-Emotimo",
 	"description": "A module to control your Emotimo product on Companion 3.0",
-	"version": "1.0.2",
+	"version": "2.0.1",
 	"license": "MIT",
 	"repository": "git+https://github.com/GermyCode/companion-module-fm-emotimo.git",
 	"bugs": "",

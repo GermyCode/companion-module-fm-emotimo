@@ -34,7 +34,6 @@ module.exports = async function (self) {
 				},
 			],
 			callback: (feedback) => {
-				//console.log('Hello world!', feedback.options.num)
 				if(feedback.options.num > 5) {
 					return true
 				} else {
@@ -79,9 +78,7 @@ module.exports = async function (self) {
 				bgcolor: combineRgb(0, 127, 0),
 				color: combineRgb(0, 0, 0),
 			},
-			options: [
-				
-			],
+			options: [],
 			callback: (feedback) => {
 				var presetID = self.getVariableValue('CurrentPstSet')
 
@@ -104,11 +101,8 @@ module.exports = async function (self) {
 				bgcolor: combineRgb(0, 127, 0),
 				color: combineRgb(0, 0, 0),
 			},
-			options: [
-				
-			],
+			options: [],
 			callback: (feedback) => {
-				// console.log('Hello world!', feedback.options.num)
 				var state = self.getVariableValue('LpActive')
 				if(state >= 0) {
 					// feedback.defaultStyle.bgcolor = combineRgb(127, 0, 0)
@@ -137,7 +131,6 @@ module.exports = async function (self) {
 				},
 			],
 			callback: (feedback) => {
-				// console.log('Hello world!', feedback.options.num)
 				var state = 0
 
 				if (feedback.options.id_mot == 1) {
@@ -187,7 +180,6 @@ module.exports = async function (self) {
 				},
 			],
 			callback: (feedback) => {
-				// console.log('Hello world!', feedback.options.num)
 				var state = 0
 
 				if (feedback.options.id_mot == 1) {
@@ -227,13 +219,9 @@ module.exports = async function (self) {
 				bgcolor: combineRgb(0, 127, 0),
 				color: combineRgb(0, 0, 0),
 			},
-			options: [
-				
-			],
+			options: [],
 			callback: (feedback) => {
 				var motorID = self.getVariableValue('CurrentMtrSet')
-
-				
 
 				if (motorID == 1) {
 					state = self.getVariableValue('PanStopA')
@@ -255,7 +243,7 @@ module.exports = async function (self) {
 					state = self.getVariableValue('RSFocusStopA')
 				}
 
-				console.log("A Status: " + state + " Motor: " + motorID +"\n")
+				// console.log("A Status: " + state + " Motor: " + motorID +"\n")
 				if(state) {
 					return true
 				} else {
@@ -271,13 +259,9 @@ module.exports = async function (self) {
 				bgcolor: combineRgb(0, 127, 0),
 				color: combineRgb(0, 0, 0),
 			},
-			options: [
-				
-			],
+			options: [],
 			callback: (feedback) => {
 				var motorID = self.getVariableValue('CurrentMtrSet')
-
-				
 
 				if (motorID == 1) {
 					state = self.getVariableValue('PanStopB')
@@ -299,7 +283,7 @@ module.exports = async function (self) {
 					state = self.getVariableValue('RSFocusStopB')
 				}
 
-				console.log("B Status: " + state + " Motor: " + motorID +"\n")
+				// console.log("B Status: " + state + " Motor: " + motorID +"\n")
 				if(state) {
 					return true
 				} else {

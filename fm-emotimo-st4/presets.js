@@ -2383,7 +2383,8 @@ module.exports = {
 						{
 							actionId: 'setPresetID',
 							options: {
-								direction: 1
+								direction: 'set',
+								gotoPst: 0
 							}
 						}
 					],

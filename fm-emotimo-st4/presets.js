@@ -249,7 +249,7 @@ module.exports = {
 			style: {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrStr) Stop A',
 				color: COLORS.WHITE,
-				bgcolor: combineRgb(127, 0, 0),
+				bgcolor: COLORS.DARK_RED,
 			},
 			steps: [
 				{
@@ -293,7 +293,7 @@ module.exports = {
 			style: {
 				text: 'Clear $(companion-module-emotimo-st4-3:CurrentMtrStr) Stops',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.BLACK,
+				bgcolor: COLORS.RED,
 			},
 			steps: [
 				{
@@ -320,7 +320,7 @@ module.exports = {
 			style: {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrStr) Stop B',
 				color: COLORS.WHITE,
-				bgcolor: combineRgb(127, 0, 0),
+				bgcolor: COLORS.DARK_RED,
 			},
 			steps: [
 				{
@@ -2200,7 +2200,7 @@ module.exports = {
 				style: {
 					text: motorNames[inc-1] + ' Stop A',
 					color: COLORS.WHITE,
-					bgcolor: combineRgb(127, 0, 0),
+					bgcolor: COLORS.DARK_RED,
 				},
 				steps: [
 					{
@@ -2249,7 +2249,7 @@ module.exports = {
 				style: {
 					text: motorNames[inc-1] + ' Stop B',
 					color: COLORS.WHITE,
-					bgcolor: combineRgb(127, 0, 0),
+					bgcolor: COLORS.DARK_RED,
 					},
 				steps: [
 					{
@@ -2297,7 +2297,7 @@ module.exports = {
 				name: 'Clear ' + motorNames[inc-1] + ' Stops',
 				style: {
 					text: 'Clear ' + motorNames[inc-1] + ' Stops',
-					color: COLORS.WHITE,
+					color: COLORS.RED,
 					bgcolor: COLORS.BLACK,
 					},
 				steps: [
@@ -2335,7 +2335,7 @@ module.exports = {
 			name: 'Clear All Stops',
 			style: {
 				text: 'Clear All Stops',
-				color: COLORS.WHITE,
+				color: COLORS.RED,
 				bgcolor: COLORS.BLACK,
 			},
 			steps: [

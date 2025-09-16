@@ -65,7 +65,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		}
 
 		this.init_emotimo_variables()
-		this.initPresets(this)
+		this.initPresets()
 
 		// Give socket time to establish
 		if (config.fetch) setTimeout(() => this.fetchStartup(), 1000);
@@ -95,8 +95,6 @@ class eMotimoModuleInstance extends InstanceBase {
 		* and destroys the 'binary' content
 		*/
 
-		if (this.pending) return
-
 		const sendBuf = Buffer.from(str + '\n', 'latin1')
 
 		this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
@@ -110,7 +108,6 @@ class eMotimoModuleInstance extends InstanceBase {
 
 	init_tcp() {
 		this.log('debug', "Init TCP");
-		// if theres a socket already connected, remove it
 		if (this.socket) {
 			this.socket.destroy()
 			delete this.socket
@@ -118,119 +115,51 @@ class eMotimoModuleInstance extends InstanceBase {
 
 		this.updateStatus(InstanceStatus.Connecting)
 
-		// if the host ip config feild is empty, return
-		if (!this.config.host) {
-			this.updateStatus(InstanceStatus.BadConfig)
-			return;
-		}
-		this.log('debug', "Opening TCP:" + this.config.host.toString() + ":" + this.config.port.toString());
-		this.socket = new TCPHelper(this.config.host, this.config.port)
-		if (this.config.host == '') {
-			this.socket.isConnected == false
-		}
+		if (this.config.host) {
+			this.log('debug', "Opening TCP:" + this.config.host.toString() + ":" + this.config.port.toString());
+			this.socket = new TCPHelper(this.config.host, this.config.port)
 
-		this.socket.on('status_change', (status, message) => {
-			this.updateStatus(status, message)
-		})
+			this.socket.on('status_change', (status, message) => {
+				this.updateStatus(status, message)
+			})
 
-		this.socket.on('error', (err) => {
-			this.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-			this.log('error', 'Module: Network error: ' + err.message)
-			// restart the whole module
-			this._onDead('Network error: ' + err.message)
-		})
+			this.socket.on('error', (err) => {
+				this.updateStatus(InstanceStatus.ConnectionFailure, err.message)
+				this.log('error', 'Network error: ' + err.message)
+			})
 
-		this.socket.on('close', (res) => {
-			this.updateStatus(InstanceStatus.ConnectionFailure, res.message)
-			this.log('error', 'Module: Network error: ' + res.message)
-			// restart the whole module
-			this._onDead('Connection closed by emotimo: ' + res.message)
-		})
+			this.socket.on('data', (data) => {
+				this.log('debug', 'Response: ' + data.toString());
+				if (this.config.saveresponse) {
+					let dataResponse = data
 
-		/*
-		States that when data is recieved, do this,
-		if the save response config is enabled then it saves the response as a variable in companion
-		then send the data recieved to get delt with
-		*/
-		this.socket.on('data', (data) => {
-			this.log('debug', 'Response: ' + data.toString());
-			if (this.config.saveresponse) {
-				let dataResponse = data
+					if (this.config.convertresponse == 'string') {
+						dataResponse = data.toString()
+					} else if (this.config.convertresponse == 'hex') {
+						dataResponse = data.toString('hex')
+					}
 
-				if (this.config.convertresponse == 'string') {
-					dataResponse = data.toString()
-				} else if (this.config.convertresponse == 'hex') {
-					dataResponse = data.toString('hex')
+					this.setVariableValues({ tcp_response: dataResponse })
+
 				}
+				//Insert TCP Parsing Here
+				this.handleTCPResponse(data)
+			})
 
-				this.setVariableValues({ tcp_response: dataResponse })
-
+			// clear old heartbeat
+			if (this.heartbeatInterval) {
+				clearInterval(this.heartbeatInterval)
 			}
-			//Insert TCP Parsing Here
-			this.handleTCPResponse(data)
-		})
 
-		// if there is still a heartbeat going, remove it
-		if (this.heartbeatInterval) {
-			clearInterval(this.heartbeatInterval)
+			this.log('debug', "Heartbeat Initialized");
+			this.heartbeatInterval = setInterval(() => {
+				var cmd = 'G500';
+				this.sendEmotimoAPICommand(cmd);
+			}, this.config.interval)
+
+		} else {
+			this.updateStatus(InstanceStatus.BadConfig)
 		}
-
-		// this._markRx() // mark the last response date
-		this.pending = false // not currently waiting on a response
-
-		// initialize new heartbeat
-		this.heartbeatInterval = setInterval(() => {
-			if (!this.socket?.isConnected) { // if the socket is not connected
-				this.log('error', 'Module: Socket not connected for heartbeat :(')
-				return;
-			}
-			if (this.retryCount > 5) {
-				this.retryCount = 0
-				this._onDead('Retry cap reached')
-				return;
-			}
-			if (this.pending) { // if were already waiting on a response dont send another
-				this.log('debug', 'Already waiting on a heartbeat response')
-				this.updateStatus(InstanceStatus.Connecting, 'Lost connection, trying to reconnect');
-				this.retryCount++;
-				return; 
-			}
-			if (this.fetchPstsStat) return;
-			this.pending = true;
-			const sendBuf = Buffer.from('G500' + '\n', 'latin1')
-			this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
-			this.retryCount = 0
-			this.socket.send(sendBuf)
-		}, this.config.interval)
-		this.log('debug', "Heartbeat Initialized");
-	}
-
-	_cleanupSocket() {
-		if (this.heartbeatInterval) { clearInterval(this.heartbeatInterval); this.heartbeatInterval = null }
-
-		if (this.socket) {
-			try { this.socket.removeAllListeners() } catch {}
-			try { this.socket.destroy() } catch {}
-			this.socket = null
-		}
-	}
-
-	_scheduleReconnect(reason = 'unknown') {
-		if (this._reconnectTimer) return // already scheduled
-		if (!this._backoff) this._backoff = 2000 // starts at 2s then doubles every try
-		const delay = this._backoff
-		this._backoff = Math.min(this._backoff * 2, 10000) // cap at 10s
-		this.log('error', `Reconnecting (reason: ${reason}) in ${delay}ms`)
-		this._reconnectTimer = setTimeout(() => {
-			this._reconnectTimer = null
-			this.init_tcp()
-		}, delay)
-	}
-
-	_onDead(origin = 'unknown') {
-		this.log('error', `Connection marked dead via ${origin}`)
-		this._cleanupSocket()
-		this._scheduleReconnect(origin)
 	}
 
 	handleTCPResponse = function (dataPacket) {
@@ -647,7 +576,6 @@ class eMotimoModuleInstance extends InstanceBase {
 
 	fetchStartup() {
 		let i = 0
-		this.fetchPstsStat = true
 
 		const sendNext = () => {
 			if (i >= 128) {
@@ -677,7 +605,6 @@ class eMotimoModuleInstance extends InstanceBase {
 					this.setVariableValues({ CurrentPstM4Pos: m4pos })
 					if (i >= this.config.startupPstAmount) {
 						this.log('debug', `Finished fetching startup presets.`)
-						this.fetchPstsStat = false
 						return;
 					}
 				}

@@ -2132,3 +2132,4 @@ module.exports = function (self) {
 		},
 	})
 }
+module.exports.PRESET_ID = PRESET_ID

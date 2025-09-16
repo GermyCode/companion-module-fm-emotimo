@@ -195,6 +195,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.retryCount++;
 				return; 
 			}
+			if (this.fetchPstsStat) return;
 			this.pending = true;
 			const sendBuf = Buffer.from('G500' + '\n', 'latin1')
 			this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
@@ -250,6 +251,11 @@ class eMotimoModuleInstance extends InstanceBase {
 				const isActive = pan !== 0 || tilt !== 0 || m3 !== 0 || m4 !== 0 || run !== 50 || ramp !== 10
 
 				if (isActive) {
+					if (!UpdateActions.PRESET_ID.some(p => p.id === preset)) {
+						UpdateActions.PRESET_ID.push({ id: preset, label: `Pst${preset}`})
+						this.updateActions()
+					}
+
 					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
 					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
 					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
@@ -671,12 +677,10 @@ class eMotimoModuleInstance extends InstanceBase {
 					this.setVariableValues({ CurrentPstM4Pos: m4pos })
 					if (i >= this.config.startupPstAmount) {
 						this.log('debug', `Finished fetching startup presets.`)
-						return
+						this.fetchPstsStat = false
+						return;
 					}
 				}
-
-				// Continue processing
-				this.handleTCPResponse(data)
 
 				i++
 				setTimeout(sendNext, 100)
@@ -684,7 +688,6 @@ class eMotimoModuleInstance extends InstanceBase {
 			this.sendEmotimoAPICommand(`G752 P${i}`)
 		}
 		sendNext()
-		this.fetchPstsStat = false
 
 		// TO-DO
 		// G101 -> get motor performance

@@ -2383,8 +2383,7 @@ module.exports = {
 						{
 							actionId: 'setPresetID',
 							options: {
-								direction: 'set',
-								gotoPst: 0
+								direction: 1
 							}
 						}
 					],
@@ -2459,7 +2458,13 @@ module.exports = {
 			steps: [
 				{
 					down: [
-						
+						{
+							actionId: 'setPresetID',
+							options: {
+								direction: 'set',
+								gotoPst: 0
+							}
+						}
 					],
 				},
 			],

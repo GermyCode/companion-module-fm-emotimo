@@ -1,0 +1,1 @@
+to install to companion, download a release and in companion, under the modules tab, click import modile package, and select the downloaded package. then in the connection info either make a new connection with that newly imported package or set the version to be the new version.

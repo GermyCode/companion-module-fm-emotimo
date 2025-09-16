@@ -2375,7 +2375,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_DARK_GREEN,
+				bgcolor: COLORS.MEDIUM_RED,
 				},
 			steps: [
 				{
@@ -2397,7 +2397,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_LIGHT_BLUE,
+				bgcolor: COLORS.MEDIUM_GREEN,
 				},
 			steps: [
 				{
@@ -2421,7 +2421,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_PURPLE,
+				bgcolor: COLORS.MEDIUM_BLUE,
 				},
 			steps: [
 				{
@@ -2524,7 +2524,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_DARK_GREEN,
+				bgcolor: COLORS.MEDIUM_RED,
 				},
 			steps: [
 				{
@@ -2546,7 +2546,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_LIGHT_BLUE,
+				bgcolor: COLORS.MEDIUM_GREEN,
 				},
 			steps: [
 				{
@@ -2570,7 +2570,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_PURPLE,
+				bgcolor: COLORS.MEDIUM_BLUE,
 				},
 			steps: [
 				{
@@ -2976,7 +2976,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_DARK_GREEN,
+				bgcolor: COLORS.MEDIUM_RED,
 			},
 			steps: [
 				{
@@ -2999,7 +2999,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_LIGHT_BLUE,
+				bgcolor: COLORS.LIGHT_LAVENDER,
 				},
 			steps: [
 				{
@@ -3022,7 +3022,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.TEAL,
+				bgcolor: COLORS.DARK_LAVENDER,
 				},
 			steps: [
 				{
@@ -3046,7 +3046,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_LIGHT_BLUE,
+				bgcolor: COLORS.MEDIUM_GREEN,
 				},
 			steps: [
 				{
@@ -3070,7 +3070,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_PURPLE,
+				bgcolor: COLORS.MEDIUM_BLUE,
 				},
 			steps: [
 				{
@@ -3194,7 +3194,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_DARK_GREEN,
+				bgcolor: COLORS.MEDIUM_RED,
 				},
 			steps: [
 				{
@@ -3216,7 +3216,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_LIGHT_BLUE,
+				bgcolor: COLORS.LIGHT_LAVENDER,
 				},
 			steps: [
 				{
@@ -3239,7 +3239,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.TEAL,
+				bgcolor: COLORS.DARK_LAVENDER,
 				},
 			steps: [
 				{
@@ -3263,7 +3263,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_LIGHT_BLUE,
+				bgcolor: COLORS.MEDIUM_GREEN,
 				},
 			steps: [
 				{
@@ -3287,7 +3287,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.DARK_PURPLE,
+				bgcolor: COLORS.MEDIUM_BLUE,
 				},
 			steps: [
 				{

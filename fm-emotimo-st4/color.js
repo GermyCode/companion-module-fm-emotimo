@@ -22,7 +22,7 @@ module.exports = {
 
 		GREEN: combineRgb(0, 255, 0),
 		DARK_GREEN: combineRgb(0, 51, 0),
-		MEDIUM_GREEN: combineRgb(0, 102, 0),
+		MEDIUM_GREEN: combineRgb(0, 153, 0),
 		PALE_GREEN: combineRgb(128, 255, 128),
 
 		BLUE: combineRgb(0, 0, 255),
@@ -44,5 +44,7 @@ module.exports = {
 		DARK_LIGHT_BLUE: combineRgb(0, 51, 102),
 		DARK_PURPLE: combineRgb(51, 0, 102),
 		PINK: combineRgb(204, 0, 204),
+		LIGHT_LAVENDER: combineRgb(120, 120, 237),
+		DARK_LAVENDER: combineRgb(64, 64, 248),
 	}
 }

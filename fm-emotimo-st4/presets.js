@@ -132,7 +132,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_BLUE,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -164,7 +164,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_DARK_GREEN,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -197,7 +197,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_DARK_GREEN,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -250,7 +250,7 @@ module.exports = {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrStr) Stop A',
 				color: COLORS.WHITE,
 				bgcolor: combineRgb(127, 0, 0),
-				},
+			},
 			steps: [
 				{
 					up: [
@@ -294,7 +294,7 @@ module.exports = {
 				text: 'Clear $(companion-module-emotimo-st4-3:CurrentMtrStr) Stops',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
-				},
+			},
 			steps: [
 				{
 					2000: {
@@ -321,7 +321,7 @@ module.exports = {
 				text: '$(companion-module-emotimo-st4-3:CurrentMtrStr) Stop B',
 				color: COLORS.WHITE,
 				bgcolor: combineRgb(127, 0, 0),
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -368,7 +368,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_BLUE,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -1281,7 +1281,7 @@ module.exports = {
 					text: '⬆️',
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -1514,7 +1514,7 @@ module.exports = {
 						text: '⬇️',
 						color: COLORS.WHITE,
 						bgcolor: COLORS.DARK_BLUE,
-						},
+					},
 					steps: [
 						{
 							down: [
@@ -2337,7 +2337,7 @@ module.exports = {
 				text: 'Clear All Stops',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -2376,7 +2376,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_RED,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -2399,7 +2399,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_GREEN,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -2423,7 +2423,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_BLUE,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -2548,7 +2548,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_GREEN,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -2572,7 +2572,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_BLUE,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -2596,7 +2596,7 @@ module.exports = {
 				text: 'Pre $(companion-module-emotimo-st4-3:CurrentPstSet)',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_RED,
-				},
+			},
 			steps: [
 				{
 					up: [
@@ -2749,7 +2749,7 @@ module.exports = {
 					text: '⬆️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -2774,7 +2774,7 @@ module.exports = {
 					text: '⬆️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -2863,7 +2863,7 @@ module.exports = {
 					text: '⬇️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -2888,7 +2888,7 @@ module.exports = {
 					text: '⬇️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -2914,7 +2914,7 @@ module.exports = {
 					text: 'Pre ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -3001,7 +3001,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.LIGHT_LAVENDER,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3024,7 +3024,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_LAVENDER,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3048,7 +3048,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_GREEN,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3072,7 +3072,7 @@ module.exports = {
 				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_BLUE,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3196,7 +3196,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_RED,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3218,7 +3218,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.LIGHT_LAVENDER,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3241,7 +3241,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_LAVENDER,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3265,7 +3265,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_GREEN,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3289,7 +3289,7 @@ module.exports = {
 				text: '⬇️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.MEDIUM_BLUE,
-				},
+			},
 			steps: [
 				{
 					down: [
@@ -3314,7 +3314,7 @@ module.exports = {
 				text: 'Loop\\n$(companion-module-emotimo-st4-3:CurrentLpSet)\\nRecall',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.DARK_RED,
-				},
+			},
 			steps: [
 				{
 					up: [
@@ -3552,7 +3552,7 @@ module.exports = {
 					text: '⬆️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -3577,7 +3577,7 @@ module.exports = {
 					text: '⬆️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -3603,7 +3603,7 @@ module.exports = {
 					text: '⬆️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -3627,7 +3627,7 @@ module.exports = {
 					text: '⬆️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -3738,7 +3738,7 @@ module.exports = {
 					text: '⬇️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -3763,7 +3763,7 @@ module.exports = {
 					text: '⬇️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [
@@ -3789,7 +3789,7 @@ module.exports = {
 					text: '⬇️ ' + inc,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_BLUE,
-					},
+				},
 				steps: [
 					{
 						down: [

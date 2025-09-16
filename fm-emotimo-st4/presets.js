@@ -3111,7 +3111,19 @@ module.exports = {
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
-			steps: [{}]
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setLoopID',
+							options: {
+								direction: 'set',
+								gotoLoop: 0
+							}
+						}
+					],
+				}
+			],
 		},
 		presets.curLpAPointsetup = {
 			category: 'Loops',
@@ -3123,7 +3135,19 @@ module.exports = {
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
-			steps: [{}],
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setLoopAPoint',
+							options: {
+								direction: 'id',
+								psetid: 0
+							}
+						}
+					],
+				}
+			],
 		},
 		presets.curLpBPointsetup = {
 			category: 'Loops',
@@ -3135,7 +3159,19 @@ module.exports = {
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
-			steps: [{}],
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setLoopBPoint',
+							options: {
+								direction: 'id',
+								psetid: 0
+							}
+						}
+					],
+				}
+			],
 		},
 		presets.curRunLp = {
 			category: 'Loops',

@@ -3,8 +3,8 @@ const { combineRgb } = require('@companion-module/base')
 const MOTOR_ID = [
 	{ id: 1, label: 'Pan' },
 	{ id: 2, label: 'Tilt' },
-	{ id: 3, label: 'Slide' },
-	{ id: 4, label: 'TurnTable' },
+	{ id: 3, label: 'M3-Slide' },
+	{ id: 4, label: 'M4-Zoom' },
 	{ id: 5, label: 'TN 1' },
 	{ id: 6, label: 'TN 2' },
 	{ id: 7, label: 'TN 3' },
@@ -138,9 +138,9 @@ module.exports = async function (self) {
 				} else if (feedback.options.id_mot == 2) {
 					state = self.getVariableValue('TiltStopA')
 				} else if (feedback.options.id_mot == 3) {
-					state = self.getVariableValue('M3StopA')
+					state = self.getVariableValue('M3-SlideStopA')
 				} else if (feedback.options.id_mot == 4) {
-					state = self.getVariableValue('M4StopA')
+					state = self.getVariableValue('M4-ZoomStopA')
 				} else if (feedback.options.id_mot == 5) {
 					state = self.getVariableValue('TNFocusStopA')
 				} else if (feedback.options.id_mot == 6) {
@@ -187,9 +187,9 @@ module.exports = async function (self) {
 				} else if (feedback.options.id_mot == 2) {
 					state = self.getVariableValue('TiltStopB')
 				} else if (feedback.options.id_mot == 3) {
-					state = self.getVariableValue('M3StopB')
+					state = self.getVariableValue('M3-SlideStopB')
 				} else if (feedback.options.id_mot == 4) {
-					state = self.getVariableValue('M4StopB')
+					state = self.getVariableValue('M4-ZoomStopB')
 				} else if (feedback.options.id_mot == 5) {
 					state = self.getVariableValue('TNFocusStopB')
 				} else if (feedback.options.id_mot == 6) {
@@ -228,9 +228,9 @@ module.exports = async function (self) {
 				} else if (motorID == 2) {
 					state = self.getVariableValue('TiltStopA')
 				} else if (motorID == 3) {
-					state = self.getVariableValue('M3StopA')
+					state = self.getVariableValue('M3-SlideStopA')
 				} else if (motorID == 4) {
-					state = self.getVariableValue('M4StopA')
+					state = self.getVariableValue('M4-ZoomStopA')
 				} else if (motorID == 5) {
 					state = self.getVariableValue('TNFocusStopA')
 				} else if (motorID == 6) {
@@ -268,9 +268,9 @@ module.exports = async function (self) {
 				} else if (motorID == 2) {
 					state = self.getVariableValue('TiltStopB')
 				} else if (motorID == 3) {
-					state = self.getVariableValue('M3StopB')
+					state = self.getVariableValue('M3-SlideStopB')
 				} else if (motorID == 4) {
-					state = self.getVariableValue('M4StopB')
+					state = self.getVariableValue('M4-ZoomStopB')
 				} else if (motorID == 5) {
 					state = self.getVariableValue('TNFocusStopB')
 				} else if (motorID == 6) {

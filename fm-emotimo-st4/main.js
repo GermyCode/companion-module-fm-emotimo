@@ -22,6 +22,10 @@ class eMotimoModuleInstance extends InstanceBase {
 			// ...UpdateVariableDefinitions,
 			...presets,
 		})
+
+		this.commandQueue = [];
+		this.commandInFlight = false;
+		this.sendDelayMs = 100;
 	}
 
 	async init(config) {
@@ -68,7 +72,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.initPresets()
 
 		// Give socket time to establish
-		if (config.fetch) setTimeout(() => this.fetchStartup(), 1000);
+		if (config.fetch) setTimeout(() => this.fetchStartup(), (this.config.interval));
 	}
 
 	updateActions() {
@@ -88,6 +92,30 @@ class eMotimoModuleInstance extends InstanceBase {
 	}
 
 	sendEmotimoAPICommand = function (str) {
+		if (str === 'G500') {
+			this.commandQueue.unshift(str);
+		} else {
+			this.commandQueue.push(str);
+		}
+		if (this.commandQueue > 1) this.log('err', 'more than 1 enqueue')
+		this.log('warn', 'Command queue Send: ' + this.commandQueue)
+		this.processQueue();
+	}
+
+	async processQueue() {
+		if (this.commandInFlight) return;           // one already in flight
+		if (this.commandQueue.length === 0) return; // nothing waiting
+
+		const cmd = this.commandQueue.shift();
+		this.commandInFlight = true;
+
+		this.log('warn', 'Command queue after send: ' + this.commandQueue)
+
+		// actually send it
+		this._sendNow(cmd);
+	}
+
+	_sendNow = function (str) {
 		/*
 		* create a binary buffer pre-encoded 'latin1' (8bit no change bytes)
 		* sending a string assumes 'utf8' encoding
@@ -95,16 +123,22 @@ class eMotimoModuleInstance extends InstanceBase {
 		* and destroys the 'binary' content
 		*/
 
-		if (this.pending) return
+		this.log('warn', 'SENDING: ' + str)
 
 		const sendBuf = Buffer.from(str + '\n', 'latin1')
 
 		this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
 
 		if (this.socket !== undefined && this.socket.isConnected) {
-			this.socket.send(sendBuf)
+			try {
+				this.socket.send(sendBuf);
+			} catch (err) {
+				this.log('error', `Send failed: ${err.message}`);
+				this.commandInFlight = false;
+			}
 		} else {
 			this.log('error', 'Module: Socket not connected :(')
+			this.commandInFlight = false; // free up if failed
 		}
 	};
 
@@ -164,9 +198,12 @@ class eMotimoModuleInstance extends InstanceBase {
 				}
 
 				this.setVariableValues({ tcp_response: dataResponse })
-
 			}
-			//Insert TCP Parsing Here
+			setTimeout(() => {
+				this.commandInFlight = false;
+				this.processQueue(); // send next
+			}, this.sendDelayMs);
+			// TCP Parsing Here
 			this.handleTCPResponse(data)
 		})
 
@@ -197,10 +234,13 @@ class eMotimoModuleInstance extends InstanceBase {
 			}
 			if (this.fetchPstsStat) return;
 			this.pending = true;
-			const sendBuf = Buffer.from('G500' + '\n', 'latin1')
-			this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
+			const cmd = 'G500'
+			this.log('debug', 'sending to ' + this.config.host + ': ' + cmd)
+			this.sendEmotimoAPICommand(cmd)
+			// const sendBuf = Buffer.from(cmd, 'latin1')
+			// this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString())
 			this.retryCount = 0
-			this.socket.send(sendBuf)
+			// this.socket.send(sendBuf)
 		}, this.config.interval)
 		this.log('debug', "Heartbeat Initialized");
 	}
@@ -650,6 +690,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.fetchPstsStat = true
 
 		const sendNext = () => {
+			if (!this.fetchPstsStat) return;
 			if (i >= 128) {
 				this.log('debug', 'Finished fetching all presets')
 				return

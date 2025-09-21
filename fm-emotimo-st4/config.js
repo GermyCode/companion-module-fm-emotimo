@@ -2,6 +2,14 @@ const { Regex } = require('@companion-module/base')
 
 const { MODELS } = require('./models.js')
 
+// take string like "/^...$/"
+const raw = Regex.IP;
+const ipSrc = raw.replace(/^\/|\/$/g, ''); // remove leading/trailing slashes
+const ipSrcNoAnchors = ipSrc.replace(/^\^/, '').replace(/\$$/, '');
+
+const RegexIPorEmpty = new RegExp(`^(?:${ipSrcNoAnchors}|)$`);
+
+
 module.exports = {
 	getConfigFields() {
 		return [
@@ -18,7 +26,7 @@ module.exports = {
 				id: 'host',
 				label: 'Target IP',
 				width: 4,
-				regex: Regex.IP,
+				regex: Regex.IP.replace(/\/$/, '|^$/'),
 			},
 			{
 				type: 'textinput',
@@ -91,13 +99,6 @@ module.exports = {
 				label: 'Update Interval',
 				width: 3,
 				default: 5000,
-			},
-			{
-				type: 'static-text',
-				id: 'dummy2',
-				width: 12,
-				label: ' ',
-				value: ' ',
 			},
 		]
 	}

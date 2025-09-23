@@ -1,16 +1,6 @@
 const { combineRgb } = require('@companion-module/base')
-
-const MOTOR_ID = [
-	{ id: 1, label: 'Pan' },
-	{ id: 2, label: 'Tilt' },
-	{ id: 3, label: 'M3-Slide' },
-	{ id: 4, label: 'M4-Zoom' },
-	{ id: 5, label: 'TN 1' },
-	{ id: 6, label: 'TN 2' },
-	{ id: 7, label: 'TN 3' },
-	{ id: 8, label: 'Roll' },
-	{ id: 9, label: 'Focus' },
-]
+const { COLORS } = require('./color.js')
+const { MOTOR_ID, MOTOR_PROFILES } = require('./actions') // TO-DO AGAIN Put Somewhere else, somewhere general
 
 module.exports = async function (self) {
 
@@ -285,6 +275,33 @@ module.exports = async function (self) {
 
 				// console.log("B Status: " + state + " Motor: " + motorID +"\n")
 				if(state) {
+					return true
+				} else {
+					return false
+				}
+			},
+		},
+		MotorProfileSatus: {
+			name: 'Motor Profile Satus',
+			type: 'boolean',
+			label: 'Motor Profile Satus',
+			defaultStyle: {
+				bgcolor: COLORS.MEDIUM_LAVENDER,
+				color: COLORS.BLACK,
+			},
+			options: [
+				{
+					type: 'dropdown',
+					id: 'id_prof',
+					label: 'Motor ID',
+					default: 5,
+					choices: MOTOR_PROFILES,
+				},
+			],
+			callback: (feedback) => {
+				var prof = MOTOR_PROFILES.find(m => m.id === feedback.options.id_prof).label
+				if (self.getVariableValue('CurrentMtrProf') === prof) var state = 1;
+				if(state === 1) {
 					return true
 				} else {
 					return false

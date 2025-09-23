@@ -44,7 +44,8 @@ module.exports = {
 		DARK_LIGHT_BLUE: combineRgb(0, 51, 102),
 		DARK_PURPLE: combineRgb(51, 0, 102),
 		PINK: combineRgb(204, 0, 204),
-		LIGHT_LAVENDER: combineRgb(120, 120, 237),
-		DARK_LAVENDER: combineRgb(64, 64, 248),
+		LIGHT_LAVENDER: combineRgb(192, 192, 255),
+		MEDIUM_LAVENDER: combineRgb(128, 128, 237),
+		DARK_LAVENDER: combineRgb(64, 64, 255),
 	}
 }

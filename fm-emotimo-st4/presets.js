@@ -384,7 +384,303 @@ module.exports = {
 				}
 			],
 		}
-		
+
+		// ########################
+		// # Motor Speed Profiles #
+		// ########################
+
+		presets.MotorsProfileHeader = {
+			category: 'Motors',
+			name: 'Speed Profiles',
+			type: 'text',
+			text: ''
+		},
+
+		presets.profileFast = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Fast',
+			style: {
+				text: 'Fast',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 0
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 0
+					},
+				}
+			]
+		},
+		presets.profileMed = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Med',
+			style: {
+				text: 'Med',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 1
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 1
+					},
+				}
+			]
+		},
+		presets.profileSlow = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Slow',
+			style: {
+				text: 'Slow',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 2
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 2
+					},
+				}
+			]
+		},
+		presets.profileTimelapse = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Timelapse',
+			style: {
+				text: 'Time-Lapse',
+				size: 20,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 3
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 3
+					},
+				}
+			]
+		},
+		presets.profileFastest = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Fastest',
+			style: {
+				text: 'Fastest',
+				size: 20,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 4
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 4
+					},
+				}
+			]
+		},
+		presets.profileUserDefined1 = {
+			category: 'Motors',
+			type: 'button',
+			name: 'User Defined 1',
+			style: {
+				text: 'User Defined 1',
+				size: 18,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 5
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 5
+					},
+				}
+			]
+		},
+		presets.profileUserDefined2 = {
+			category: 'Motors',
+			type: 'button',
+			name: 'User Defined 2',
+			style: {
+				text: 'User Defined 2',
+				size: 18,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 6
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 6
+					},
+				}
+			]
+		},
+		presets.profileInertiaWheels = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Inertia Wheels',
+			style: {
+				text: 'Inertia Wheels',
+				size: 20,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 7
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 7
+					},
+				}
+			]
+		},
+
+		// ########################
+		// # Motor Rotary Simple #
+		// ########################
+
 		presets.MotorHeader2 = {
 			category: 'Motors',
 			name: 'Rotary Encoders',
@@ -3005,7 +3301,7 @@ module.exports = {
 			style: {
 				text: '⬆️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.LIGHT_LAVENDER,
+				bgcolor: COLORS.MEDIUM_LAVENDER,
 			},
 			steps: [
 				{
@@ -3258,7 +3554,7 @@ module.exports = {
 			style: {
 				text: '⬇️',
 				color: COLORS.WHITE,
-				bgcolor: COLORS.LIGHT_LAVENDER,
+				bgcolor: COLORS.MEDIUM_LAVENDER,
 			},
 			steps: [
 				{

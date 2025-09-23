@@ -61,7 +61,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.config.interval = this.config.interval || 5000
 		this.config.prot = 'tcp'
 		this.fetchStat = false
-		this.motorCount = (this.config.model === 'Spectrum ST4') ? 4 : 0; this.log('err' , 'Error getting motor count'); //(this.config.model === 'Spectrum ST4.3') ? 6 : (this.config.model === 'SA2.6 Conductor') ? 9 : 
+		this.motorCount = this.config.model === 'Spectrum ST4' ? 4 : 0; this.log('err' , 'Error getting motor count'); //(this.config.model === 'Spectrum ST4.3') ? 6 : (this.config.model === 'SA2.6 Conductor') ? 9 : 
 
 		if (this.config.prot == 'tcp') {
 			this.init_tcp()
@@ -351,169 +351,42 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.setVariableValues({ LastPstID: -1 })
 				return;
 			case 'Reset Stops':
-				var data = tokens[1]
-				this.log('debug', "Motor:" + data); //Data[0] is empty there is a space here
-				if (data == 1) {
-					this.setVariableValues({ PanStopA: 0 })
-					this.setVariableValues({ PanStopB: 0 })
-					this.log('debug', "Pan Cleared");
-				} else if (data == 2) {
-					this.setVariableValues({ TiltStopA: 0 })
-					this.setVariableValues({ TiltStopB: 0 })
-				} else if (data == 3) {
-					this.setVariableValues({ 'M3-SlideStopA': 0 })
-					this.setVariableValues({ 'M3-SlideStopB': 0 })
-				} else if (data == 4) {
-					this.setVariableValues({ 'M4-ZoomStopA': 0 })
-					this.setVariableValues({ 'M4-ZoomStopB': 0 })
-				} else if (data == 5) {
-					this.setVariableValues({ TNFocusStopA: 0 })
-					this.setVariableValues({ TNFocusStopB: 0 })
-				} else if (data == 6) {
-					this.setVariableValues({ TNIrisStopA: 0 })
-					this.setVariableValues({ TNIrisStopB: 0 })
-				} else if (data == 7) {
-					this.setVariableValues({ TNZoomStopA: 0 })
-					this.setVariableValues({ TNZoomStopB: 0 })
-				} else if (data == 8) {
-					this.setVariableValues({ RSRollStopA: 0 })
-					this.setVariableValues({ RSRollStopB: 0 })
-				} else if (data == 9) {
-					this.setVariableValues({ RSFocusStopA: 0 })
-					this.setVariableValues({ RSFocusStopB: 0 })
-				} else {
-					this.log('debug', "Error");
+				let motor = Number(tokens[1])
+				if (motor != 0) {
+					try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
+						var axis = UpdateActions.MOTOR_ID.find(m => m.id === motor).label
+						this.setVariableValues({ [`${axis}StopA`]: 0 })
+						this.setVariableValues({ [`${axis}StopB`]: 0 })
+					}
+					catch (e) {
+						this.log('error', `couldn't find id: ${motor} in MOTOR_ID. Error: ${e}`)
+					}
+				} else { // reset all axis
+					for (let i = 1; i <= this.motorCount; i++) {
+						try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
+							var axis = UpdateActions.MOTOR_ID.find(m => m.id === i).label
+							this.setVariableValues({ [`${axis}StopA`]: 0 })
+							this.setVariableValues({ [`${axis}StopB`]: 0 })
+						}
+						catch (e) {
+							this.log('error', `Couldn't find id: ${i} in MOTOR_ID. Error: ${e}`)
+						}
+					}
 				}
+
 				this.checkFeedbacks("StopAStatus")
 				this.checkFeedbacks("StopBStatus")
 				this.checkFeedbacks("StopAStatusSmart")
 				this.checkFeedbacks("StopBStatusSmart")
 				return;
-			case 'StopA':
-				var data = tokens[1].split(',')
-				this.log('debug', "ID:" + data[0] + ":" + data[1]); //Data[0] is empty there is a space here
-				var motor = data[0]
-				var position = data[1]
-				if (position != "-2000000000") {
-					if (motor == 1) {
-						this.setVariableValues({ PanStopA: 1 })
-					} else if (motor == 2) {
-						this.setVariableValues({ TiltStopA: 1 })
-					} else if (motor == 3) {
-						this.setVariableValues({ 'M3-SlideStopA': 1 })
-					} else if (motor == 4) {
-						this.setVariableValues({ 'M4-ZoomStopA': 1 })
-					} else if (motor == 5) {
-						this.setVariableValues({ TNFocusStopA: 1 })
-					} else if (motor == 6) {
-						this.setVariableValues({ TNIrisStopA: 1 })
-					} else if (motor == 7) {
-						this.setVariableValues({ TNZoomStopA: 1 })
-					} else if (motor == 8) {
-						this.setVariableValues({ RSRollStopA: 1 })
-					} else if (motor == 9) {
-						this.setVariableValues({ RSFocusStopA: 1 })
-					}
-				} else {
-					if (motor == 1) {
-						this.setVariableValues({ PanStopA: 0 })
-					} else if (motor == 2) {
-						this.setVariableValues({ TiltStopA: 0 })
-					} else if (motor == 3) {
-						this.setVariableValues({ 'M3-SlideStopA': 0 })
-					} else if (motor == 4) {
-						this.setVariableValues({ 'M4-ZoomStopA': 0 })
-					} else if (motor == 5) {
-						this.setVariableValues({ TNFocusStopA: 0 })
-					} else if (motor == 6) {
-						this.setVariableValues({ TNIrisStopA: 0 })
-					} else if (motor == 7) {
-						this.setVariableValues({ TNZoomStopA: 0 })
-					} else if (motor == 8) {
-						this.setVariableValues({ RSRollStopA: 0 })
-					} else if (motor == 9) {
-						this.setVariableValues({ RSFocusStopA: 0 })
-					}
-				}
-				this.checkFeedbacks("StopAStatus")	
-				this.checkFeedbacks("StopAStatusSmart")
-				return;
-			case 'StopB':
-				var data = tokens[1].split(',')
-				this.log('debug', "ID:" + data[0] + ":" + data[1]); //Data[0] is empty there is a space here
-				var motor = data[0]
-				var position = data[1]
-				if (position != "-2000000000") {
-					if (motor == 1) {
-						this.setVariableValues({ PanStopB: 1 })
-					} else if (motor == 2) {
-						this.setVariableValues({ TiltStopB: 1 })
-					} else if (motor == 3) {
-						this.setVariableValues({ 'M3-SlideStopB': 1 })
-					} else if (motor == 4) {
-						this.setVariableValues({ 'M4-ZoomStopB': 1 })
-					} else if (motor == 5) {
-						this.setVariableValues({ TNFocusStopB: 1 })
-					} else if (motor == 6) {
-						this.setVariableValues({ TNIrisStopB: 1 })
-					} else if (motor == 7) {
-						this.setVariableValues({ TNZoomStopB: 1 })
-					} else if (motor == 8) {
-						this.setVariableValues({ RSRollStopB: 1 })
-					} else if (motor == 9) {
-						this.setVariableValues({ RSFocusStopB: 1 })
-					}
-				} else {
-					if (motor == 1) {
-						this.setVariableValues({ PanStopB: 0 })
-					} else if (motor == 2) {
-						this.setVariableValues({ TiltStopB: 0 })
-					} else if (motor == 3) {
-						this.setVariableValues({ 'M3-SlideStopB': 0 })
-					} else if (motor == 4) {
-						this.setVariableValues({ 'M4-ZoomStopB': 0 })
-					} else if (motor == 5) {
-						this.setVariableValues({ TNFocusStopB: 0 })
-					} else if (motor == 6) {
-						this.setVariableValues({ TNIrisStopB: 0 })
-					} else if (motor == 7) {
-						this.setVariableValues({ TNZoomStopB: 0 })
-					} else if (motor == 8) {
-						this.setVariableValues({ RSRollStopB: 0 })
-					} else if (motor == 9) {
-						this.setVariableValues({ RSFocusStopB: 0 })
-					}
-				}
-				this.checkFeedbacks("StopBStatus")
-				this.checkFeedbacks("StopBStatusSmart")
-				return;
-			case 'All Stops Cleared':
-				this.setVariableValues({ PanStopA: 0 })
-				this.setVariableValues({ PanStopB: 0 })
-				this.setVariableValues({ TiltStopA: 0 })
-				this.setVariableValues({ TiltStopB: 0 })
-				this.setVariableValues({ 'M3-SlideStopA': 0 })
-				this.setVariableValues({ 'M3-SlideStopB': 0 })
-				this.setVariableValues({ 'M4-ZoomStopA': 0 })
-				this.setVariableValues({ 'M4-ZoomStopB': 0 })
-				this.setVariableValues({ TNFocusStopA: 0 })
-				this.setVariableValues({ TNFocusStopB: 0 })
-				this.setVariableValues({ TNIrisStopA: 0 })
-				this.setVariableValues({ TNIrisStopB: 0 })
-				this.setVariableValues({ TNZoomStopA: 0 })
-				this.setVariableValues({ TNZoomStopB: 0 })
-				this.setVariableValues({ RSRollStopA: 0 })
-				this.setVariableValues({ RSRollStopB: 0 })
-				this.setVariableValues({ RSFocusStopA: 0 })
-				this.setVariableValues({ RSFocusStopB: 0 })
-				this.checkFeedbacks("StopAStatus")
-				this.checkFeedbacks("StopBStatus")
-				this.checkFeedbacks("StopAStatusSmart")
-				this.checkFeedbacks("StopBStatusSmart")
+			case 'Motor Profile Set':
+				this.setVariableValues({ CurrentMtrProf: tokens[1].trim()})
+				this.checkFeedbacks('MotorProfileSatus')
 				return;
 			default:
 		}
-		this.log('error', `token 0 || ${tokens[0]} ||| 1 || ${tokens[1]} ||| 2 || ${tokens[2]} ||| 3 || ${tokens[3]}`)
+		// other special responses //
+
 		// Mainly for the fetch preset thing when it connects
 		// response for the G752 Command (preset fetch)
 		if (tokens[0].startsWith('Preset ')) {
@@ -579,10 +452,80 @@ class eMotimoModuleInstance extends InstanceBase {
 				return;
 			}
 		}
-		switch (tokens[tokens.length - 1]) {
-			case 'StopA': this.log('error', 'a'); return;;
-			case 'StopB': this.log('error', 'b'); return;;
+		if (tokens[0].startsWith('Motor performance set for')) {
+			let data = tokens[0].split(' ')
+			let axis = data[4]
+			// TO-DO TEMP NAMING FIX
+			if (axis === 'M3') {
+				axis = 'M3-Slide'
+			} else if (axis === 'M4') {
+				axis = 'M4-Zoom'
+			}
+			// if 
+			// this.setVariableValues({ [`${CurrentMtrProf}`]: })
 		}
+
+		/*
+		logic for stops:
+		normal set stop response would be: StopA:motor_id,Position
+		requesting motor stop location response would be: Pan StopA:location
+		normal response: 'StopA' -> ['StopA', undefined]
+		request: 'Pan StopA' -> ["Pan", "StopA"]
+		*/
+		const [w1, w2] = tokens[0].split(' ');
+		var axis = w2 ? w1 : undefined; // motor name, when the second argument exists, aka its not a normal response
+		const stop = w2 ? w2 : w1; // 'StopA' or 'StopB' 
+		// TO-DO TEMP NAMING FIX
+		if (axis === 'M3') {
+			axis = 'M3-Slide'
+		} else if (axis === 'M4') {
+			axis = 'M4-Zoom'
+		}
+		switch (stop) {
+			case 'StopA':
+				var positionRaw = tokens[1]
+				if (axis === undefined) { // if its a normal response
+					var [motor, positionRaw] = tokens[1].split(',')
+					try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
+						axis = UpdateActions.MOTOR_ID.find(m => m.id === Number(motor)).label
+					}
+					catch (e) {
+						this.log('error', `couldn't find id: ${motor} in MOTOR_ID. Error: ${e}`)
+					}
+				}
+				var position = positionRaw.trim() // remove any \n or anything
+
+				if (position != '-2000000000') {
+					this.setVariableValues({ [`${axis}StopA`]: 1 })
+				} else {
+					this.setVariableValues({ [`${axis}StopA`]: 0 })
+				}
+				this.checkFeedbacks("StopAStatus")	
+				this.checkFeedbacks("StopAStatusSmart")
+				return;
+			case 'StopB':
+				var positionRaw = tokens[1]
+				if (axis === undefined) { // if its a normal response
+					var [motor, positionRaw] = tokens[1].split(',')
+					try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
+						axis = UpdateActions.MOTOR_ID.find(m => m.id === Number(motor)).label
+					}
+					catch (e) {
+						this.log('error', `couldn't find id: ${motor} in MOTOR_ID. Error: ${e}`)
+					}
+				}
+				var position = positionRaw.trim() // remove any \n or anything
+
+				if (position != '2000000000') {
+					this.setVariableValues({ [`${axis}StopB`]: 1 })
+				} else {
+					this.setVariableValues({ [`${axis}StopB`]: 0 })
+				}
+				this.checkFeedbacks("StopBStatus")	
+				this.checkFeedbacks("StopBStatusSmart")
+				return;
+		}
+		this.log('error', 'ERROR Parsing Response: ' + dataPacket.toString())
 	}
 
 	init_tcp_variables() {

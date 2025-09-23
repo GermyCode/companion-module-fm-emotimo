@@ -236,7 +236,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: Jog Motors')
+				self.log('info', 'Action Triggered: Jog Motors')
 				if (data.options.settype ===  'id') {
 					var motor_id = data.options.id
 				} else {
@@ -293,7 +293,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: Jog Motors STOP')
+				self.log('info', 'Action Triggered: Jog Motors STOP')
 				if (data.options.settype ===  'id') {
 					var motor_id = data.options.id
 				} else {
@@ -333,7 +333,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setJogSpeedLimit')
+				self.log('info', 'Action Triggered: setJogSpeedLimit')
 				if (data.options.settype ===  'id') {
 					var motor_id = data.options.id
 				} else {
@@ -398,7 +398,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: Set Cruise Speed')
+				self.log('info', 'Action Triggered: Set Cruise Speed')
 				var motorSpeed = 0
 				var motorInversion = 1
 				var rawMotorSpeed = 0
@@ -453,7 +453,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: resetCruiseSpeed')
+				self.log('info', 'Action Triggered: resetCruiseSpeed')
 				if (data.options.id == 1) {
 					self.setVariableValues({ PanCruiseSpeed: 0 })
 				} else if (data.options.id == 2) {
@@ -497,7 +497,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: tnpositionDrive')
+				self.log('info', 'Action Triggered: tnpositionDrive')
 				var temp = 0
 				var increment = 0
 
@@ -553,7 +553,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: positionDrive')
+				self.log('info', 'Action Triggered: positionDrive')
 				var cmdParam ='X'
 				var temp = 0
 				var increment = 0
@@ -628,7 +628,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: toggleIncrement')
+				self.log('info', 'Action Triggered: toggleIncrement')
 				var temp = 0
 
 				if (data.options.id == 1) {
@@ -710,7 +710,7 @@ module.exports = function (self) {
 			name: 'Stop All Motors',
 			options: [],
 			callback: async () => {
-				self.log('warn', 'Action: stopMotors')
+				self.log('info', 'Action Triggered: stopMotors')
 				self.setVariableValues({ 'LastPstID': -1 })
 				self.sendEmotimoAPICommand('G911')
 			},
@@ -728,7 +728,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async () => {
-				self.log('warn', 'Action: homeRS')
+				self.log('info', 'Action Triggered: homeRS')
 				self.sendEmotimoAPICommand('G202')
 			}
 		},
@@ -736,7 +736,7 @@ module.exports = function (self) {
 			name: 'Calibrate All TN',
 			options: [],
 			callback: async () => {
-				self.log('warn', 'Action: calibrateAllTN')
+				self.log('info', 'Action Triggered: calibrateAllTN')
 				self.sendEmotimoAPICommand('G812 C0')
 			}
 		},
@@ -752,7 +752,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: calibrateTNMotor')
+				self.log('info', 'Action Triggered: calibrateTNMotor')
 				self.sendEmotimoAPICommand('G812 C0 M' + (data.options.id-4))
 			}
 		},
@@ -761,7 +761,7 @@ module.exports = function (self) {
 			name: 'Invert Current Motor',
 			options: [],
 			callback: async () => {
-				self.log('warn', 'Action: invertCurrentAxis')
+				self.log('info', 'Action Triggered: invertCurrentAxis')
 				var motor = self.getVariableValue('CurrentMtrSet')
 				var motorInvertName = ''
 				var inversionState = 0
@@ -820,7 +820,7 @@ module.exports = function (self) {
 			name: 'Set Stop A',
 			options: [...MOTOR_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: setStopA')
+				self.log('info', 'Action Triggered: setStopA')
 				if (data.options.settype === 'id') { // Not Smart type
 					var motor_id = data.options.id
 				} else {
@@ -833,7 +833,7 @@ module.exports = function (self) {
 			name: 'Set Stop B',
 			options: [...MOTOR_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: setStopB')
+				self.log('info', 'Action Triggered: setStopB')
 				if (data.options.settype === 'id') { // Not Smart type
 					var motor_id = data.options.id
 				} else {
@@ -864,7 +864,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: recallStopA')
+				self.log('info', 'Action Triggered: recallStopA')
 				if (data.options.settype ===  'id') {
 					var motor_id = data.options.id
 				} else {
@@ -898,7 +898,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: recallStopB')
+				self.log('info', 'Action Triggered: recallStopB')
 				if (data.options.settype ===  'id') {
 					var motor_id = data.options.id
 				} else {
@@ -916,7 +916,7 @@ module.exports = function (self) {
 			name: 'Clear Stop A',
 			options: [...MOTOR_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: clearStopA')
+				self.log('info', 'Action Triggered: clearStopA')
 				if (data.options.settype === 'id') { // Not Smart type
 					var motor_id = data.options.id
 				} else {
@@ -929,7 +929,7 @@ module.exports = function (self) {
 			name: 'Clear Stop B',
 			options: [...MOTOR_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: clearStopB')
+				self.log('info', 'Action Triggered: clearStopB')
 				if (data.options.settype === 'id') { // Not Smart type
 					var motor_id = data.options.id
 				} else {
@@ -942,7 +942,7 @@ module.exports = function (self) {
 			name: 'Clear Stops by Axis',
 			options: [...MOTOR_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: clearStopByAxis')
+				self.log('info', 'Action Triggered: clearStopByAxis')
 				if (data.options.settype === 'id') { // Not Smart type
 					var motor_id = data.options.id
 				} else {
@@ -955,7 +955,7 @@ module.exports = function (self) {
 			name: 'Clear All Stops',
 			options: [],
 			callback: async () => {
-				self.log('warn', 'Action: clearAllStops')
+				self.log('info', 'Action Triggered: clearAllStops')
 				self.sendEmotimoAPICommand('G219 M0')
 			}
 		},
@@ -984,7 +984,7 @@ module.exports = function (self) {
 				}
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setMotorID')
+				self.log('info', 'Action Triggered: setMotorID')
 				var motor_id = self.getVariableValue('CurrentMtrSet')
 				if (data.options.direction === 'set') {
 					motor_id = data.options.setPst
@@ -1042,11 +1042,8 @@ module.exports = function (self) {
 				}
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setMotorProfile')
-				const selProf = data.options.prodileid
-				self.setVariableValues({ CurrentMtrProf: selProf})
-
-				self.sendEmotimoAPICommand('G102 P' + selProf)
+				self.log('info', 'Action Triggered: setMotorProfile')
+				self.sendEmotimoAPICommand('G102 P' + data.options.prodileid)
 			}
 		},
 
@@ -1054,7 +1051,7 @@ module.exports = function (self) {
 			name: 'Zero Motors',
 			options: [],
 			callback: async () => {
-				self.log('warn', 'Action: zeroMotors')
+				self.log('info', 'Action Triggered: zeroMotors')
 				self.sendEmotimoAPICommand('G201')
 			}
 		},
@@ -1085,7 +1082,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: savePset')
+				self.log('info', 'Action Triggered: savePset')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 				} else {
@@ -1129,7 +1126,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: recallPset')
+				self.log('info', 'Action Triggered: recallPset')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 				} else {
@@ -1171,7 +1168,7 @@ module.exports = function (self) {
 				}
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setPresetID')
+				self.log('info', 'Action Triggered: setPresetID')
 				var preset = self.getVariableValue('CurrentPstSet')
 				if (data.options.direction === 'set') {
 					preset = data.options.gotoPst
@@ -1238,7 +1235,7 @@ module.exports = function (self) {
 			name: 'Set Preset Run Time',
 			options: [...PST_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: setPresetRunTime')
+				self.log('info', 'Action Triggered: setPresetRunTime')
 				var skip = false
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
@@ -1285,7 +1282,7 @@ module.exports = function (self) {
 			name: 'Set Preset Ramp Time',
 			options: [...PST_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: setPresetRampTime')
+				self.log('info', 'Action Triggered: setPresetRampTime')
 				var skip = false
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
@@ -1355,7 +1352,7 @@ module.exports = function (self) {
 				}
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setLoopID')
+				self.log('info', 'Action Triggered: setLoopID')
 				var id_loop = self.getVariableValue('CurrentLpSet')
 
 				if (data.options.direction === 'set') {
@@ -1469,7 +1466,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setLoopAPoint')
+				self.log('info', 'Action Triggered: setLoopAPoint')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 					var pointTemp = self.getVariableValue('Lp'+preset+'APoint');
@@ -1540,7 +1537,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setLoopBPoint')
+				self.log('info', 'Action Triggered: setLoopBPoint')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 					var pointTemp = self.getVariableValue('Lp'+preset+'BPoint');
@@ -1575,7 +1572,7 @@ module.exports = function (self) {
 			name: 'Set Loop Run Time',
 			options: [...LP_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: setLoopRunTime')
+				self.log('info', 'Action Triggered: setLoopRunTime')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 					var runtemp = self.getVariableValue('Lp'+preset+'RunT')
@@ -1622,7 +1619,7 @@ module.exports = function (self) {
 			name: 'Set Loop Ramp Time',
 			options: [...LP_OPTIONS],
 			callback: async (data) => {
-				self.log('warn', 'Action: setLoopRampTime')
+				self.log('info', 'Action Triggered: setLoopRampTime')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 					var ramptemp = self.getVariableValue('Lp'+preset+'RampT')
@@ -1693,7 +1690,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: saveLp')
+				self.log('info', 'Action Triggered: saveLp')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
@@ -1732,7 +1729,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: recallLoop')
+				self.log('info', 'Action Triggered: recallLoop')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
 					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
@@ -1802,7 +1799,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: gotoCoords')
+				self.log('info', 'Action Triggered: gotoCoords')
 				const resolvedCoordsValue = await self.parseVariablesInString(data.options.coords)
 				const resolvedRunValue = await self.parseVariablesInString(data.options.runtime)
 				const resolvedRampValue = await self.parseVariablesInString(data.options.ramptime)
@@ -1881,7 +1878,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: savePstCoords')
+				self.log('info', 'Action Triggered: savePstCoords')
 				if (data.options.smart == 0) {
 					var preset = self.getVariableValue('CurrentPstSet')
 				} else {
@@ -2031,7 +2028,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: setMotorPosition')
+				self.log('info', 'Action Triggered: setMotorPosition')
 				const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 				// If a variable gets inputted, get that value, otherwise it takes the inputted value
 				var resolvedPanValue = await self.parseVariablesInString(data.options.pCoords)
@@ -2082,7 +2079,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: virtualInput')
+				self.log('info', 'Action Triggered: virtualInput')
 				self.sendEmotimoAPICommand('G600 C' + data.options.vbutton)
 			},
 		},
@@ -2106,7 +2103,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (data) => {
-				self.log('warn', 'Action: send CMD')
+				self.log('info', 'Action Triggered: send CMD')
 				const cmd = unescape(await self.parseVariablesInString(data.options.id_send))
 
 				if (cmd != '') {

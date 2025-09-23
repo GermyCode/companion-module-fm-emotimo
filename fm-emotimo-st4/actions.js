@@ -1,4 +1,15 @@
 const { variableList } = require('./variables')
+const { 
+	MOTOR_ID,
+	TN_MOTOR_ID,
+	DIRECTION_ID,
+	MOTOR_SPEED,
+	MOTOR_PROFILES,
+	MOTOR_PROFILES_VELOCITIES,
+	PRESET_ID,
+	LOOP_ID,
+	VIRTUAL_BUTTON 
+} = require('./lists')
 
 const CHOICES_END = [
 	{ id: '', label: 'None' },
@@ -7,83 +18,6 @@ const CHOICES_END = [
 	{ id: '\r', label: 'CR - \\r (Old MacOS)' },
 	{ id: '\x00', label: 'NULL - \\x00 (Can happen)' },
 	{ id: '\n\r', label: 'LFCR - \\n\\r (Just stupid)' },
-]
-
-const MOTOR_ID = [
-	{ id: 1, label: 'Pan' },
-	{ id: 2, label: 'Tilt' },
-	{ id: 3, label: 'M3-Slide' },
-	{ id: 4, label: 'M4-Zoom' },
-	{ id: 5, label: 'TN1' },
-	{ id: 6, label: 'TN2' },
-	{ id: 7, label: 'TN3' },
-	{ id: 8, label: 'Roll' },
-	{ id: 9, label: 'Focus' },
-]
-
-const MOTOR_ID_UNSET = [ //This is used to have a null value so we can pull the CurrentMtrSet value instead
-	{ id: 0, label: 'Unset' },
-	{ id: 1, label: 'Pan' },
-	{ id: 2, label: 'Tilt' },
-	{ id: 3, label: 'M3-Slide' },
-	{ id: 4, label: 'M4-Zoom' },
-	{ id: 5, label: 'TN 1' },
-	{ id: 6, label: 'TN 2' },
-	{ id: 7, label: 'TN 3' },
-	{ id: 8, label: 'Roll' },
-	{ id: 9, label: 'Focus' },
-]
-
-const TN_MOTOR_ID = [
-	{ id: 5, label: 'TN 1' },
-	{ id: 6, label: 'TN 2' },
-	{ id: 7, label: 'TN 3' },
-]
-
-const DIRECTION_ID = [
-	{ id: 1, label: 'Positive' },
-	{ id: -1, label: 'Negative' },
-]
-
-const MOTOR_SPEED = [
-	{ id: 0, label: 'Default' },
-	{ id: 5000, label: 'Slow' },
-	{ id: 25000, label: 'Medium' },
-	{ id: 50000, label: 'Fast' },
-	{ id: 100000, label: 'Fastest' },
-
-]
-
-const MOTOR_PROFILES = [
-	{ id: 0, label: 'Quiet/Fast' },
-	{ id: 1, label: 'Quiet/Medium' },
-	{ id: 2, label: 'Quiet/Slow' },
-	{ id: 3, label: 'Timelapse' },
-	{ id: 4, label: 'Fastest' },
-	{ id: 5, label: 'User Defined 1' },
-	{ id: 6, label: 'User Defined 2' },
-	{ id: 7, label: 'Inertia Wheels' },
-]
-
-var PRESET_ID = [
-	{ id: 0, label: 'Pst0' },
-]
-
-var LOOP_ID = [
-	{ id: 0, label: 'Lp0' },
-]
-
-const VIRTUAL_BUTTON = [
-	{ id: 0, label: 'Enter' },
-	{ id: 1, label: 'Up' },
-	{ id: 2, label: 'Right' },
-	{ id: 3, label: 'Down' },
-	{ id: 4, label: 'Left' },
-	{ id: 5, label: 'Back' },
-	{ id: 6, label: 'Enter Held' },
-	{ id: 7, label: 'Triangle' },
-	{ id: 8, label: 'Circle' },
-
 ]
 
 const CHOICES_SET_TYPE = [
@@ -459,9 +393,9 @@ module.exports = function (self) {
 				} else if (data.options.id == 2) {
 					self.setVariableValues({ TiltCruiseSpeed: 0 })
 				} else if (data.options.id == 3) {
-					self.setVariableValues({ 'M3-SlideCruiseSpeed': 0 })
+					self.setVariableValues({ M3CruiseSpeed: 0 })
 				} else if (data.options.id == 4) {
-					self.setVariableValues({ 'M4-ZoomCruiseSpeed': 0 })
+					self.setVariableValues({ M4CruiseSpeed: 0 })
 				} else if (data.options.id == 5) {
 					self.setVariableValues({ TN1CruiseSpeed: 0 })
 				} else if (data.options.id == 6) {
@@ -778,11 +712,11 @@ module.exports = function (self) {
 				} else if (motor == 3) {
 					inversionState = self.getVariableValue('M3-SlideInversion')
 					inversionState *= -1
-					self.setVariableValues({ 'M3-SlideInversion': inversionState })
+					self.setVariableValues({ M3Inversion: inversionState })
 				} else if (motor == 4) {
-					inversionState = self.getVariableValue('M4-ZoomInversion')
+					inversionState = self.getVariableValue('M4Inversion')
 					inversionState *= -1
-					self.setVariableValues({ 'M4-ZoomInversion': inversionState })
+					self.setVariableValues({ M4Inversion: inversionState })
 				} else if (motor == 5) {
 					inversionState = self.getVariableValue('TN1Inversion')
 					inversionState *= -1
@@ -859,7 +793,7 @@ module.exports = function (self) {
 					id: 'id',
 					label: 'Motor ID',
 					default: 0,
-					choices: MOTOR_ID_UNSET,
+					choices: MOTOR_ID,
 					isVisible: (options) => options.settype === 'id',
 				},
 			],
@@ -869,10 +803,6 @@ module.exports = function (self) {
 					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
-				}
-
-				if (motor_id == 0) {
-					motor_id = self.getVariableValue('CurrentMtrSet')
 				}
 				self.sendEmotimoAPICommand('G217 M' + motor_id)
 			}
@@ -893,7 +823,7 @@ module.exports = function (self) {
 					id: 'id',
 					label: 'Motor ID',
 					default: 0,
-					choices: MOTOR_ID_UNSET,
+					choices: MOTOR_ID,
 					isVisible: (options) => options.settype === 'id',
 				},
 			],
@@ -903,10 +833,6 @@ module.exports = function (self) {
 					var motor_id = data.options.id
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
-				}
-
-				if (motor_id == 0) {
-					motor_id = self.getVariableValue('CurrentMtrSet')
 				}
 				self.sendEmotimoAPICommand('G218 M' + motor_id)
 			}
@@ -2053,14 +1979,14 @@ module.exports = function (self) {
 				}
 				// Slide
 				if (resolvedSlideValue) { // if not blank, do things
-					self.log('debug', `Setting motor M3-Slide to position ${resolvedSlideValue}`)
+					self.log('debug', `Setting motor M3 to position ${resolvedSlideValue}`)
 					self.setVariableValues({ 'SPos': resolvedSlideValue })
 					self.sendEmotimoAPICommand(`G200 M3 P${resolvedSlideValue}`)
 					await wait(200) // waits 200ms before continuing
 				}
 				//Zoom
 				if (resolvedZoomValue) { // if not blank, do things
-					self.log('debug', `Setting motor M4-Zoom to position ${resolvedZoomValue}`)
+					self.log('debug', `Setting motor M4 to position ${resolvedZoomValue}`)
 					self.setVariableValues({ 'MPos': resolvedZoomValue })
 					self.sendEmotimoAPICommand(`G200 M4 P${resolvedZoomValue}`)
 					await wait(200) // waits 200ms before continuing
@@ -2129,6 +2055,3 @@ module.exports = function (self) {
 		},
 	})
 }
-module.exports.PRESET_ID = PRESET_ID
-module.exports.MOTOR_ID = MOTOR_ID
-module.exports.MOTOR_PROFILES = MOTOR_PROFILES

@@ -1,7 +1,16 @@
 const { combineRgb } = require('@companion-module/base')
 const { COLORS } = require('./color.js')
-const { MOTOR_ID, MOTOR_PROFILES } = require('./actions') // TO-DO AGAIN Put Somewhere else, somewhere general
-
+const { 
+	MOTOR_ID,
+	TN_MOTOR_ID,
+	DIRECTION_ID,
+	MOTOR_SPEED,
+	MOTOR_PROFILES,
+	MOTOR_PROFILES_VELOCITIES,
+	PRESET_ID,
+	LOOP_ID,
+	VIRTUAL_BUTTON 
+} = require('./lists')
 module.exports = async function (self) {
 
 	self.setFeedbackDefinitions({
@@ -128,9 +137,9 @@ module.exports = async function (self) {
 				} else if (feedback.options.id_mot == 2) {
 					state = self.getVariableValue('TiltStopA')
 				} else if (feedback.options.id_mot == 3) {
-					state = self.getVariableValue('M3-SlideStopA')
+					state = self.getVariableValue('M3StopA')
 				} else if (feedback.options.id_mot == 4) {
-					state = self.getVariableValue('M4-ZoomStopA')
+					state = self.getVariableValue('M4StopA')
 				} else if (feedback.options.id_mot == 5) {
 					state = self.getVariableValue('TNFocusStopA')
 				} else if (feedback.options.id_mot == 6) {
@@ -177,9 +186,9 @@ module.exports = async function (self) {
 				} else if (feedback.options.id_mot == 2) {
 					state = self.getVariableValue('TiltStopB')
 				} else if (feedback.options.id_mot == 3) {
-					state = self.getVariableValue('M3-SlideStopB')
+					state = self.getVariableValue('M3StopB')
 				} else if (feedback.options.id_mot == 4) {
-					state = self.getVariableValue('M4-ZoomStopB')
+					state = self.getVariableValue('M4StopB')
 				} else if (feedback.options.id_mot == 5) {
 					state = self.getVariableValue('TNFocusStopB')
 				} else if (feedback.options.id_mot == 6) {
@@ -218,9 +227,9 @@ module.exports = async function (self) {
 				} else if (motorID == 2) {
 					state = self.getVariableValue('TiltStopA')
 				} else if (motorID == 3) {
-					state = self.getVariableValue('M3-SlideStopA')
+					state = self.getVariableValue('M3StopA')
 				} else if (motorID == 4) {
-					state = self.getVariableValue('M4-ZoomStopA')
+					state = self.getVariableValue('M4StopA')
 				} else if (motorID == 5) {
 					state = self.getVariableValue('TNFocusStopA')
 				} else if (motorID == 6) {
@@ -258,9 +267,9 @@ module.exports = async function (self) {
 				} else if (motorID == 2) {
 					state = self.getVariableValue('TiltStopB')
 				} else if (motorID == 3) {
-					state = self.getVariableValue('M3-SlideStopB')
+					state = self.getVariableValue('M3StopB')
 				} else if (motorID == 4) {
-					state = self.getVariableValue('M4-ZoomStopB')
+					state = self.getVariableValue('M4StopB')
 				} else if (motorID == 5) {
 					state = self.getVariableValue('TNFocusStopB')
 				} else if (motorID == 6) {
@@ -287,7 +296,7 @@ module.exports = async function (self) {
 			label: 'Motor Profile Satus',
 			defaultStyle: {
 				bgcolor: COLORS.MEDIUM_LAVENDER,
-				color: COLORS.BLACK,
+				color: COLORS.WHITE,
 			},
 			options: [
 				{

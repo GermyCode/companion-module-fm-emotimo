@@ -2,14 +2,6 @@ const { Regex } = require('@companion-module/base')
 
 const { MODELS } = require('./models.js')
 
-// take string like "/^...$/"
-const raw = Regex.IP;
-const ipSrc = raw.replace(/^\/|\/$/g, ''); // remove leading/trailing slashes
-const ipSrcNoAnchors = ipSrc.replace(/^\^/, '').replace(/\$$/, '');
-
-const RegexIPorEmpty = new RegExp(`^(?:${ipSrcNoAnchors}|)$`);
-
-
 module.exports = {
 	getConfigFields() {
 		return [
@@ -100,6 +92,50 @@ module.exports = {
 				width: 3,
 				default: 5000,
 			},
+
+			// ########################
+			// ## Custom motor Names ##
+			// ########################
+			// {
+			// 	type: 'checkbox',
+			// 	id: 'customNames',
+			// 	label: 'Overwrite the default motor names with custom ones. Leave blank for default. Only Available for Spectrum ST4',
+			// 	width: 10,
+			// 	default: false,
+			// 	isVisible: (config) => config.model === 'Spectrum ST4',
+			// },
+			// {
+			// 	type: 'textinput',
+			// 	id: 'customNamePan',
+			// 	label: 'Pan:',
+			// 	width: 4,
+			// 	default: '',
+			// 	isVisible: (config) => !!config.customNames && config.model === 'Spectrum ST4',
+			// },
+			// {
+			// 	type: 'textinput',
+			// 	id: 'customNameTilt',
+			// 	label: 'Tilt:',
+			// 	width: 4,
+			// 	default: '',
+			// 	isVisible: (config) => !!config.customNames && config.model === 'Spectrum ST4',
+			// },
+			// {
+			// 	type: 'textinput',
+			// 	id: 'customNameM3',
+			// 	label: 'M3:',
+			// 	width: 4,
+			// 	default: '',
+			// 	isVisible: (config) => !!config.customNames && config.model === 'Spectrum ST4',
+			// },
+			// {
+			// 	type: 'textinput',
+			// 	id: 'customNameM4',
+			// 	label: 'M4:',
+			// 	width: 4,
+			// 	default: '',
+			// 	isVisible: (config) => !!config.customNames && config.model === 'Spectrum ST4',
+			// },
 		]
 	}
 }

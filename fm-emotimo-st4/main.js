@@ -4,6 +4,17 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 const { variableList } = require('./variables')
+const { 
+	MOTOR_ID,
+	TN_MOTOR_ID,
+	DIRECTION_ID,
+	MOTOR_SPEED,
+	MOTOR_PROFILES,
+	MOTOR_PROFILES_VELOCITIES,
+	PRESET_ID,
+	LOOP_ID,
+	VIRTUAL_BUTTON 
+} = require('./lists')
 // const UpdatePresets = require('./presets')
 
 const presets = require('./presets')
@@ -62,6 +73,11 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.config.prot = 'tcp'
 		this.fetchStat = false
 		this.motorCount = this.config.model === 'Spectrum ST4' ? 4 : 0; this.log('err' , 'Error getting motor count'); //(this.config.model === 'Spectrum ST4.3') ? 6 : (this.config.model === 'SA2.6 Conductor') ? 9 : 
+
+		this.customPanName = this.config.customNamePan || 'Pan'
+		this.customTiltName = this.config.customNameTilt || 'Tilt'
+		this.customM3Name = this.config.customNameM3 || 'M3'
+		this.customPaM4me = this.config.customNameM4 || 'M4'
 
 		if (this.config.prot == 'tcp') {
 			this.init_tcp()
@@ -353,8 +369,8 @@ class eMotimoModuleInstance extends InstanceBase {
 			case 'Reset Stops':
 				let motor = Number(tokens[1])
 				if (motor != 0) {
-					try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
-						var axis = UpdateActions.MOTOR_ID.find(m => m.id === motor).label
+					try { // map the motor id to a name using the MOTOR_ID object list
+						var axis = MOTOR_ID.find(m => m.id === motor).label
 						this.setVariableValues({ [`${axis}StopA`]: 0 })
 						this.setVariableValues({ [`${axis}StopB`]: 0 })
 					}
@@ -363,8 +379,8 @@ class eMotimoModuleInstance extends InstanceBase {
 					}
 				} else { // reset all axis
 					for (let i = 1; i <= this.motorCount; i++) {
-						try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
-							var axis = UpdateActions.MOTOR_ID.find(m => m.id === i).label
+						try { // map the motor id to a name using the MOTOR_ID object list
+							var axis = MOTOR_ID.find(m => m.id === i).label
 							this.setVariableValues({ [`${axis}StopA`]: 0 })
 							this.setVariableValues({ [`${axis}StopB`]: 0 })
 						}
@@ -390,32 +406,32 @@ class eMotimoModuleInstance extends InstanceBase {
 		// Mainly for the fetch preset thing when it connects
 		// response for the G752 Command (preset fetch)
 		if (tokens[0].startsWith('Preset ')) {
-			const line = dataPacket.toString()
-			const match = line.match(/Preset (\d+): X(-?\d+)\s+Y(-?\d+)\s+Z(-?\d+)\s+W(-?\d+).*?RunTime:\s*(\d+)\s+RampTime:\s*(\d+)/)
+			const line = dataPacket.toString();
+			const match = line.match(/Preset (\d+): X(-?\d+)\s+Y(-?\d+)\s+Z(-?\d+)\s+W(-?\d+).*?RunTime:\s*(\d+)\s+RampTime:\s*(\d+)/);
 		
 			if (match) {
-				this.pending = false
-				const [, preset, pan, tilt, m3, m4, run, ramp] = match.map(Number)
+				this.pending = false;
+				const [, preset, pan, tilt, m3, m4, run, ramp] = match.map(Number);
 
 				// Check if it's an "active" preset
-				const isActive = pan !== 0 || tilt !== 0 || m3 !== 0 || m4 !== 0 || run !== 50 || ramp !== 10
+				const isActive = pan !== 0 || tilt !== 0 || m3 !== 0 || m4 !== 0 || run !== 50 || ramp !== 10;
 
 				if (isActive) {
 					// adding the active preset to the PRESET_ID list in the actions file
-					if (!UpdateActions.PRESET_ID.some(p => p.id === preset)) {
-						UpdateActions.PRESET_ID.push({ id: preset, label: `Pst${preset}`})
-						this.updateActions()
+					if (!PRESET_ID.some(p => p.id === preset)) {
+						PRESET_ID.push({ id: preset, label: `Pst${preset}`});
+						this.updateActions();
 					}
 
-					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
-					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
-					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
-					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
-					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
-					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
-					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
+					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` });
+					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` });
+					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` });
+					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` });
+					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` });
+					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` });
+					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` });
 
-					this.setVariableDefinitions(variableList)
+					this.setVariableDefinitions(variableList);
 
 					this.setVariableValues({
 						[`Pst${preset}Stat`]: 1,
@@ -424,45 +440,94 @@ class eMotimoModuleInstance extends InstanceBase {
 						[`Pst${preset}M3Pos`]: m3,
 						[`Pst${preset}M4Pos`]: m4,
 						[`Pst${preset}RunT`]: run,
-						[`Pst${preset}RampT`]: ramp,
+						[`Pst${preset}RampT`]: ramp
 					})
 					if (preset === this.getVariableValue('CurrentPstSet')) {
-						this.setVariableValues({ 'CurrentPstSetRun': run })
-						this.setVariableValues({ 'CurrentPstSetRamp': ramp })
+						this.setVariableValues({ 'CurrentPstSetRun': run });
+						this.setVariableValues({ 'CurrentPstSetRamp': ramp });
 					}
 
-					let setpstsRaw = this.getVariableValue('SetPsts')
-					let setpsts = []
+					let setpstsRaw = this.getVariableValue('SetPsts');
+					let setpsts = [];
 
 					try {
-						setpsts = JSON.parse(setpstsRaw) || []
+						setpsts = JSON.parse(setpstsRaw) || [];
 					} catch (e) {
-						setpsts = []
+						setpsts = [];
 					}
 
 					// Only add if not already present
 					if (!setpsts.includes(preset)) {
-						setpsts.push(preset)
-						this.setVariableValues({ SetPsts: JSON.stringify(setpsts) })
+						setpsts.push(preset);
+						this.setVariableValues({ SetPsts: JSON.stringify(setpsts) });
 					}
 
-					this.checkFeedbacks("SetPreset")
-					this.checkFeedbacks("SetPresetSmart")
+					this.checkFeedbacks("SetPreset");
+					this.checkFeedbacks("SetPresetSmart");
 				}
 				return;
 			}
 		}
 		if (tokens[0].startsWith('Motor performance set for')) {
-			let data = tokens[0].split(' ')
-			let axis = data[4]
-			// TO-DO TEMP NAMING FIX
-			if (axis === 'M3') {
-				axis = 'M3-Slide'
-			} else if (axis === 'M4') {
-				axis = 'M4-Zoom'
+			// DEFAULT: Motor performance set for Pan: Vel.: 40000, Accel.: 750, IRUN: 10, IHOLD: 3
+			let data = tokens[0].split(' '); // data = ['Motor', 'performance', 'set', 'for', 'Pan']
+			let axis = data[4];
+			if (!tokens[1]) { // G100 response, 'Motor performance set for Pan' // tokens[1] would be undefined
+				return;
 			}
-			// if 
-			// this.setVariableValues({ [`${CurrentMtrProf}`]: })
+			// with the initial split at the top the response has multiple ':' in it so it splits it weird
+			// Pan: Vel.: 40000, Accel.: 750, IRUN: 10, IHOLD: 3 -> ['Vel.', '40000, Accel.', '750, IRUN', '10, IHOLD', '3']
+			// other is not needed since its just like 'Accel.' and so on.
+			var [velRaw, other] = tokens[2].split(',');
+			var [accelRaw, other] = tokens[3].split(',');
+			var [irunRaw, other] = tokens[4].split(',');
+			var [iholdRaw, other] = tokens[5].split(',');
+
+			// there is an extra space infront of them
+			var vel = velRaw.trim()
+			var accel = accelRaw.trim()
+			var irun = irunRaw.trim()
+			var ihold = iholdRaw.trim()
+
+			var speeds = {Vel: vel, Accel: accel, IRUN: irun, IHOLD: ihold}
+
+			this.setVariableValues({ [`${axis}SpeedProfileValues`]: speeds });
+
+			// for now only worry about the pan values since they are unique enough
+
+			// if ((this.getVariableValue('PanSpeedProfileValues') != '') && // checks if all the axis have been requested and arent blank
+			// 		(this.getVariableValue('TiltSpeedProfileValues' != '')) &&
+			// 		(this.getVariableValue('M3SpeedProfileValues') != '') &&
+			// 		(this.getVariableValue('M4SpeedProfileValues') != '')) {
+			//	// do something
+			//}
+
+			if (axis === 'Pan') {
+				for (let i = 0; i < MOTOR_PROFILES_VELOCITIES.length; i++) { // loop through all entries in the list
+					var foo = MOTOR_PROFILES_VELOCITIES[i] // foo = the entry object at index i // {id: 'Quiet/Fast,Pan', Vel: '90000', Accel: '2000', IRUN: '10', IHOLD: '3'},
+					var [bar1, bar2] = foo.id.split(',') // split the id // 'Quiet/Fast,Pan' -> ['Quiet/Fast', 'Pan']
+					if (bar2 === 'Pan') {
+						if (foo.Vel === vel &&
+								foo.Accel === accel &&
+								foo.IRUN === irun &&
+								foo.IHOLD === ihold ) { // check all the speed and see if they match
+							var profile = bar1;
+							break;
+						}
+					}
+				}
+				
+				// var profile = MOTOR_PROFILES_VELOCITIES.find(m => {
+				// 	m.Vel === vel &&
+				// 	m.Accel === accel &&
+				// 	m.IRUN === irun &&
+				// 	m.IHOLD === ihold;
+				// })
+				this.log('debug', `Profile: ${profile} // vel: ${vel} // accel: ${accel} // irun: ${irun} // ihold: ${ihold}`);
+				this.setVariableValues({ 'CurrentMtrProf': profile })
+				this.checkFeedbacks('MotorProfileSatus')
+			}
+			return;
 		}
 
 		/*
@@ -475,19 +540,13 @@ class eMotimoModuleInstance extends InstanceBase {
 		const [w1, w2] = tokens[0].split(' ');
 		var axis = w2 ? w1 : undefined; // motor name, when the second argument exists, aka its not a normal response
 		const stop = w2 ? w2 : w1; // 'StopA' or 'StopB' 
-		// TO-DO TEMP NAMING FIX
-		if (axis === 'M3') {
-			axis = 'M3-Slide'
-		} else if (axis === 'M4') {
-			axis = 'M4-Zoom'
-		}
 		switch (stop) {
 			case 'StopA':
 				var positionRaw = tokens[1]
 				if (axis === undefined) { // if its a normal response
 					var [motor, positionRaw] = tokens[1].split(',')
-					try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
-						axis = UpdateActions.MOTOR_ID.find(m => m.id === Number(motor)).label
+					try { // map the motor id to a name using the MOTOR_ID object list
+						axis = MOTOR_ID.find(m => m.id === Number(motor)).label
 					}
 					catch (e) {
 						this.log('error', `couldn't find id: ${motor} in MOTOR_ID. Error: ${e}`)
@@ -507,8 +566,8 @@ class eMotimoModuleInstance extends InstanceBase {
 				var positionRaw = tokens[1]
 				if (axis === undefined) { // if its a normal response
 					var [motor, positionRaw] = tokens[1].split(',')
-					try { // map the motor id to a name using the MOTOR_ID object list // TO-DO make a general spot for MOTOR_ID and PRESET_ID instead of having to use UpdateActions.whatever
-						axis = UpdateActions.MOTOR_ID.find(m => m.id === Number(motor)).label
+					try { // map the motor id to a name using the MOTOR_ID object list
+						axis = MOTOR_ID.find(m => m.id === Number(motor)).label
 					}
 					catch (e) {
 						this.log('error', `couldn't find id: ${motor} in MOTOR_ID. Error: ${e}`)
@@ -525,7 +584,6 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.checkFeedbacks("StopBStatusSmart")
 				return;
 		}
-		this.log('error', 'ERROR Parsing Response: ' + dataPacket.toString())
 	}
 
 	init_tcp_variables() {
@@ -558,8 +616,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ RStep: 1 })
 		this.setVariableValues({ PanSpeedLimit: 100 })
 		this.setVariableValues({ TiltSpeedLimit: 100 })
-		this.setVariableValues({ 'M3-SlideSpeedLimit': 100 })
-		this.setVariableValues({ 'M4-ZoomSpeedLimit': 100 })
+		this.setVariableValues({ M3SpeedLimit: 100 })
+		this.setVariableValues({ M4SpeedLimit: 100 })
 		this.setVariableValues({ TN1SpeedLimit: 50 })
 		this.setVariableValues({ TN2SpeedLimit: 50 })
 		this.setVariableValues({ TN3SpeedLimit: 50 })
@@ -567,8 +625,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ FocusSpeedLimit: 100 })
 		this.setVariableValues({ PanCruiseSpeed: 0 })
 		this.setVariableValues({ TiltCruiseSpeed: 0 })
-		this.setVariableValues({ 'M3-SlideCruiseSpeed': 0 })
-		this.setVariableValues({ 'M4-ZoomCruiseSpeed': 0 })
+		this.setVariableValues({ M3CruiseSpeed: 0 })
+		this.setVariableValues({ M4CruiseSpeed: 0 })
 		this.setVariableValues({ TN1CruiseSpeed: 0 })
 		this.setVariableValues({ TN2CruiseSpeed: 0 })
 		this.setVariableValues({ TN3CruiseSpeed: 0 })
@@ -586,10 +644,10 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ PanStopB: 0 })
 		this.setVariableValues({ TiltStopA: 0 })
 		this.setVariableValues({ TiltStopB: 0 })
-		this.setVariableValues({ 'M3-SlideStopA': 0 })
-		this.setVariableValues({ 'M3-SlideStopB': 0 })
-		this.setVariableValues({ 'M4-ZoomStopA': 0 })
-		this.setVariableValues({ 'M4-ZoomStopB': 0 })
+		this.setVariableValues({ M3StopA: 0 })
+		this.setVariableValues({ M3StopB: 0 })
+		this.setVariableValues({ M4StopA: 0 })
+		this.setVariableValues({ M4StopB: 0 })
 		this.setVariableValues({ TNFocusStopA: 0 })
 		this.setVariableValues({ TNFocusStopB: 0 })
 		this.setVariableValues({ TNIrisStopA: 0 })
@@ -615,8 +673,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ CurrentMtrSpeed: 100 })
 		this.setVariableValues({ PanInversion: 1 })
 		this.setVariableValues({ TiltInversion: 1 })
-		this.setVariableValues({ 'M3-SlideInversion': 1 })
-		this.setVariableValues({ 'M4-ZoomInversion': 1 })
+		this.setVariableValues({ M3Inversion: 1 })
+		this.setVariableValues({ M4Inversion: 1 })
 		this.setVariableValues({ TN1Inversion: 1 })
 		this.setVariableValues({ TN2Inversion: 1 })
 		this.setVariableValues({ TN3Inversion: 1 })
@@ -633,9 +691,9 @@ class eMotimoModuleInstance extends InstanceBase {
 
 		try {
 			await this.fetchLoop('preset', 0, this.config.startupPstAmount, i => `G752 P${i}`)
+			await this.fetchLoop('Motor Performance', 1, this.motorCount, i => `G101 M${i}`)
 			await this.fetchLoop('Stops A', 1, this.motorCount, i => `G215 M${i}`)
 			await this.fetchLoop('Stops B', 1, this.motorCount, i => `G216 M${i}`)
-			await this.fetchLoop('Motor Performance', 1, this.motorCount, i => `G101 M${i}`)
 
 			this.log('debug', 'All startup fetches complete')
 		} catch (err) {

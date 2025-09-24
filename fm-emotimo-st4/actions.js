@@ -1384,7 +1384,7 @@ module.exports = function (self) {
 				{
 					type: 'number',
 					label: 'Preset ID',
-					id: 'psetid',
+					id: 'pstid',
 					min: 0,
 					max: 127,
 					default: 0,
@@ -1402,7 +1402,7 @@ module.exports = function (self) {
 				}
 
 				if (data.options.direction === 'id') {
-					pointTemp = data.options.psetid
+					pointTemp = data.options.pstid
 				} else {
 					pointTemp += data.options.direction
 				}
@@ -1455,7 +1455,7 @@ module.exports = function (self) {
 				{
 					type: 'number',
 					label: 'Preset ID',
-					id: 'psetid',
+					id: 'pstid',
 					min: 0,
 					max: 127,
 					default: 0,
@@ -1473,7 +1473,7 @@ module.exports = function (self) {
 				}
 
 				if (data.options.direction === 'id') {
-					pointTemp = data.options.psetid
+					pointTemp = data.options.pstid
 				} else {
 					pointTemp += data.options.direction
 				}

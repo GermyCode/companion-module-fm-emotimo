@@ -216,7 +216,7 @@ module.exports = {
 			type: 'button',
 			name: 'Current Motor Speed',
 			style: {
-				text: 'Speed:\\n$(companion-module-emotimo-st4-3:CurrentMtrSpeed)',
+				text: '$(companion-module-emotimo-st4-3:CurrentMtrPosStr)\\nSpeed:\\n$(companion-module-emotimo-st4-3:CurrentMtrSpeed)',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -1655,7 +1655,7 @@ module.exports = {
 			type: 'button',
 			name: 'M3 Speed',
 			style: {
-				text: 'Slide\\nSpeed:\\n$(companion-module-emotimo-st4-3:M3-SlideSpeedLimit)',
+				text: 'Slide\\nSpeed:\\n$(companion-module-emotimo-st4-3:M3SpeedLimit)',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -1679,7 +1679,7 @@ module.exports = {
 			type: 'button',
 			name: 'M4 Speed',
 			style: {
-				text: 'M4\\nSpeed:\\n$(companion-module-emotimo-st4-3:M4-ZoomSpeedLimit)',
+				text: 'M4\\nSpeed:\\n$(companion-module-emotimo-st4-3:M4SpeedLimit)',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -3439,7 +3439,7 @@ module.exports = {
 							options: {
 								settype: 'smart',
 								direction: 'id',
-								psetid: 0
+								pstid: 0
 							}
 						}
 					],
@@ -3464,7 +3464,7 @@ module.exports = {
 							options: {
 								settype: 'smart',
 								direction: 'id',
-								psetid: 0
+								pstid: 0
 							}
 						}
 					],

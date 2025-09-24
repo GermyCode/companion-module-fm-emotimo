@@ -3437,6 +3437,7 @@ module.exports = {
 						{
 							actionId: 'setLoopAPoint',
 							options: {
+								settype: 'smart',
 								direction: 'id',
 								psetid: 0
 							}
@@ -3461,6 +3462,7 @@ module.exports = {
 						{
 							actionId: 'setLoopBPoint',
 							options: {
+								settype: 'smart',
 								direction: 'id',
 								psetid: 0
 							}

@@ -221,6 +221,7 @@ module.exports = async function (self) {
 			options: [],
 			callback: (feedback) => {
 				var motorID = self.getVariableValue('CurrentMtrSet')
+				var state = undefined
 
 				if (motorID == 1) {
 					state = self.getVariableValue('PanStopA')
@@ -242,7 +243,6 @@ module.exports = async function (self) {
 					state = self.getVariableValue('RSFocusStopA')
 				}
 
-				// console.log("A Status: " + state + " Motor: " + motorID +"\n")
 				if(state) {
 					return true
 				} else {
@@ -261,6 +261,7 @@ module.exports = async function (self) {
 			options: [],
 			callback: (feedback) => {
 				var motorID = self.getVariableValue('CurrentMtrSet')
+				var state = undefined
 
 				if (motorID == 1) {
 					state = self.getVariableValue('PanStopB')

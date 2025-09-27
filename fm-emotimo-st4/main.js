@@ -121,7 +121,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		}
 		if (this.recentList[0] != str) { // if str is NOT already the most recent
 			if (this.recentList.length >= this.keepRecentAmmount) this.recentList.pop(); // remove the last entry if length is longer than allowed
-			this.recentList.unshift(str)
+			this.recentList.unshift(str) // add to frontm index 0
 		}
 		this.processQueue();
 	}
@@ -210,16 +210,15 @@ class eMotimoModuleInstance extends InstanceBase {
 		*/
 		this.socket.on('data', (data) => {
 			this.log('debug', 'Response: ' + data.toString());
-			if (data.toString().split(':')[0].trim() != 'Positions' && this.recentList[0] === 'G500') { // checking if its not a normal G500 response, and if the last command sent was a G500
-				// got a response, eventhough it might not be a response from a G500, but we got a response
-				// This is for if any reason we send a G500 and the response is not the normal response for a G500, the module wont wait for a proper response and eventually restart itself
+			// This is for if any reason we send a G500 and the response is not the normal response for a G500, the module wont wait for a proper response and eventually restart itself
+			if (data.toString().split(':')[0].trim() != 'Positions' && this.recentList[0] === 'G500') {
 				if (this.pending) {
 					this.log('warn', 'got a response, eventhough it might not be a response from a G500, but we got a response')
 					this.pending = false;
 					this.updateStatus(InstanceStatus.Ok, 'Connection Active')
 				}
 			}
-			
+
 			if (this.config.saveresponse) {
 				let dataResponse = data
 
@@ -327,8 +326,8 @@ class eMotimoModuleInstance extends InstanceBase {
 				}
 				this.setVariableValues({ PPos: Number(data[1])})
 				this.setVariableValues({ TPos: Number(data[2])})
-				this.setVariableValues({ SPos: Number(data[3])})
-				this.setVariableValues({ ZPos: Number(data[4])})
+				this.setVariableValues({ M3Pos: Number(data[3])})
+				this.setVariableValues({ M4Pos: Number(data[4])})
 				this.setVariableValues({ FPos: Number(data[5])})
 				this.setVariableValues({ IPos: Number(data[6])})
 				this.setVariableValues({ ZPos: Number(data[7])})
@@ -358,8 +357,8 @@ class eMotimoModuleInstance extends InstanceBase {
 
 					var panpos = this.getVariableValue('PPos')
 					var tiltpos = this.getVariableValue('TPos')
-					var m3pos = this.getVariableValue('SPos')
-					var m4pos = this.getVariableValue('ZPos')
+					var m3pos = this.getVariableValue('M3Pos')
+					var m4pos = this.getVariableValue('M4Pos')
 
 					this.setVariableValues({ [`Pst${presetId}PanPos`]: panpos })
 					this.setVariableValues({ [`Pst${presetId}TiltPos`]: tiltpos })
@@ -618,8 +617,8 @@ class eMotimoModuleInstance extends InstanceBase {
 	init_emotimo_variables() {
 		this.setVariableValues({ PPos: 0 })
 		this.setVariableValues({ TPos: 0 })
-		this.setVariableValues({ SPos: 0 })
-		this.setVariableValues({ ZPos: 0 })
+		this.setVariableValues({ M3Pos: 0 })
+		this.setVariableValues({ M4Pos: 0 })
 		this.setVariableValues({ FPos: 5000 })
 		this.setVariableValues({ IPos: 5000 })
 		this.setVariableValues({ ZPos: 5000 })

@@ -103,4 +103,13 @@ module.exports = {
     { id: 7, label: 'Triangle' },
     { id: 8, label: 'Circle' },
   ],
+
+  DEFAULTS: [
+    { id: 'RunT', value: 50},
+    { id: 'RampT', value: 10},
+    { id: 'PanPos', value: -2000000000},
+    { id: 'TiltPos', value: -2000000000},
+    { id: 'M3Pos', value: -2000000000},
+    { id: 'M4Pos', value: -2000000000},
+  ]
 }

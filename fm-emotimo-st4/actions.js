@@ -8,7 +8,8 @@ const {
 	MOTOR_PROFILES_VELOCITIES,
 	PRESET_ID,
 	LOOP_ID,
-	VIRTUAL_BUTTON 
+	VIRTUAL_BUTTON,
+	DEFAULTS
 } = require('./lists')
 
 const CHOICES_END = [
@@ -986,6 +987,11 @@ module.exports = function (self) {
 //  ***   PRESET STUFFS   ***
 //============================
 
+		// To-DO: Make reset preset action
+		// option to soft reset it, where it only resets companion things, and an option to full reset, sets preset positions in the emotimo to the default whatever positions
+		// To-DO: Make request action, to get the inputted preset/stop/performance values from the emotimo 
+		// options for preset/stop/performance, where it sends the command to request approprate data
+
 		savePset: {
 			name: 'Save Preset',
 			options: [ 
@@ -1070,6 +1076,90 @@ module.exports = function (self) {
 				self.sendEmotimoAPICommand(cmd)
 			},
 		},
+		// removePset: {
+		// 	name: 'Remove Preset',
+		// 	options: [ 
+		// 		{
+		// 			type: 'dropdown',
+		// 			id: 'settype',
+		// 			label: 'Set Type',
+		// 			default: 'smart',
+		// 			choices: CHOICES_SET_TYPE,
+		// 			tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+		// 		},
+		// 		{
+		// 			type: 'dropdown',
+		// 			id: 'setopt',
+		// 			label: 'Set Options',
+		// 			default: 'soft',
+		// 			choices: [
+		// 				{ id: 'soft', label: 'Soft Remove'},
+		// 				{ id: 'full', label: 'Full Remove'},
+		// 			],
+		// 			tooltip: 'Soft Remove: removes companion side variables\nFull Remove: removes/resets emotimo side',
+		// 		},
+		// 		{
+		// 			type: 'number',
+		// 			id: 'id',
+		// 			label: 'Preset ID',
+		// 			default: 1,
+		// 			min: 1,
+		// 			max: 127,
+		// 			isVisible: (options) => options.settype === 'id',
+		// 		},
+		// 	],
+		// 	callback: async (data) => {
+		// 		self.log('info', 'Action Triggered: removePset')
+		// 		if (data.options.settype === 'id') { // Not Smart type
+		// 			var preset = data.options.id
+		// 		} else {
+		// 			var preset = self.getVariableValue('CurrentPstSet')
+		// 		}
+
+		// 		if (preset < 0) {
+		// 			preset = 0;
+		// 		} else if (preset > 127) { 
+		// 			preset = 127;
+		// 		}
+
+		// 		if (preset <= 0) {
+		// 			self.log('warn', 'Cannot remove preset 0')
+		// 			return;
+		// 		}
+
+		// 		if (variableList.some(o => o.variableId === `Pst${preset}Stat`) || data.options.setopt === 'full') { // if it exists in the variable list. OR if full is selected jsut incase it doesnt exist in the list but you want to remove it from the emotimo
+		// 			if (data.options.setopt === 'soft') {
+		// 				self.log('debug', 'soft removing preset ' + preset)
+		// 			}
+		// 			if (preset === self.getVariableValue('CurrentPstSet')) {
+		// 				self.setVariableValues({ CurrentPstSet: preset-1})
+		// 			}
+
+		// 			// cant use .filter here since its a const import
+		// 			for (let i = PRESET_ID.length - 1; i >= 0; i--) {
+		// 				if (PRESET_ID[i].id === preset) {
+		// 					PRESET_ID.splice(i, 1)
+		// 				}
+		// 			}
+		// 			self.updateActions()
+
+		// 			let variableListNew = variableList.filter(o => !o.variableId.startsWith(`Pst${preset}`)); // filters out all entries that start with 'Pst{preset}' and new variableList becomes everything else but that
+		// 			self.updateVariableDefinitions(variableListNew);
+
+		// 			self.updateFeedbacks();
+
+		// 			if (data.options.setopt === 'full') {
+		// 				self.log('debug', 'Full removing preset ' + preset)
+		// 				let part1CMD = 'G21 P' + preset + ' T' + DEFAULTS['RunT'] / 10 + ' A' + DEFAULTS['RampT'] / 10
+		// 				let part2CMD = ' X' + DEFAULTS['PanPos'] + ' Y' + DEFAULTS['TiltPos'] + ' Z' + DEFAULTS['M3Pos'] + ' W' + DEFAULTS['M4Pos']
+		// 				self.sendEmotimoAPICommand(part1CMD + part2CMD)
+		// 			}
+		// 		} else {
+		// 			self.log('warn', 'Preset info ' + preset + ' Does not exist. Nothing removed');
+		// 			return;
+		// 		}
+		// 	},
+		// },
 
 		setPresetID: {
 			name: 'Set Preset ID',
@@ -1108,14 +1198,7 @@ module.exports = function (self) {
 					preset = 127;
 				}
 
-				var exists = false
-				for (const item of variableList) {
-					if (item.variableId === `Pst${preset}Stat`) {
-						exists = true
-						break
-					}
-				}
-				if (!exists) {
+				if (!variableList.some(o => o.variableId === `Pst${preset}Stat`)) {
 					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
 
 					PRESET_ID.push({ id: preset, label: `Pst${preset}` })

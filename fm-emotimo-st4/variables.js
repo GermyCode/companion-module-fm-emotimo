@@ -1,8 +1,8 @@
 const variableList = [
 	{ name: 'PanPosition', variableId: 'PPos' },
 	{ name: 'TiltPosition', variableId: 'TPos' },
-	{ name: 'SlidePosition', variableId: 'SPos' },
-	{ name: 'M4Position', variableId: 'ZPos' },
+	{ name: 'M3Position', variableId: 'M3Pos' },
+	{ name: 'M4Position', variableId: 'M4Pos' },
 	{ name: 'FocusPosition', variableId: 'FPos' },
 	{ name: 'IrisPosition', variableId: 'IPos' },
 	{ name: 'ZoomPosition', variableId: 'ZPos' },

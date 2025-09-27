@@ -37,6 +37,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.commandQueue = [];
 		this.commandInFlight = false;
 		this.sendDelayMs = 100;
+		this.recentList = ['']
+		this.keepRecentAmmount = 5 // 0-4 = 5 Total
 	}
 
 	async init(config) {
@@ -108,13 +110,19 @@ class eMotimoModuleInstance extends InstanceBase {
 		UpdatePresets(this)
 	}
 
-	sendEmotimoAPICommand = function (str) {
-		if (str === 'G500') {
+	// DONT ADD \n OR ANY ENDING CRLF TO END, IT WILL BE HANDELED AUTOMATICALLY
+	sendEmotimoAPICommand = function (str, addToFront = false) {
+		if (addToFront) {
+			// add to front, index 0
 			this.commandQueue.unshift(str);
 		} else {
+			// add to end, index -1
 			this.commandQueue.push(str);
 		}
-		if (this.commandQueue.length > 1) this.log('err', 'more than 1 enqueue: ' + this.commandQueue)
+		if (this.recentList[0] != str) { // if str is NOT already the most recent
+			if (this.recentList.length >= this.keepRecentAmmount) this.recentList.pop(); // remove the last entry if length is longer than allowed
+			this.recentList.unshift(str)
+		}
 		this.processQueue();
 	}
 
@@ -122,9 +130,9 @@ class eMotimoModuleInstance extends InstanceBase {
 		if (this.commandInFlight) return;           // one already in flight
 		if (this.commandQueue.length === 0) return; // nothing waiting
 
-		this.log('debug', 'Command queue: ' + this.commandQueue)
+		this.log('debug', `Command queue: ${this.commandQueue}  //  Recent Sent: ${this.recentList}`)
 
-		const cmd = this.commandQueue.shift();
+		const cmd = this.commandQueue.shift(); // returns and removes the first item in the list, index 0
 		this.commandInFlight = true;
 
 		// actually send it
@@ -202,6 +210,16 @@ class eMotimoModuleInstance extends InstanceBase {
 		*/
 		this.socket.on('data', (data) => {
 			this.log('debug', 'Response: ' + data.toString());
+			if (data.toString().split(':')[0].trim() != 'Positions' && this.recentList[0] === 'G500') { // checking if its not a normal G500 response, and if the last command sent was a G500
+				// got a response, eventhough it might not be a response from a G500, but we got a response
+				// This is for if any reason we send a G500 and the response is not the normal response for a G500, the module wont wait for a proper response and eventually restart itself
+				if (this.pending) {
+					this.log('warn', 'got a response, eventhough it might not be a response from a G500, but we got a response')
+					this.pending = false;
+					this.updateStatus(InstanceStatus.Ok, 'Connection Active')
+				}
+			}
+			
 			if (this.config.saveresponse) {
 				let dataResponse = data
 
@@ -250,7 +268,7 @@ class eMotimoModuleInstance extends InstanceBase {
 			if (this.fetchStat) return;
 			this.pending = true;
 			const cmd = 'G500'
-			this.sendEmotimoAPICommand(cmd)
+			this.sendEmotimoAPICommand(cmd, true)
 			this.retryCount = 0
 		}, this.config.interval)
 		this.log('debug', "Heartbeat Initialized");
@@ -259,7 +277,8 @@ class eMotimoModuleInstance extends InstanceBase {
 	_cleanupSocket() {
 		if (this.heartbeatInterval) { clearInterval(this.heartbeatInterval); this.heartbeatInterval = null }
 
-		if (this.commandQueue) this.commandQueue = null
+		if (this.commandQueue) this.commandQueue = []
+		if (this.recentList) this.recentList = []
 
 		if (this.socket) {
 			try { this.socket.removeAllListeners() } catch {}
@@ -528,6 +547,10 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.checkFeedbacks('MotorProfileSatus')
 			}
 			return;
+		}
+		if (tokens[0].startsWith('Com\'d Not Recognized')) {
+			this.log('error', 'Com\'d Not Recognized. Resending: : ' + this.recentList[0])
+			this.sendEmotimoAPICommand(this.recentList[0], true)
 		}
 
 		/*

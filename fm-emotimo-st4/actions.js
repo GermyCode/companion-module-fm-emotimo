@@ -196,7 +196,7 @@ const DWELL_OPTIONS = [
 ]
 
 makeNewLoop = function(self, id) {
-	self.log('debug', `Loop ${id_lidoop} does not exist yet. Adding now`)
+	self.log('debug', `Loop ${id} does not exist yet. Adding now`)
 	LOOP_ID.push({ id: id, label: `Lp${id}` })
 	self.updateActions()
 

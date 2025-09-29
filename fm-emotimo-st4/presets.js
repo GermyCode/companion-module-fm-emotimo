@@ -2747,7 +2747,8 @@ module.exports = {
 			type: 'button',
 			name: 'Selected Preset',
 			style: {
-				text: 'Preset\\nID:\\n$(companion-module-emotimo-st4-3:CurrentPstSet)',
+				text: 'Preset:\\n$(companion-module-emotimo-st4-3:CurrentPstSet)',
+				size: 20,
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -2758,7 +2759,7 @@ module.exports = {
 							actionId: 'setPresetID',
 							options: {
 								direction: 'set',
-								gotoPst: 0
+								id: 0
 							}
 						}
 					],
@@ -2770,7 +2771,8 @@ module.exports = {
 			type: 'button',
 			name: 'Selected Preset Run',
 			style: {
-				text: 'Run:\\n$(companion-module-emotimo-st4-3:CurrentPstSetRun)',
+				text: 'Run:\\n$(companion-module-emotimo-st4-3:CurrentPstRun)',
+				size: 20,
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -2793,7 +2795,8 @@ module.exports = {
 			type: 'button',
 			name: 'Selected Preset Ramp',
 			style: {
-				text: 'Ramp:\\n$(companion-module-emotimo-st4-3:CurrentPstSetRamp)',
+				text: 'Ramp:\\n$(companion-module-emotimo-st4-3:CurrentPstRamp)',
+				size: 20,
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},

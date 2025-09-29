@@ -15,7 +15,6 @@ const {
 	LOOP_ID,
 	VIRTUAL_BUTTON 
 } = require('./lists')
-// const UpdatePresets = require('./presets')
 
 const presets = require('./presets')
 
@@ -104,10 +103,6 @@ class eMotimoModuleInstance extends InstanceBase {
 
 	updateVariableDefinitions() {
 		UpdateVariableDefinitions(this)
-	}
-
-	updatePresets() {
-		UpdatePresets(this)
 	}
 
 	// DONT ADD \n OR ANY ENDING CRLF TO END, IT WILL BE HANDELED AUTOMATICALLY
@@ -307,7 +302,7 @@ class eMotimoModuleInstance extends InstanceBase {
 	handleTCPResponse = function (dataPacket) {
 		var tokens = dataPacket.toString().split(':')
 
-		this.log('debug', "Parse:" + tokens[0]);
+		this.log('debug', 'Parse: ' + tokens[0]);
 		switch (tokens[0]) {
 			// response from the G500 command
 			case 'Positions':
@@ -333,6 +328,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.setVariableValues({ ZPos: Number(data[7])})
 				// this.setVariableValues({ RPos: Number(data[8])})
 				return;
+			// response from the G21 command
 			case 'Preset Set':
 				var data = tokens[1].split(' ')
 				this.log('debug', "ID:" + data[0] + ":" + data[1]); //Data[0] is empty there is a space here
@@ -375,6 +371,7 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.checkFeedbacks("SetPreset")
 				this.checkFeedbacks("SetPresetSmart")
 				return;
+			// response from the G24 command
 			case 'Exiting Loop':
 				this.setVariableValues({ LpActive: -1 })
 				this.checkFeedbacks("LoopStatus")
@@ -461,8 +458,8 @@ class eMotimoModuleInstance extends InstanceBase {
 						[`Pst${preset}RampT`]: ramp
 					})
 					if (preset === this.getVariableValue('CurrentPstSet')) {
-						this.setVariableValues({ 'CurrentPstSetRun': run });
-						this.setVariableValues({ 'CurrentPstSetRamp': ramp });
+						this.setVariableValues({ 'CurrentPstRun': run });
+						this.setVariableValues({ 'CurrentPstRamp': ramp });
 					}
 
 					let setpstsRaw = this.getVariableValue('SetPsts');
@@ -550,6 +547,25 @@ class eMotimoModuleInstance extends InstanceBase {
 		if (tokens[0].startsWith('Com\'d Not Recognized')) {
 			this.log('error', 'Com\'d Not Recognized. Resending: : ' + this.recentList[0])
 			this.sendEmotimoAPICommand(this.recentList[0], true)
+			return;
+		}
+		// response for the G25 Command (save loop): response: 'Loop 2 Set' -> ['Loop', '2', 'Set']
+		if (tokens[0].startsWith('Loop') && tokens[0].endsWith('Set')) {
+			const [w1, w2, w3] = tokens[0].split(' ');
+			let setLpsRaw = this.getVariableValue('SetLps')
+			let setlps = []
+
+			try { // convert the '[]' to []
+				setlps = JSON.parse(setLpsRaw) || []
+			} catch (e) {
+				setlps = []
+			}
+
+			if (!setlps.includes(w2)) {
+				setlps.push(w2)
+				this.setVariableValues({ SetLps: JSON.stringify(setlps) }) // parse '[]' to [], push w2, set back to '[]'
+			}
+			return;
 		}
 
 		/*
@@ -661,6 +677,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ Lp0RampT: 10 })
 		this.setVariableValues({ Lp0APoint: 0 })
 		this.setVariableValues({ Lp0BPoint: 0 })
+		this.setVariableValues({ Lp0DwellA: 500 })
+		this.setVariableValues({ Lp0DwellB: 500 })
 		this.setVariableValues({ LpActive: -1 })
 		this.setVariableValues({ PanStopA: 0 })
 		this.setVariableValues({ PanStopB: 0 })
@@ -681,13 +699,15 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ RSFocusStopA: 0 })
 		this.setVariableValues({ RSFocusStopB: 0 })
 		this.setVariableValues({ CurrentPstSet: 0 })
-		this.setVariableValues({ CurrentPstSetRun: 50 })
-		this.setVariableValues({ CurrentPstSetRamp: 10 })
+		this.setVariableValues({ CurrentPstRun: 50 })
+		this.setVariableValues({ CurrentPstRamp: 10 })
 		this.setVariableValues({ CurrentLpSet: 0 })
 		this.setVariableValues({ CurrentLpA: 0 })
 		this.setVariableValues({ CurrentLpB: 0 })
 		this.setVariableValues({ CurrentLpRun: 50 })
 		this.setVariableValues({ CurrentLpRamp: 10 })
+		this.setVariableValues({ CurrentLpDwellA: 500 })
+		this.setVariableValues({ CurrentLpDwellB: 500 })
 		this.setVariableValues({ CurrentMtrSet: 1 })
 		this.setVariableValues({ CurrentMtrStr: 'Pan' })
 		this.setVariableValues({ CurrentMtrPosStr: 'Pan Right' })
@@ -705,7 +725,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ CurrentMtrInversion: 'Normal' })
 		this.setVariableValues({ LastPstID: -1 })
 		this.setVariableValues({ CurrentMtrProf: -1 })
-		this.setVariableValues({ SetLps: "[0]" })
+		this.setVariableValues({ SetLps: "[]" })
+		this.setVariableValues({ SetPsts: "[]" })
 	}
 
 	async fetchStartup() {

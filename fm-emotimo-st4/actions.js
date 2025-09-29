@@ -109,7 +109,7 @@ const LP_OPTIONS = [
 		type: 'number',
 		label: 'Value',
 		id: 'setvalue',
-		min: 10,
+		min: 0,
 		max: 600,
 		default: 50,
 		isVisible: (options) => options.setopt === 'set'
@@ -143,6 +143,99 @@ const MOTOR_OPTIONS = [
 		isVisible: (options) => options.settype === 'id',
 	},
 ]
+
+const DWELL_OPTIONS = [
+	{
+		type: 'dropdown',
+		id: 'settype',
+		label: 'Set Type',
+		default: 'smart',
+		choices: CHOICES_SET_TYPE,
+		tooltip: 'Smart: The current loop selected\nID: Select a specific loop ID to change',
+	},
+	{
+		type: 'dropdown',
+		id: 'id',
+		label: 'ID',
+		default: 0,
+		choices: LOOP_ID,
+		isVisible: (options) => options.settype === 'id',
+		tooltip: 'If you dont see a specific preset ID, make sure it is set first',
+	},
+	{
+		type: 'dropdown',
+		id: 'setopt',
+		label: 'Set Options',
+		default: 'set',
+		choices: CHOICES_SET,
+		tooltip: 'Set Value: set a specific value\nIncrement: Increase by a value each time\nDecrement: Decrease by a value each time\nReset: Reset to the default value',
+	},
+	{
+		type: 'static-text',
+		label: 'Info',
+		value: 'In Miliseconds, 1000ms = 1 sec, default 500ms = 0.5 sec',
+	},
+	{
+		type: 'number',
+		label: 'Value',
+		id: 'setvalue',
+		min: 300,
+		max: 60000,
+		default: 500,
+		isVisible: (options) => options.setopt === 'set'
+	},
+	{
+		type: 'number',
+		label: 'Value',
+		id: 'ammount',
+		min: 1,
+		max: 60000,
+		default: 100,
+		isVisible: (options) => options.setopt === 'up' || options.setopt === 'down'
+	},
+]
+
+makeNewLoop = function(self, id_loop) {
+	self.log('debug', `Loop ${id_loop} does not exist yet. Adding now`)
+	LOOP_ID.push({ id: id_loop, label: `Lp${id_loop}` })
+	self.updateActions()
+
+	variableList.push({ name: `Loop${id_loop}RunT`, variableId: `Lp${id_loop}RunT` })
+	variableList.push({ name: `Loop${id_loop}RampT`, variableId: `Lp${id_loop}RampT` })
+	variableList.push({ name: `Loop${id_loop}APoint`, variableId: `Lp${id_loop}APoint` })
+	variableList.push({ name: `Loop${id_loop}BPoint`, variableId: `Lp${id_loop}BPoint` })
+	variableList.push({ name: `Loop${id_loop}DwellA`, variableId: `Lp${id_loop}DwellA` })
+	variableList.push({ name: `Loop${id_loop}DwellB`, variableId: `Lp${id_loop}DwellB` })
+
+	self.setVariableDefinitions(variableList)
+
+	self.setVariableValues({ [`Lp${id_loop}RunT`]: 50 })
+	self.setVariableValues({ [`Lp${id_loop}RampT`]: 10 })
+	self.setVariableValues({ [`Lp${id_loop}APoint`]: 0 })
+	self.setVariableValues({ [`Lp${id_loop}BPoint`]: 0 })
+	self.setVariableValues({ [`Lp${id_loop}DwellA`]: 500 })
+	self.setVariableValues({ [`Lp${id_loop}DwellB`]: 500 })
+}
+
+makeNewPreset = function(self, id_loop) {
+	self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
+	PRESET_ID.push({ id: preset, label: `Pst${preset}` })
+	self.updateActions()
+
+	variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
+	variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
+	variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
+	variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
+	variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
+	variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
+	variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
+
+	self.setVariableDefinitions(variableList)
+
+	self.setVariableValues({ [`Pst${preset}RunT`]: 50 })
+	self.setVariableValues({ [`Pst${preset}RampT`]: 10 })
+	self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
+}
 
 module.exports = function (self) {
 	self.setActionDefinitions({
@@ -1004,36 +1097,35 @@ module.exports = function (self) {
 					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
 				},
 				{
-					type: 'number',
+					type: 'textinput',
 					id: 'id',
 					label: 'Preset ID',
-					default: 0,
-					min: 0,
-					max: 127,
+					default: '0',
+					// min: 0,
+					// max: 127,
+					useVariables: { local: true },
+					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-127) or a variable',
 					isVisible: (options) => options.settype === 'id',
 				},
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: savePset')
 				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
+					const s = (await self.parseVariablesInString(data.options.id).trim())
+					const preset = Number(s)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Preset must be 0-127; got ${s}`)
+						return;
+					}
 				} else {
 					var preset = self.getVariableValue('CurrentPstSet')
 				}
-
 				var runtemp = self.getVariableValue('Pst'+preset+'RunT') || 50
 				var ramptemp = self.getVariableValue('Pst'+preset+'RampT') || 10
 
-				if (!PRESET_ID.some(p => p.id === preset)) {
-					self.log('debug', 'Preset ' + preset + ' is not already set. Setting now')
-					self.sendEmotimoAPICommand('G21 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-					setTimeout(() => {
-						self.log('debug', 'Getting info for new preset')
-						self.sendEmotimoAPICommand('G752 P' + preset)
-					}, 100)
-				} else {
-				self.sendEmotimoAPICommand('G21 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
-				}
+				self.sendEmotimoAPICommand(`G21 P${preset} T${runtemp / 10} A${ramptemp / 10}`)
+				self.pstModified = false
 			},
 		},
 		recallPset: {
@@ -1048,32 +1140,54 @@ module.exports = function (self) {
 					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
 				},
 				{
-					type: 'number',
+					type: 'textinput',
 					id: 'id',
 					label: 'Preset ID',
-					default: 0,
-					min: 0,
-					max: 127,
+					default: '0',
+					// min: 0,
+					// max: 127,
+					useVariables: { local: true },
+					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-127) or a variable',
 					isVisible: (options) => options.settype === 'id',
 				},
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: recallPset')
 				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
+					const s = (await self.parseVariablesInString(data.options.id).trim())
+					const preset = Number(s)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Preset must be 0-127; got ${s}`)
+						return;
+					}
 				} else {
 					var preset = self.getVariableValue('CurrentPstSet')
 				}
 
 				if (!PRESET_ID.some(p => p.id === preset)) {
-					self.log('error', 'Module: Cannot recall preset ' + preset + ' because it is not set yet')
+					self.log('error', 'Module: Cannot recall preset ' + preset + ' because it is not configured yet')
 					return;
 				}
 
-				const cmd = 'G20 P' + preset
 				self.setVariableValues({ LastPstID: preset })
 				self.log('debug', 'Recalled Preset: ' + preset)
-				self.sendEmotimoAPICommand(cmd)
+
+				let setPstsRaw = self.getVariableValue('SetPsts')
+				let setpsts = []
+
+				try { // convert the '[]' to []
+					setpsts = JSON.parse(setPstsRaw) || []
+				} catch (e) {
+					setpsts = []
+				}
+				if (!setpsts.includes(preset) || self.pstModified) { // if its not saved or its been modified, then send command
+					var runtemp = self.getVariableValue('Pst'+preset+'RunT') || 50
+					var ramptemp = self.getVariableValue('Pst'+preset+'RampT') || 10
+					self.sendEmotimoAPICommand(`G21 P${preset} T${runtemp / 10} A${ramptemp / 10}`)
+					self.pstModified = false
+				}
+				setTimeout(() => self.sendEmotimoAPICommand(`G20 P${preset}`), 100);
 			},
 		},
 		// removePset: {
@@ -1174,20 +1288,28 @@ module.exports = function (self) {
 					]
 				},
 				{
-					id: 'gotoPst',
-					type: 'number',
-					label: 'Set Preset ID',
+					type: 'textinput',
+					id: 'id',
+					label: 'Preset ID',
 					default: 0,
-					min: 0,
-					max: 127,
-					isVisible: (options) => options.direction === 'set'
-				}
+					// min: 0,
+					// max: 127,
+					useVariables: { local: true },
+					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-127) or a variable',
+					isVisible: (options) => options.direction === 'set',
+				},
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: setPresetID')
 				var preset = self.getVariableValue('CurrentPstSet')
 				if (data.options.direction === 'set') {
-					preset = data.options.gotoPst
+					const s = (await self.parseVariablesInString(data.options.id).trim())
+					preset = Number(s)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Preset must be 0-127; got ${s}`)
+						return;
+					}
 				} else {
 					preset += data.options.direction
 				}
@@ -1199,24 +1321,7 @@ module.exports = function (self) {
 				}
 
 				if (!variableList.some(o => o.variableId === `Pst${preset}Stat`)) {
-					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
-
-					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
-					self.updateActions()
-
-					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
-					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
-					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
-					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
-					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
-					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
-					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
-
-					self.setVariableDefinitions(variableList)
-
-					self.setVariableValues({ [`Pst${preset}RunT`]: 50 })
-					self.setVariableValues({ [`Pst${preset}RampT`]: 10 })
-					self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
+					makeNewPreset(self, preset)
 				}
 
 				var ramptemp = self.getVariableValue(`Pst${preset}RampT`)
@@ -1229,8 +1334,8 @@ module.exports = function (self) {
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp + ' PanPos: ' + panpos + ' TiltPos: ' + tiltpos + ' M3Pos: ' + m3pos + ' M4Pos: ' + m4pos)
 
 				self.setVariableValues({ CurrentPstSet: preset })
-				self.setVariableValues({ CurrentPstSetRun: runtemp })
-				self.setVariableValues({ CurrentPstSetRamp: ramptemp })
+				self.setVariableValues({ CurrentPstRun: runtemp })
+				self.setVariableValues({ CurrentPstRamp: ramptemp })
 				self.setVariableValues({ CurrentPstPanPos: panpos })
 				self.setVariableValues({ CurrentPstTiltPos: tiltpos })
 				self.setVariableValues({ CurrentPstM3Pos: m3pos })
@@ -1252,8 +1357,8 @@ module.exports = function (self) {
 					var ramptemp = self.getVariableValue('Pst'+preset+'RampT')
 				} else {
 					var preset = self.getVariableValue('CurrentPstSet')
-					var runtemp = self.getVariableValue('CurrentPstSetRun')
-					var ramptemp = self.getVariableValue('CurrentPstSetRamp')
+					var runtemp = self.getVariableValue('CurrentPstRun')
+					var ramptemp = self.getVariableValue('CurrentPstRamp')
 				}
 
 				if (data.options.setopt === 'set') {
@@ -1268,10 +1373,12 @@ module.exports = function (self) {
 
 				if (runtemp > 600) {
 					runtemp = 600;
-					skip = true
 				} else if (runtemp < 10) {
 					runtemp = 10;
-					skip = true
+				}
+
+				if (!variableList.some(o => o.variableId === `Pst${preset}Stat`)) {
+					makeNewPreset(self, preset)
 				}
 
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
@@ -1279,12 +1386,12 @@ module.exports = function (self) {
 				var varID = 'Pst'+preset+'RunT'
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
 				self.setVariableValues({ [varID]: runtemp })
-				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstSetRun: runtemp })
-				}
 
-				if (skip) return;
-				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+				self.pstModified = true
+
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstRun: runtemp })
+				}
 			}
 		},
 		setPresetRampTime: {
@@ -1299,8 +1406,8 @@ module.exports = function (self) {
 					var ramptemp = self.getVariableValue('Pst'+preset+'RampT')
 				} else {
 					var preset = self.getVariableValue('CurrentPstSet')
-					var runtemp = self.getVariableValue('CurrentPstSetRun')
-					var ramptemp = self.getVariableValue('CurrentPstSetRamp')
+					var runtemp = self.getVariableValue('CurrentPstRun')
+					var ramptemp = self.getVariableValue('CurrentPstRamp')
 				}
 
 				if (data.options.setopt === 'set') {
@@ -1315,10 +1422,8 @@ module.exports = function (self) {
 
 				if (ramptemp > 300) {
 					ramptemp = 300;
-					skip = true
 				} else if (ramptemp < 5) {
 					ramptemp = 5;
-					skip = true
 				}
 
 				self.log('debug', 'Preset ID: ' + preset + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
@@ -1327,12 +1432,11 @@ module.exports = function (self) {
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
 				self.setVariableValues({ [varID]: ramptemp })
 
-				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstSetRamp: ramptemp })
-				}
+				self.pstModified = true
 
-				if (skip) return;
-				self.sendEmotimoAPICommand('G21 N1 P' + preset + ' T' + runtemp / 10 + ' A' + ramptemp / 10)
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentPstSet')) {
+					self.setVariableValues({ CurrentPstRamp: ramptemp })
+				}
 			}
 		},
 
@@ -1362,73 +1466,40 @@ module.exports = function (self) {
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: setLoopID')
-				var id_loop = self.getVariableValue('CurrentLpSet')
+				var preset = self.getVariableValue('CurrentLpSet')
 
 				if (data.options.direction === 'set') {
-					id_loop = data.options.gotoLoop
+					preset = data.options.gotoLoop
 				} else {
-					id_loop += data.options.direction
+					preset += data.options.direction
 				}
 
-				if (id_loop > 7) {
-					id_loop = 7;
-				} else if (id_loop < 0) {
-					id_loop = 0;
+				if (preset > 7) {
+					preset = 7;
+				} else if (preset < 0) {
+					preset = 0;
 				}
 
-				var exists = false
-				for (const item of variableList) {
-					if (item.variableId === `Lp${id_loop}RunT`) {
-						exists = true
-						break
-					}
+				if (!variableList.some(i => i.variableId === `Lp${preset}RunT`)) { // if it doesnt exist
+					makeNewLoop(self, preset)
 				}
 
-				if (!exists) {
-					self.log('debug', `Loop ${id_loop} does not exist yet. Adding now`)
+				var ramptemp = self.getVariableValue('Lp' + preset + 'RampT')
+				var runtemp = self.getVariableValue('Lp' + preset + 'RunT')
+				var lpApt = self.getVariableValue('Lp' + preset + 'APoint')
+				var lpBpt = self.getVariableValue('Lp' + preset + 'BPoint')
+				var dwellA = self.getVariableValue('Lp'+preset+'DwellA');
+				var dwellB = self.getVariableValue('Lp'+preset+'DwellB');
 
-					LOOP_ID.push({ id: id_loop, label: `Lp${id_loop}` })
-					let setLpsRaw = self.getVariableValue('SetLps')
-					let setlps = []
+				self.log('debug', `Loop ID: ${preset} A${lpApt} B${lpBpt} T${(Number(runtemp) / 10)} R${(Number(ramptemp) / 10)} C${dwellA} D${dwellB}`)
 
-					try {
-						setlps = JSON.parse(setLpsRaw) || []
-					} catch (e) {
-						setlps = []
-					}
-
-					// Only add if not already present
-					if (!setlps.includes(id_loop)) {
-						setlps.push(id_loop)
-						self.setVariableValues({ SetLps: JSON.stringify(setlps) })
-					}
-					self.updateActions()
-
-					variableList.push({ name: `Loop${id_loop}RunT`, variableId: `Lp${id_loop}RunT` })
-					variableList.push({ name: `Loop${id_loop}RampT`, variableId: `Lp${id_loop}RampT` })
-					variableList.push({ name: `Loop${id_loop}APoint`, variableId: `Lp${id_loop}APoint` })
-					variableList.push({ name: `Loop${id_loop}BPoint`, variableId: `Lp${id_loop}BPoint` })
-
-					self.setVariableDefinitions(variableList)
-
-					self.setVariableValues({ [`Lp${id_loop}RunT`]: 50 })
-					self.setVariableValues({ [`Lp${id_loop}RampT`]: 10 })
-					self.setVariableValues({ [`Lp${id_loop}APoint`]: 0 })
-					self.setVariableValues({ [`Lp${id_loop}BPoint`]: 0 })
-				}
-
-				var ramptemp = self.getVariableValue('Lp' + id_loop + 'RampT')
-				var runtemp = self.getVariableValue('Lp' + id_loop + 'RunT')
-				var lpApt = self.getVariableValue('Lp' + id_loop + 'APoint')
-				var lpBpt = self.getVariableValue('Lp' + id_loop + 'BPoint')
-
-				self.log('debug', 'Loop ID: ' + id_loop + ' A: ' + lpApt + ' B: ' + lpBpt + ' RunT: ' + runtemp + ' RampT: ' + ramptemp)
-
-				self.setVariableValues({ CurrentLpSet: id_loop })
+				self.setVariableValues({ CurrentLpSet: preset })
 				self.setVariableValues({ CurrentLpRun: runtemp })
 				self.setVariableValues({ CurrentLpRamp: ramptemp })
 				self.setVariableValues({ CurrentLpA: lpApt })
 				self.setVariableValues({ CurrentLpB: lpBpt })
+				self.setVariableValues({ CurrentLpDwellA: dwellA })
+				self.setVariableValues({ CurrentLpDwellB: dwellB })
 
 				self.checkFeedbacks("SetLoopSmart")
 			}
@@ -1496,9 +1567,15 @@ module.exports = function (self) {
 					pointTemp = 0;
 				}
 
+				if (!variableList.some(i => i.variableId === `Lp${preset}RunT`)) { // if it doesnt exist
+					makeNewLoop(self, preset)
+				}
+
 				var varID = 'Lp'+preset+'APoint'
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
 				self.setVariableValues({ [varID]: pointTemp })
+
+				self.lpModified = true
 
 				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpA: pointTemp })
@@ -1567,9 +1644,15 @@ module.exports = function (self) {
 					pointTemp = 0;
 				}
 
+				if (!variableList.some(i => i.variableId === `Lp${preset}RunT`)) { // if it doesnt exist
+					makeNewLoop(self, preset)
+				}
+
 				var varID = 'Lp'+preset+'BPoint'
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + pointTemp)
 				self.setVariableValues({ [varID]: pointTemp })
+
+				self.lpModified = true
 
 				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpB: pointTemp })
@@ -1615,9 +1698,15 @@ module.exports = function (self) {
 				if (runtemp > 600) { runtemp = 600 }
 				else if (runtemp < 10 && runtemp > 0) { runtemp = 0 }
 
+				if (!variableList.some(i => i.variableId === `Lp${preset}RunT`)) { // if it doesnt exist
+					makeNewLoop(self, preset)
+				}
+
 				var varID = 'Lp'+preset+'RunT'
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + runtemp)
 				self.setVariableValues({ [varID]: runtemp })
+
+				self.lpModified = true
 
 				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpRun: runtemp })
@@ -1662,9 +1751,15 @@ module.exports = function (self) {
 				if (ramptemp > 600) { ramptemp = 600 }
 				else if (ramptemp < 10 && ramptemp > 0) { ramptemp = 0 }
 
+				if (!variableList.some(i => i.variableId === `Lp${preset}RunT`)) { // if it doesnt exist
+					makeNewLoop(self, preset)
+				}
+
 				var varID = 'Lp'+preset+'RampT'
 				self.log('debug', 'Variable ID: ' + varID + ' to ' + ramptemp)
 				self.setVariableValues({ [varID]: ramptemp })
+
+				self.lpModified = true
 
 				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
 					self.setVariableValues({ CurrentLpRamp: ramptemp })
@@ -1672,7 +1767,98 @@ module.exports = function (self) {
 			}
 		},
 
-		saveLp: {
+		setLoopDwellTimeA: {
+			name: 'Set Loop Dwell Time A Point',
+			options: [...DWELL_OPTIONS],
+			callback: async (data) => {
+				self.log('info', 'Action Triggered: setLoopDwellTimeA')
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
+					var dwell = self.getVariableValue('Lp'+preset+'DwellA')
+				} else {
+					var preset = self.getVariableValue('CurrentLpSet')
+					var dwell = self.getVariableValue('CurrentLpDwellA')
+				}
+
+				if (data.options.setopt === 'set') {
+					dwell = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
+					// if current dwell is 0, if they increase by 5 itll still be set to 0
+					// since 5 < 10, so if thats the case then set it to 10, else default behavior
+					dwell += data.options.ammount;
+				} else if (data.options.setopt === 'down') {
+					// if dwell is 10 and they decrease, set it to 0, else default behavior
+					dwell -= data.options.ammount
+				} else if (data.options.setopt === 'reset') {
+					dwell = 500
+				}
+
+				// basic limiting
+				if (dwell > 60000) { dwell = 60000 }
+				else if (dwell < 300) { dwell = 300 }
+
+				if (!variableList.some(i => i.variableId === `Lp${preset}RunT`)) { // if it doesnt exist
+					makeNewLoop(self, preset)
+				}
+
+				var varID = 'Lp'+preset+'DwellA'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + dwell)
+				self.setVariableValues({ [varID]: dwell })
+
+				self.lpModified = true
+
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+					self.setVariableValues({ CurrentLpDwellA: dwell })
+				}
+			}
+		},
+		setLoopDwellTimeB: {
+			name: 'Set Loop Dwell Time B Point',
+			options: [...DWELL_OPTIONS],
+			callback: async (data) => {
+				self.log('info', 'Action Triggered: setLoopDwellTimeB')
+				if (data.options.settype === 'id') { // Not Smart type
+					var preset = data.options.id
+					var dwell = self.getVariableValue('Lp'+preset+'DwellB')
+				} else {
+					var preset = self.getVariableValue('CurrentLpSet')
+					var dwell = self.getVariableValue('CurrentLpDwellB')
+				}
+
+				if (data.options.setopt === 'set') {
+					dwell = data.options.setvalue
+				} else if (data.options.setopt === 'up') {
+					// if current dwell is 0, if they increase by 5 itll still be set to 0
+					// since 5 < 10, so if thats the case then set it to 10, else default behavior
+					dwell += data.options.ammount;
+				} else if (data.options.setopt === 'down') {
+					// if dwell is 10 and they decrease, set it to 0, else default behavior
+					dwell -= data.options.ammount
+				} else if (data.options.setopt === 'reset') {
+					dwell = 500
+				}
+
+				// basic limiting
+				if (dwell > 60000) { dwell = 60000 }
+				else if (dwell < 300) { dwell = 300 }
+
+				if (!variableList.some(i => i.variableId === `Lp${preset}RunT`)) { // if it doesnt exist
+					makeNewLoop(self, preset)
+				}
+
+				var varID = 'Lp'+preset+'DwellB'
+				self.log('debug', 'Variable ID: ' + varID + ' to ' + dwell)
+				self.setVariableValues({ [varID]: dwell })
+
+				self.lpModified = true
+
+				if (data.options.settype === 'smart' || preset === self.getVariableValue('CurrentLpSet')) {
+					self.setVariableValues({ CurrentLpDwellB: dwell })
+				}
+			}
+		},
+
+		saveLp: { // Sends loop settings to the emotimo. This isnt necessary since it sends the settings anyways when a loop is recalled. This is just a sanity check action.
 			name: 'Save Loop',
 			options: [
 				{
@@ -1702,18 +1888,18 @@ module.exports = function (self) {
 				self.log('info', 'Action Triggered: saveLp')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
-					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
-					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
-					var lpAPt = self.getVariableValue('Lp'+preset+'APoint');
-					var lpBPt = self.getVariableValue('Lp'+preset+'BPoint');
 				} else {
-					var preset = self.getVariableValue('CurrentLpSet')
-					var ramptemp = self.getVariableValue('CurrentLpRamp')
-					var runtemp = self.getVariableValue('CurrentLpRun')
-					var lpAPt = self.getVariableValue('CurrentLpA')
-					var lpBPt = self.getVariableValue('CurrentLpB')
+					var preset = self.getVariableValue('CurrentLpSet');
 				}
-				self.sendEmotimoAPICommand('G25 L' + preset + ' A' + lpAPt + ' B' + lpBPt + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
+				var runtemp = self.getVariableValue('Lp'+preset+'RunT');
+				var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
+				var lpAPt = self.getVariableValue('Lp'+preset+'APoint');
+				var lpBPt = self.getVariableValue('Lp'+preset+'BPoint');
+				var dwellA = self.getVariableValue('Lp'+preset+'DwellA');
+				var dwellB = self.getVariableValue('Lp'+preset+'DwellB');
+
+				self.sendEmotimoAPICommand(`G25 L${preset} A${lpAPt} B${lpBPt} T${(Number(runtemp) / 10)} R${(Number(ramptemp) / 10)} C${dwellA} D${dwellB}`);
+				self.lpModified = false
 			},
 		},
 		recallLoop: {
@@ -1741,29 +1927,43 @@ module.exports = function (self) {
 				self.log('info', 'Action Triggered: recallLoop')
 				if (data.options.settype === 'id') { // Not Smart type
 					var preset = data.options.id
-					var runtemp = self.getVariableValue('Lp'+preset+'RunT');
-					var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
-					var tempA = self.getVariableValue('Lp'+preset+'APoint');
-					var tempB = self.getVariableValue('Lp'+preset+'BPoint');
 				} else {
-					var preset = self.getVariableValue('CurrentLpSet')
-					var ramptemp = self.getVariableValue('CurrentLpRamp')
-					var runtemp = self.getVariableValue('CurrentLpRun')
-					var tempA = self.getVariableValue('CurrentLpA')
-					var tempB = self.getVariableValue('CurrentLpB')
+					var preset = self.getVariableValue('CurrentLpSet');
 				}
+				var runtemp = self.getVariableValue('Lp'+preset+'RunT');
+				var ramptemp = self.getVariableValue('Lp'+preset+'RampT');
+				var lpAPt = self.getVariableValue('Lp'+preset+'APoint');
+				var lpBPt = self.getVariableValue('Lp'+preset+'BPoint');
+				var dwellA = self.getVariableValue('Lp'+preset+'DwellA');
+				var dwellB = self.getVariableValue('Lp'+preset+'DwellB');
 
 				var loopActive = self.getVariableValue('LpActive')
 
-				self.log('debug', 'Active Loop: ' + loopActive)
-				if (loopActive == -1) {
+				// self.log('debug', 'Active Loop: ' + loopActive)
+				if (loopActive == -1) { // no loop active, to start loop
+					if (!LOOP_ID.some(p => p.id === preset)) {
+						self.log('warn', 'Loop ' + preset + ' is not configured yet')
+						return;
+					}
 					self.setVariableValues({ LpActive: preset })
 					self.setVariableValues({ LastPstID: -1})
 					self.checkFeedbacks("LoopStatus")
 
-					self.sendEmotimoAPICommand('G25 L' + preset + ' A' + tempA + ' B' + tempB + ' T' + runtemp / 10 + ' R' + ramptemp / 10 + ' C500 D500')
-					setTimeout(() => self.sendEmotimoAPICommand('G24 L' + preset + ' N0'), 100);
-				} else {
+					let setLpsRaw = self.getVariableValue('SetLps')
+					let setlps = []
+
+					try { // convert the '[]' to []
+						setlps = JSON.parse(setLpsRaw) || []
+					} catch (e) {
+						setlps = []
+					}
+
+					if (!setlps.includes(preset) || self.lpModified) { // if its not saved or its been modified, then send command
+						self.sendEmotimoAPICommand(`G25 L${preset} A${lpAPt} B${lpBPt} T${(Number(runtemp) / 10)} R${(Number(ramptemp) / 10)} C${dwellA} D${dwellB}`);
+						self.lpModified = false
+					}
+					setTimeout(() => self.sendEmotimoAPICommand(`G24 L${preset}`), 100);
+				} else { // loop active, to stop it
 					self.setVariableValues({ LpActive: -1 })
 					self.checkFeedbacks("LoopStatus")
 					self.sendEmotimoAPICommand('G24')
@@ -1976,7 +2176,7 @@ module.exports = function (self) {
 				}
 				cmd2 += ' T' + resolvedRunValue / 10
 				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstSetRun: resolvedRunValue })
+					self.setVariableValues({ CurrentPstRun: resolvedRunValue })
 				} else {
 					self.setVariableValues({ [`Pst${preset}RunT`]: resolvedRunValue })
 				}
@@ -1986,7 +2186,7 @@ module.exports = function (self) {
 				}
 				cmd2 += ' A' + resolvedRampValue / 10
 				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstSetRun: resolvedRampValue })
+					self.setVariableValues({ CurrentPstRun: resolvedRampValue })
 				} else {
 					self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue })
 				}

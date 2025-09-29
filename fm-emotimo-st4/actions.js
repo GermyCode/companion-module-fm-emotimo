@@ -195,46 +195,46 @@ const DWELL_OPTIONS = [
 	},
 ]
 
-makeNewLoop = function(self, id_loop) {
-	self.log('debug', `Loop ${id_loop} does not exist yet. Adding now`)
-	LOOP_ID.push({ id: id_loop, label: `Lp${id_loop}` })
+makeNewLoop = function(self, id) {
+	self.log('debug', `Loop ${id_lidoop} does not exist yet. Adding now`)
+	LOOP_ID.push({ id: id, label: `Lp${id}` })
 	self.updateActions()
 
-	variableList.push({ name: `Loop${id_loop}RunT`, variableId: `Lp${id_loop}RunT` })
-	variableList.push({ name: `Loop${id_loop}RampT`, variableId: `Lp${id_loop}RampT` })
-	variableList.push({ name: `Loop${id_loop}APoint`, variableId: `Lp${id_loop}APoint` })
-	variableList.push({ name: `Loop${id_loop}BPoint`, variableId: `Lp${id_loop}BPoint` })
-	variableList.push({ name: `Loop${id_loop}DwellA`, variableId: `Lp${id_loop}DwellA` })
-	variableList.push({ name: `Loop${id_loop}DwellB`, variableId: `Lp${id_loop}DwellB` })
+	variableList.push({ name: `Loop${id}RunT`, variableId: `Lp${id}RunT` })
+	variableList.push({ name: `Loop${id}RampT`, variableId: `Lp${id}RampT` })
+	variableList.push({ name: `Loop${id}APoint`, variableId: `Lp${id}APoint` })
+	variableList.push({ name: `Loop${id}BPoint`, variableId: `Lp${id}BPoint` })
+	variableList.push({ name: `Loop${id}DwellA`, variableId: `Lp${id}DwellA` })
+	variableList.push({ name: `Loop${id}DwellB`, variableId: `Lp${id}DwellB` })
 
 	self.setVariableDefinitions(variableList)
 
-	self.setVariableValues({ [`Lp${id_loop}RunT`]: 50 })
-	self.setVariableValues({ [`Lp${id_loop}RampT`]: 10 })
-	self.setVariableValues({ [`Lp${id_loop}APoint`]: 0 })
-	self.setVariableValues({ [`Lp${id_loop}BPoint`]: 0 })
-	self.setVariableValues({ [`Lp${id_loop}DwellA`]: 500 })
-	self.setVariableValues({ [`Lp${id_loop}DwellB`]: 500 })
+	self.setVariableValues({ [`Lp${id}RunT`]: 50 })
+	self.setVariableValues({ [`Lp${id}RampT`]: 10 })
+	self.setVariableValues({ [`Lp${id}APoint`]: 0 })
+	self.setVariableValues({ [`Lp${id}BPoint`]: 0 })
+	self.setVariableValues({ [`Lp${id}DwellA`]: 500 })
+	self.setVariableValues({ [`Lp${id}DwellB`]: 500 })
 }
 
-makeNewPreset = function(self, id_loop) {
-	self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
-	PRESET_ID.push({ id: preset, label: `Pst${preset}` })
+makeNewPreset = function(self, id) {
+	self.log('debug', `Preset ${id} does not exist yet. Adding now`)
+	PRESET_ID.push({ id: id, label: `Pst${id}` })
 	self.updateActions()
 
-	variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
-	variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
-	variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
-	variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
-	variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
-	variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
-	variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
+	variableList.push({ name: `Preset${id}RunT`, variableId: `Pst${id}RunT` })
+	variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${id}RampT` })
+	variableList.push({ name: `Preset${id}Status`, variableId: `Pst${id}Stat` })
+	variableList.push({ name: `Preset${id}PanPos`, variableId: `Pst${id}PanPos` })
+	variableList.push({ name: `Preset${id}TiltPos`, variableId: `Pst${id}TiltPos` })
+	variableList.push({ name: `Preset${id}M3Pos`, variableId: `Pst${id}M3Pos` })
+	variableList.push({ name: `Preset${id}M4Pos`, variableId: `Pst${id}M4Pos` })
 
 	self.setVariableDefinitions(variableList)
 
-	self.setVariableValues({ [`Pst${preset}RunT`]: 50 })
-	self.setVariableValues({ [`Pst${preset}RampT`]: 10 })
-	self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
+	self.setVariableValues({ [`Pst${id}RunT`]: 50 })
+	self.setVariableValues({ [`Pst${id}RampT`]: 10 })
+	self.setVariableValues({ [`Pst${id}Stat`]: 0 })
 }
 
 module.exports = function (self) {
@@ -1536,19 +1536,27 @@ module.exports = function (self) {
 					]
 				},
 				{
-					type: 'number',
-					label: 'Preset ID',
+					type: 'textinput',
 					id: 'pstid',
-					min: 0,
-					max: 127,
-					default: 0,
-					isVisible: (options) => options.direction === 'id',
+					label: 'Preset ID',
+					default: '0',
+					// min: 0,
+					// max: 127,
+					useVariables: { local: true },
+					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-127) or a variable',
+					isVisible: (options) => options.settype === 'id',
 				},
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: setLoopAPoint')
 				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
+					const s = (await self.parseVariablesInString(data.options.id).trim())
+					var preset = Number(s)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Preset must be 0-127; got ${s}`)
+						return;
+					}
 					var pointTemp = self.getVariableValue('Lp'+preset+'APoint');
 				} else {
 					var preset = self.getVariableValue('CurrentLpSet')
@@ -1613,19 +1621,27 @@ module.exports = function (self) {
 					]
 				},
 				{
-					type: 'number',
-					label: 'Preset ID',
+					type: 'textinput',
 					id: 'pstid',
-					min: 0,
-					max: 127,
-					default: 0,
-					isVisible: (options) => options.direction === 'id',
+					label: 'Preset ID',
+					default: '0',
+					// min: 0,
+					// max: 127,
+					useVariables: { local: true },
+					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-127) or a variable',
+					isVisible: (options) => options.settype === 'id',
 				},
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: setLoopBPoint')
 				if (data.options.settype === 'id') { // Not Smart type
-					var preset = data.options.id
+					const s = (await self.parseVariablesInString(data.options.id).trim())
+					var preset = Number(s)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Preset must be 0-127; got ${s}`)
+						return;
+					}
 					var pointTemp = self.getVariableValue('Lp'+preset+'BPoint');
 				} else {
 					var preset = self.getVariableValue('CurrentLpSet')

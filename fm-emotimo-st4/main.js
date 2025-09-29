@@ -332,7 +332,7 @@ class eMotimoModuleInstance extends InstanceBase {
 			case 'Preset Set':
 				var data = tokens[1].split(' ')
 				this.log('debug', "ID:" + data[0] + ":" + data[1]); //Data[0] is empty there is a space here
-				const presetId = data[1]
+				const presetId = Number(data[1])
 				if (!isNaN(presetId) && presetId >= 0) {
 					this.setVariableValues({ [`Pst${presetId}Stat`]: 1 })
 
@@ -370,6 +370,12 @@ class eMotimoModuleInstance extends InstanceBase {
 				}
 				this.checkFeedbacks("SetPreset")
 				this.checkFeedbacks("SetPresetSmart")
+				return;
+			// response from the G24 Command
+			case 'Entering Loop':
+				this.setVariableValues({ LastPstID: -1})
+				this.setVariableValues({ LpActive: tokens[1] })
+				this.checkFeedbacks("LoopStatus")
 				return;
 			// response from the G24 command
 			case 'Exiting Loop':
@@ -418,7 +424,6 @@ class eMotimoModuleInstance extends InstanceBase {
 		}
 		// other special responses //
 
-		// Mainly for the fetch preset thing when it connects
 		// response for the G752 Command (preset fetch)
 		if (tokens[0].startsWith('Preset ')) {
 			const line = dataPacket.toString();

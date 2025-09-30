@@ -1156,7 +1156,7 @@ module.exports = function (self) {
 				self.log('info', 'Action Triggered: recallPset')
 				if (data.options.settype === 'id') { // Not Smart type
 					const s = (await self.parseVariablesInString(data.options.id)).trim()
-					const preset = Number(s)
+					var preset = Number(s)
 					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
 						self.log('warn', `Preset must be 0-127; got ${s}`)
 						return;
@@ -1277,6 +1277,36 @@ module.exports = function (self) {
 		// 	},
 		// },
 
+		removePsetTemp: {
+			name: 'Remove Preset',
+			options: [
+				{
+					type: 'number',
+					id: 'id',
+					label: 'Preset ID',
+					default: 0,
+					min: 1,
+					max: 127,
+				},
+			],
+			callback: async (data) => {
+				self.log('info', 'Action Triggered: removePset')
+				let preset = data.options.id
+				if (preset < 0) {
+					preset = 0;
+				} else if (preset > 127) { 
+					preset = 127;
+				}
+				if (preset <= 0) {
+					self.log('warn', 'Cannot remove preset 0')
+					return;
+				}
+
+				self.setVariableValues({ [`Pst${preset}Stat`]: 0 })
+				self.checkFeedbacks('SetPreset')
+				self.checkFeedbacks('SetPresetSmart')
+			}
+		},
 		setPresetID: {
 			name: 'Set Preset ID',
 			options: [

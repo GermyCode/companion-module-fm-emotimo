@@ -5,7 +5,7 @@ module.exports = {
 	COLORS: {
 		BLACK: combineRgb(0, 0, 0),
 		DARK_GRAY: combineRgb(72, 72, 72),
-		GRAY: combineRgb(128, 128, 128),
+		GRAY: combineRgb(146, 146, 146),
 		WHITE: combineRgb(255, 255, 255),
 
 		RED: combineRgb(255, 0, 0),
@@ -17,15 +17,16 @@ module.exports = {
 		PALE_ORANGE: combineRgb(255, 191, 128),
 
 		YELLOW: combineRgb(255, 255, 0),
+		MEDIUM_YELLOW: combineRgb(153, 153, 0),
 		DARK_YELLOW: combineRgb(102, 102, 0),
-		PALE_YELLOW: combineRgb(255, 255, 128),
+		DARK_DARK_YELLOW: combineRgb(51, 51, 0),
 
 		GREEN: combineRgb(0, 255, 0),
-		DARK_GREEN: combineRgb(0, 51, 0),
 		MEDIUM_GREEN: combineRgb(0, 153, 0),
+		DARK_GREEN: combineRgb(0, 51, 0),
 		PALE_GREEN: combineRgb(128, 255, 128),
 
-		BLUE: combineRgb(0, 0, 255),
+		BLUE: combineRgb(0, 0, 204),
 		DARK_DARK_BLUE: combineRgb(0, 0, 51),
 		DARK_BLUE: combineRgb(0, 0, 102),
 		MEDIUM_BLUE: combineRgb(0, 0, 153),

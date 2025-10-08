@@ -1,6 +1,6 @@
 {
 	"name": "fm-emotimo",
-	"version": "2.0.7",
+	"version": "2.0.8",
 	"main": "main.js",
 	"scripts": {
 		"format": "prettier -w ."

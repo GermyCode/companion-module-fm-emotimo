@@ -1,4 +1,4 @@
-const { combineRgb } = require('@companion-module/base')
+// const { combineRgb } = require('@companion-module/base')
 const { COLORS } = require('./color.js')
 
 let { MODELS, SERIES_SPECS } = require('./models.js')
@@ -28,9 +28,9 @@ module.exports = {
 
 		let motorNames = ['Pan', 'Tilt', 'Slide', 'M4', 'TN Focus', 'TN Iris', 'TN Zoom', 'Roll', 'RS Focus']
 
-		// ########################
+		// #######################
 		// ##### Smart Motor #####
-		// ########################
+		// #######################
 		presets.MotorHeader1 = {
 			category: 'Motors',
 			name: 'Streamdeck Motor Page',
@@ -234,6 +234,27 @@ module.exports = {
 				},
 			],
 		},
+		presets.motorsStopMotors = {
+			category: 'Motors',
+			type: 'button',
+			name: 'Stop All Motors',
+			style: {
+				text: 'E-Stop\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.RED,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'stopMotors',
+						}
+					],
+					up: [],
+				},
+			],
+		},
 
 		presets.MotorLineBreak2 = {
 			category: 'Motors',
@@ -241,7 +262,7 @@ module.exports = {
 			type: 'text',
 			text: ''
 		},
-		
+
 		presets.SetCurMtrStopA = {
 			category: 'Motors',
 			type: 'button',
@@ -677,9 +698,9 @@ module.exports = {
 			]
 		},
 
-		// ########################
+		// #######################
 		// # Motor Rotary Simple #
-		// ########################
+		// #######################
 
 		presets.MotorHeader2 = {
 			category: 'Motors',
@@ -771,9 +792,9 @@ module.exports = {
 			text: 'These are Pan/Tilt Velocity Controls with Arrow Images'
 		},
 
-		// ########################
+		// #######################
 		// # Motor Arrow Presets #
-		// ########################
+		// #######################
 		presets.MotLeftUp = {
 			category: 'Motors',
 			type: 'button',
@@ -975,11 +996,7 @@ module.exports = {
 							actionId: 'stopMotors',
 						}
 					],
-					up: [
-						{
-							actionId: 'stopMotors',
-						}
-					],
+					up: [],
 				},
 			],
 		},
@@ -1171,6 +1188,9 @@ module.exports = {
 		// ########################
 		// #### Motor	Rotary	####
 		// ########################
+
+		// commented out because this will probably send lots of commands to the emotimo
+		// making the api overload causing it to freeze
 
 		// presets.MotorHeader4 = {
 		// 	category: 'Motors',
@@ -1557,10 +1577,10 @@ module.exports = {
 		// 		],
 		// 	}
 		// }
-		
-		// ########################
-		// #### Motor	Speeds	####
-		// ########################
+
+		// #######################
+		// #### Motor Speeds ####
+		// #######################
 
 		presets.MotorHeader5 = {
 			category: 'Motors',
@@ -1801,7 +1821,7 @@ module.exports = {
 			text: ''
 		}
 
-		for (let inc = 1; inc < 9; inc++) {	
+		for (let inc = 1; inc < 9; inc++) {
 				presets['motorSpeedDec' + inc] = {
 					category: 'Motors',
 					type: 'button',
@@ -1829,9 +1849,9 @@ module.exports = {
 				}
 		}
 
-		// ########################
+		// #######################
 		// #### Motor	Presets ####
-		// ########################
+		// #######################
 		presets.MotorHeader6 = {
 			category: 'Motors',
 			name: 'Jog Motors by Axis',
@@ -2478,9 +2498,9 @@ module.exports = {
 			],
 		}
 
-		// ########################
-		// ####	Motor	Stops	####
-		// ########################
+		// #######################
+		// ##### Motor Stops #####
+		// #######################
 		presets.MotorHeader7 = {
 			category: 'Motors',
 			name: 'Stops by Axis',
@@ -2653,9 +2673,9 @@ module.exports = {
 			],
 		},
 
-		// ########################
-		// ####### Presets #######
-		// ########################
+		// #######################
+		// ### Presets Normal ###
+		// #######################
 
 		presets.PresetHeader1 = {
 			category: 'Presets',
@@ -2732,6 +2752,27 @@ module.exports = {
 						}
 					],
 				}
+			],
+		},
+		presets.presetsStopMotors = {
+			category: 'Presets',
+			type: 'button',
+			name: 'Stop All Motors',
+			style: {
+				text: 'E-Stop\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.RED,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'stopMotors',
+						}
+					],
+					up: [],
+				},
 			],
 		},
 
@@ -2892,7 +2933,7 @@ module.exports = {
 				}
 			],
 		},
-		presets.recallSmart = {
+		presets.recallPstNormal = {
 			category: 'Presets',
 			type: 'button',
 			name: 'Preset Smart Recall',
@@ -2908,6 +2949,7 @@ module.exports = {
 							actionId: 'recallPset',
 							options: {
 								settype: 'smart',
+								lockout: false,
 							}
 						}
 					],
@@ -2929,9 +2971,9 @@ module.exports = {
 			],
 			feedbacks: [
 				{
-					feedbackId: 'SetPresetSmart',
+					feedbackId: 'SetPreset',
 					options: {
-						
+						settype: 'samrt',
 					},
 					style: {
 						bgcolor: COLORS.DARK_GREEN,
@@ -3102,7 +3144,7 @@ module.exports = {
 				type: 'text',
 				text: ''
 			},
-			
+
 			presets['Preset' + inc + 'RunTime'] = {
 				category: 'Presets',
 				type: 'button',
@@ -3221,14 +3263,14 @@ module.exports = {
 				},
 				steps: [
 					{
-						down: [
-						],
+						down: [],
 						up: [
 							{
 								actionId: 'recallPset',
 								options: {
 									settype: 'id',
-									id: inc
+									id: inc,
+									lockout: false,
 								}
 							}
 						],
@@ -3253,7 +3295,8 @@ module.exports = {
 					{
 						feedbackId: 'SetPreset',
 						options: {
-							presetNum: inc
+							settype: 'id',
+							id: inc
 						},
 						style: {
 							bgcolor: COLORS.DARK_GREEN,
@@ -3270,9 +3313,9 @@ module.exports = {
 			}
 		}
 
-		// ########################
-		// ####	 Loops		####
-		// ########################
+		// #######################
+		// ######## Loops ########
+		// #######################
 
 		presets.IncreaseLpSetup = {
 			category: 'Loops',
@@ -3390,6 +3433,27 @@ module.exports = {
 						}
 					],
 				}
+			],
+		},
+		presets.loopStopMotors = {
+			category: 'Loops',
+			type: 'button',
+			name: 'Stop All Motors',
+			style: {
+				text: 'E-Stop\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.RED,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'stopMotors',
+						}
+					],
+					up: [],
+				},
 			],
 		},
 
@@ -3648,13 +3712,13 @@ module.exports = {
 			],
 		},
 
-		presets.recallLpSmart = {
+		presets.recallLp = {
 			category: 'Loops',
 			type: 'button',
 			name: 'Loop Smart Recall',
 			style: {
 				text: 'Loop\\n$(companion-module-emotimo-st4-3:CurrentLpSet)\\nRecall',
-				color: COLORS.WHITE,
+				color: COLORS.WHITE, //COLORS.GRAY,
 				bgcolor: COLORS.DARK_RED,
 			},
 			steps: [
@@ -3670,6 +3734,16 @@ module.exports = {
 				},
 			],
 			feedbacks: [
+				// {
+				// 	feedbackId: 'SetLoop',
+				// 	options: {
+				// 		settype: 'smart',
+				// 	},
+				// 	style: {
+				// 		bgcolor: COLORS.DARK_RED,
+				// 		color: COLORS.WHITE,
+				// 	},
+				// },
 				{
 					feedbackId: 'LoopStatus',
 					options: {},
@@ -3678,6 +3752,16 @@ module.exports = {
 						color: COLORS.BLACK,
 					},
 				},
+				{
+						feedbackId: 'CurrentLooping',
+						options: {
+							settype: 'smart',
+						},
+						style: {
+							bgcolor: COLORS.MEDIUM_GREEN,
+							color: COLORS.BLACK,
+						},
+					},
 			]
 		},
 
@@ -3695,7 +3779,7 @@ module.exports = {
 				name: 'Loop ' + inc + ' Recall',
 				style: {
 					text: 'Loop\\n' + inc + '\\nRecall',
-					color: COLORS.WHITE,
+					color: COLORS.WHITE, //COLORS.GRAY,
 					bgcolor: COLORS.DARK_RED,
 				},
 				steps: [
@@ -3709,6 +3793,38 @@ module.exports = {
 								}
 							}
 						],
+					},
+				],
+				feedbacks: [
+					// {
+					// 	feedbackId: 'SetLoop',
+					// 	options: {
+					// 		settype: 'id',
+					// 		id: inc,
+					// 	},
+					// 	style: {
+					// 		bgcolor: COLORS.DARK_RED,
+					// 		color: COLORS.WHITE,
+					// 	},
+					// },
+					{
+						feedbackId: 'LoopStatus',
+						options: {},
+						style: {
+							bgcolor: COLORS.MEDIUM_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'CurrentLooping',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.MEDIUM_GREEN,
+							color: COLORS.BLACK,
+						},
 					},
 				],
 			}
@@ -3886,6 +4002,54 @@ module.exports = {
 				text: 'Setup and Recall Buttons for Loop ' + inc
 			},
 
+			presets['Loop' + inc + 'APointInc'] = {
+				category: 'Loops',
+				type: 'button',
+				name: 'Loop ' + inc + ' A Point Inc',
+				style: {
+					text: '⬆️ ' + inc,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
+				},
+				steps: [
+					{
+						down: [
+							{
+								actionId: 'setLoopAPoint',
+								options: {
+									settype: 'id',
+									id: inc,
+									direction: 1
+								}
+							}
+						],
+					}
+				],
+			},
+			presets['Loop' + inc + 'BPointInc'] = {
+				category: 'Loops',
+				type: 'button',
+				name: 'Loop ' + inc + ' B Point Inc',
+				style: {
+					text: '⬆️ ' + inc,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
+				},
+				steps: [
+					{
+						down: [
+							{
+								actionId: 'setLoopBPoint',
+								options: {
+									settype: 'id',
+									id: inc,
+									direction: 1
+								}
+							}
+						],
+					}
+				],
+			},
 			presets['increaseLpRunTime' + inc] = {
 				category: 'Loops',
 				type: 'button',
@@ -3937,55 +4101,6 @@ module.exports = {
 				],
 			},
 
-			presets['Loop' + inc + 'APointInc'] = {
-				category: 'Loops',
-				type: 'button',
-				name: 'Loop ' + inc + ' A Point Inc',
-				style: {
-					text: '⬆️ ' + inc,
-					color: COLORS.WHITE,
-					bgcolor: COLORS.DARK_BLUE,
-				},
-				steps: [
-					{
-						down: [
-							{
-								actionId: 'setLoopAPoint',
-								options: {
-									settype: 'id',
-									id: inc,
-									direction: 1
-								}
-							}
-						],
-					}
-				],
-			},
-			presets['Loop' + inc + 'BPointInc'] = {
-				category: 'Loops',
-				type: 'button',
-				name: 'Loop ' + inc + ' B Point Inc',
-				style: {
-					text: '⬆️ ' + inc,
-					color: COLORS.WHITE,
-					bgcolor: COLORS.DARK_BLUE,
-				},
-				steps: [
-					{
-						down: [
-							{
-								actionId: 'setLoopBPoint',
-								options: {
-									settype: 'id',
-									id: inc,
-									direction: 1
-								}
-							}
-						],
-					}
-				],
-			},
-
 			presets['Loop' + inc + 'LineBreak'] = {
 			category: 'Loops',
 			name: '',
@@ -3993,6 +4108,28 @@ module.exports = {
 			text: ' '
 			},
 
+			presets['Loop' + inc + 'APoint'] = {
+				category: 'Loops',
+				type: 'button',
+				name: 'Loop A Point ' + inc,
+				style: {
+					text: 'Loop\\nA Point:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'APoint)',
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
+				},
+				steps: [{}]
+			},
+			presets['Loop' + inc + 'BPoint'] = {
+				category: 'Loops',
+				type: 'button',
+				name: 'Loop B Point ' + inc,
+				style: {
+					text: 'Loop\\nB Point:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'BPoint)',
+					color: COLORS.WHITE,
+					bgcolor: COLORS.BLACK,
+				},
+				steps: [{}],
+			},
 			presets['Loop' + inc + 'RunTime'] = {
 				category: 'Loops',
 				type: 'button',
@@ -4042,29 +4179,6 @@ module.exports = {
 				],
 			},
 
-			presets['Loop' + inc + 'APoint'] = {
-				category: 'Loops',
-				type: 'button',
-				name: 'Loop A Point ' + inc,
-				style: {
-					text: 'Loop\\nA Point:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'APoint)',
-					color: COLORS.WHITE,
-					bgcolor: COLORS.BLACK,
-				},
-				steps: [{}]
-			},
-			presets['Loop' + inc + 'BPoint'] = {
-				category: 'Loops',
-				type: 'button',
-				name: 'Loop B Point ' + inc,
-				style: {
-					text: 'Loop\\nB Point:\\n$(companion-module-emotimo-st4-3:Lp' + inc + 'BPoint)',
-					color: COLORS.WHITE,
-					bgcolor: COLORS.BLACK,
-				},
-				steps: [{}],
-			},
-
 			presets['Loop' + inc + 'LowLineBreak'] = {
 				category: 'Loops',
 				name: '',
@@ -4072,6 +4186,54 @@ module.exports = {
 				text: ' '
 			},
 
+			presets['Loop' + inc + 'APointDec'] = {
+				category: 'Loops',
+				type: 'button',
+				name: 'Loop ' + inc + ' A Point Dec',
+				style: {
+					text: '⬇️ ' + inc,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
+				},
+				steps: [
+					{
+						down: [
+							{
+								actionId: 'setLoopAPoint',
+								options: {
+									settype: 'id',
+									id: inc,
+									direction: -1
+								}
+							}
+						],
+					}
+				],
+			},
+			presets['Loop' + inc + 'BPointDec'] = {
+				category: 'Loops',
+				type: 'button',
+				name: 'Loop ' + inc + ' B Point Dec',
+				style: {
+					text: '⬇️ ' + inc,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_BLUE,
+				},
+				steps: [
+					{
+						down: [
+							{
+								actionId: 'setLoopBPoint',
+								options: {
+									settype: 'id',
+									id: inc,
+									direction: -1
+								}
+							}
+						],
+					}
+				],
+			},
 			presets['decreaseLpRunTime' + inc] = {
 				category: 'Loops',
 				type: 'button',
@@ -4123,62 +4285,13 @@ module.exports = {
 				],
 			},
 
-			presets['Loop' + inc + 'APointDec'] = {
-				category: 'Loops',
-				type: 'button',
-				name: 'Loop ' + inc + ' A Point Dec',
-				style: {
-					text: '⬇️ ' + inc,
-					color: COLORS.WHITE,
-					bgcolor: COLORS.DARK_BLUE,
-				},
-				steps: [
-					{
-						down: [
-							{
-								actionId: 'setLoopAPoint',
-								options: {
-									settype: 'id',
-									id: inc,
-									direction: -1
-								}
-							}
-						],
-					}
-				],
-			},
-			presets['Loop' + inc + 'BPointDec'] = {
-				category: 'Loops',
-				type: 'button',
-				name: 'Loop ' + inc + ' B Point Dec',
-				style: {
-					text: '⬇️ ' + inc,
-					color: COLORS.WHITE,
-					bgcolor: COLORS.DARK_BLUE,
-				},
-				steps: [
-					{
-						down: [
-							{
-								actionId: 'setLoopBPoint',
-								options: {
-									settype: 'id',
-									id: inc,
-									direction: -1
-								}
-							}
-						],
-					}
-				],
-			},
-
 			presets['Loop' + inc + 'Recall2'] = {
 				category: 'Loops',
 				type: 'button',
 				name: 'Loop ' + inc + ' Recall',
 				style: {
 					text: 'Loop\\n' + inc + '\\nRecall',
-					color: COLORS.WHITE,
+					color: COLORS.WHITE, // COLORS.GRAY,
 					bgcolor: COLORS.DARK_RED,
 				},
 				steps: [
@@ -4194,12 +4307,44 @@ module.exports = {
 						],
 					},
 				],
+				feedbacks: [
+					// {
+					// 	feedbackId: 'SetLoop',
+					// 	options: {
+					// 		settype: 'id',
+					// 		id: inc,
+					// 	},
+					// 	style: {
+					// 		bgcolor: COLORS.DARK_RED,
+					// 		color: COLORS.WHITE,
+					// 	},
+					// },
+					{
+						feedbackId: 'LoopStatus',
+						options: {},
+						style: {
+							bgcolor: COLORS.MEDIUM_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'CurrentLooping',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.MEDIUM_GREEN,
+							color: COLORS.BLACK,
+						},
+					},
+				],
 			}
 		}
 
-		// ########################
-		// ####	 Other		####
-		// ########################
+		// #######################
+		// ######## Other ########
+		// #######################
 
 		presets.rsHome = {
 			category: 'Other',
@@ -4283,18 +4428,62 @@ module.exports = {
 				},
 			],
 		},
+		presets.OtherStopMotors = {
+			category: 'Other',
+			type: 'button',
+			name: 'Stop All Motors',
+			style: {
+				text: 'E-Stop\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.RED,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'stopMotors',
+						}
+					],
+					up: [],
+				},
+			],
+		},
 
-		// ########################
+		// #######################
 		// #### UI Navigation ####
-		// ########################
+		// #######################
 
+		presets.VirtBack = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Back',
+			style: {
+				text: '🔙',
+				size: '50',
+				alignment: 'center:bottom',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 5,
+							}
+						}
+					],
+				},
+			],
+		},
 		presets.VirtUp = {
 			category: 'UI Navigation',
 			type: 'button',
 			name: 'Nav Up',
 			style: {
-				text: 'Up\\n',
-				size: '18',
+				text: '⬆️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -4311,59 +4500,28 @@ module.exports = {
 				},
 			],
 		},
-		presets.VirtRight = {
+		presets.VirtEmpty1 = {
 			category: 'UI Navigation',
 			type: 'button',
-			name: 'Nav Right',
+			name: '',
 			style: {
-				text: 'Right\\n',
-				size: '18',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 2,
-							}
-						}
-					],
-				},
-			],
+			steps: [],
 		},
-		presets.VirtDown = {
+		presets.LineBreak40 = {
 			category: 'UI Navigation',
-			type: 'button',
-			name: 'Nav Down',
-			style: {
-				text: 'Down\\n',
-				size: '18',
-				color: COLORS.WHITE,
-				bgcolor: COLORS.BLACK,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: 'virtualInput',
-							options: {
-								vbutton: 3,
-							}
-						}
-					],
-				},
-			],
-		},
+			name: '',
+			type: 'text',
+			text: ' '
+		}
 		presets.VirtLeft = {
 			category: 'UI Navigation',
 			type: 'button',
 			name: 'Nav Left',
 			style: {
-				text: 'Left\\n',
-				size: '18',
+				text: '⬅️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -4385,8 +4543,7 @@ module.exports = {
 			type: 'button',
 			name: 'Nav Enter',
 			style: {
-				text: 'Select\\n',
-				size: '18',
+				text: '⏺',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -4417,13 +4574,12 @@ module.exports = {
 				},
 			],
 		},
-		presets.VirtBack = {
+		presets.VirtRight = {
 			category: 'UI Navigation',
 			type: 'button',
-			name: 'Nav Back',
+			name: 'Nav Right',
 			style: {
-				text: 'Escape\\n',
-				size: '18',
+				text: '➡️',
 				color: COLORS.WHITE,
 				bgcolor: COLORS.BLACK,
 			},
@@ -4433,14 +4589,928 @@ module.exports = {
 						{
 							actionId: 'virtualInput',
 							options: {
-								vbutton: 5,
+								vbutton: 2,
 							}
 						}
 					],
 				},
 			],
 		},
+		presets.LineBreak400 = {
+			category: 'UI Navigation',
+			name: '',
+			type: 'text',
+			text: ' '
+		}
+		presets.VirtEmpty2 = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: '',
+			style: {
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [],
+		},
+		presets.VirtDown = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: 'Nav Down',
+			style: {
+				text: '⬇️',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'virtualInput',
+							options: {
+								vbutton: 3,
+							}
+						}
+					],
+				},
+			],
+		},
+		presets.VirtEmpty3 = {
+			category: 'UI Navigation',
+			type: 'button',
+			name: '',
+			style: {
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			},
+			steps: [],
+		},
 
+		// #######################
+		// ###### Playback ######
+		// #######################
+
+		// lockout
+		presets.PlaybackHeader1 = {
+			category: 'Playback',
+			name: 'Generic Playback Page, Lockout',
+			type: 'text',
+			text: ''
+		},
+
+		presets.PlaybackEmpty1 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'Title page?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 0; inc < 6; inc++) {
+			presets['PlaybackRecallLp' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Loop ${inc} Recall`,
+				style: {
+					text: `Loop ${inc}\\nRecall`,
+					color: COLORS.WHITE, //COLORS.GRAY,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallLoop',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: true,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					// {
+					// 	feedbackId: 'SetLoop',
+					// 	options: {
+					// 		settype: 'id',
+					// 		id: inc,
+					// 	},
+					// 	style: {
+					// 		bgcolor: COLORS.DARK_RED,
+					// 		color: COLORS.WHITE,
+					// 	},
+					// },
+					{
+						feedbackId: 'LoopStatus',
+						options: {},
+						style: {
+							bgcolor: COLORS.MEDIUM_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'CurrentLooping',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.MEDIUM_GREEN,
+							color: COLORS.BLACK,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackStopMotors = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Stop All Motors',
+			style: {
+				text: 'E-Stop\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.RED,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'stopMotors',
+						}
+					],
+					up: [],
+				},
+			],
+		},
+
+		presets.PLaybackLineBreak1 = {
+			category: 'Playback',
+			name: '',
+			type: 'text',
+			text: ' '
+		},
+
+		presets.PlaybackEmpty4 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'goto loop edit page?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 0; inc < 11; inc+=2) {
+			presets['PlaybackRecallPst1' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Preset ${inc} Recall`,
+				style: {
+					text: `Preset\\nRecall\\n${inc}`,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallPset',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: true,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'SetPreset',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.DARK_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'MovingStatus',
+						options: {},
+						style: {
+							bgcolor: COLORS.BLUE,
+							color: COLORS.WHITE,
+						},
+					},
+					{
+						feedbackId: 'CurrentPreset',
+						options: {
+							settype: 'id',
+							id: inc
+						},
+						style: {
+							bgcolor: COLORS.DARK_DARK_YELLOW,
+							color: COLORS.WHITE,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackProfileFast = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Fast',
+			style: {
+				text: 'Fast',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 0,
+								lockout: true,
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MovingStatus',
+					options: {},
+					style: {
+						bgcolor: COLORS.DARK_LAVENDER,
+						color: COLORS.WHITE,
+					},
+				},
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 0
+					},
+				},
+			]
+		},
+
+		presets.PLaybackLineBreak2 = {
+			category: 'Playback',
+			name: '',
+			type: 'text',
+			text: ' '
+		},
+		presets.PlaybackEmpty5 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'goto preset edit?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 1; inc < 12; inc+=2) {
+			presets['PlaybackRecallPst2' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Preset ${inc} Recall`,
+				style: {
+					text: `Preset\\nRecall\\n${inc}`,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallPset',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: true,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'SetPreset',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.DARK_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'MovingStatus',
+						options: {},
+						style: {
+							bgcolor: COLORS.BLUE,
+							color: COLORS.WHITE,
+						},
+					},
+					{
+						feedbackId: 'CurrentPreset',
+						options: {
+							settype: 'id',
+							id: inc
+						},
+						style: {
+							bgcolor: COLORS.DARK_DARK_YELLOW,
+							color: COLORS.WHITE,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackProfileMed = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Med',
+			style: {
+				text: 'Med',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 1,
+								lockout: true,
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MovingStatus',
+					options: {},
+					style: {
+						bgcolor: COLORS.DARK_LAVENDER,
+						color: COLORS.WHITE,
+					},
+				},
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 1
+					},
+				},
+			]
+		},
+
+		presets.PLaybackLineBreak3 = {
+			category: 'Playback',
+			name: '',
+			type: 'text',
+			text: ' '
+		},
+		presets.PlaybackEmpty6 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'goto this page?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 12; inc < 18; inc++) {
+			presets['PlaybackRecallPst3' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Preset ${inc} Recall`,
+				style: {
+					text: `Preset\\nRecall\\n${inc}`,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallPset',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: true,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'SetPreset',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.DARK_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'MovingStatus',
+						options: {},
+						style: {
+							bgcolor: COLORS.BLUE,
+							color: COLORS.WHITE,
+						},
+					},
+					{
+						feedbackId: 'CurrentPreset',
+						options: {
+							settype: 'id',
+							id: inc
+						},
+						style: {
+							bgcolor: COLORS.DARK_DARK_YELLOW,
+							color: COLORS.WHITE,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackProfileSlow = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Slow',
+			style: {
+				text: 'Slow',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 2,
+								lockout: true,
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MovingStatus',
+					options: {},
+					style: {
+						bgcolor: COLORS.DARK_LAVENDER,
+						color: COLORS.WHITE,
+					},
+				},
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 2
+					},
+				},
+			]
+		},
+
+
+
+		// no lockout
+		presets.PlaybackHeader10 = {
+			category: 'Playback',
+			name: 'Generic Playback Page, No Lockout',
+			type: 'text',
+			text: ''
+		},
+
+		presets.PlaybackEmpty10 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'Title page?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 0; inc < 6; inc++) {
+			presets['PlaybackRecallLp2' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Loop ${inc} Recall`,
+				style: {
+					text: `Loop ${inc}\\nRecall`,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallLoop',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: true,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'LoopStatus',
+						options: {},
+						style: {
+							bgcolor: COLORS.MEDIUM_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'CurrentLooping',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.MEDIUM_GREEN,
+							color: COLORS.BLACK,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackStopMotors1 = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Stop All Motors',
+			style: {
+				text: 'E-Stop\\n',
+				size: '18',
+				color: COLORS.WHITE,
+				bgcolor: COLORS.RED,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'stopMotors',
+						}
+					],
+					up: [],
+				},
+			],
+		},
+
+		presets.PLaybackLineBreak10 = {
+			category: 'Playback',
+			name: '',
+			type: 'text',
+			text: ' '
+		},
+
+		presets.PlaybackEmpty40 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'goto loop edit page?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 0; inc < 11; inc+=2) {
+			presets['PlaybackRecallPst10' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Preset ${inc} Recall`,
+				style: {
+					text: `Preset\\nRecall\\n${inc}`,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallPset',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: false,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'SetPreset',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.DARK_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'CurrentPreset',
+						options: {
+							settype: 'id',
+							id: inc
+						},
+						style: {
+							bgcolor: COLORS.DARK_DARK_YELLOW,
+							color: COLORS.WHITE,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackProfileFast1 = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Fast',
+			style: {
+				text: 'Fast',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 0,
+								lockout: false,
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 0
+					},
+				}
+			]
+		},
+
+		presets.PLaybackLineBreak20 = {
+			category: 'Playback',
+			name: '',
+			type: 'text',
+			text: ' '
+		},
+		presets.PlaybackEmpty50 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'goto preset edit?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 1; inc < 12; inc+=2) {
+			presets['PlaybackRecallPst20' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Preset ${inc} Recall`,
+				style: {
+					text: `Preset\\nRecall\\n${inc}`,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallPset',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: false,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'SetPreset',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.DARK_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'CurrentPreset',
+						options: {
+							settype: 'id',
+							id: inc
+						},
+						style: {
+							bgcolor: COLORS.DARK_DARK_YELLOW,
+							color: COLORS.WHITE,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackProfileMed1 = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Med',
+			style: {
+				text: 'Med',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 1,
+								lockout: false,
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 1
+					},
+				}
+			]
+		},
+
+		presets.PLaybackLineBreak30 = {
+			category: 'Playback',
+			name: '',
+			type: 'text',
+			text: ' '
+		},
+		presets.PlaybackEmpty60 = {
+			category: 'Playback',
+			type: 'button',
+			name: '',
+			style: {
+				text: 'goto this page?',
+				size: 15,
+				color: COLORS.WHITE,
+				bgcolor: COLORS.BLACK,
+			}
+		}
+		for (let inc = 12; inc < 18; inc++) {
+			presets['PlaybackRecallPst30' + inc] = {
+				category: 'Playback',
+				type: 'button',
+				name: `Preset ${inc} Recall`,
+				style: {
+					text: `Preset\\nRecall\\n${inc}`,
+					color: COLORS.WHITE,
+					bgcolor: COLORS.DARK_RED,
+				},
+				steps: [
+					{
+						up: [
+							{
+								actionId: 'recallPset',
+								options: {
+									settype: 'id',
+									id: inc,
+									lockout: false,
+								}
+							}
+						],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'SetPreset',
+						options: {
+							settype: 'id',
+							id: inc,
+						},
+						style: {
+							bgcolor: COLORS.DARK_YELLOW,
+							color: COLORS.BLACK,
+						},
+					},
+					{
+						feedbackId: 'CurrentPreset',
+						options: {
+							settype: 'id',
+							id: inc
+						},
+						style: {
+							bgcolor: COLORS.DARK_DARK_YELLOW,
+							color: COLORS.WHITE,
+						},
+					},
+				],
+			}
+		}
+		presets.PlaybackProfileSlow1 = {
+			category: 'Playback',
+			type: 'button',
+			name: 'Slow',
+			style: {
+				text: 'Slow',
+				size: 25,
+				color: COLORS.BLACK,
+				bgcolor: COLORS.LIGHT_LAVENDER,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setMotorProfile',
+							options: {
+								prodileid: 2,
+								lockout: false,
+							}
+						}
+					],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'MotorProfileSatus',
+					style: {
+						bgcolor: COLORS.MEDIUM_LAVENDER,
+						color: COLORS.WHITE,
+					},
+					options: {
+						id_prof: 2
+					},
+				}
+			]
+		},
 
 		this.setPresetDefinitions(presets);
 	}

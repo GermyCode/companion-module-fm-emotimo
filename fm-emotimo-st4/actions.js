@@ -1,5 +1,5 @@
 const { variableList } = require('./variables')
-const { 
+const {
 	MOTOR_ID,
 	TN_MOTOR_ID,
 	DIRECTION_ID,
@@ -451,7 +451,7 @@ module.exports = function (self) {
 						rawMotorSpeed = 500
 					} else if (rawMotorSpeed < -500) {
 						rawMotorSpeed = -500
-					} 
+					}
 					motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
 				} else {
 					rawMotorSpeed += data.options.direction * 5
@@ -459,7 +459,7 @@ module.exports = function (self) {
 						rawMotorSpeed = 100
 					} else if (rawMotorSpeed < -100) {
 						rawMotorSpeed = -100
-					} 
+					}
 					motorSpeed = motorInversion * temp / 100.0 * rawMotorSpeed
 				}
 
@@ -793,7 +793,6 @@ module.exports = function (self) {
 				var motor = self.getVariableValue('CurrentMtrSet')
 				var motorInvertName = ''
 				var inversionState = 0
-				
 
 				if (motor == 1) {
 					inversionState = self.getVariableValue('PanInversion')
@@ -1059,10 +1058,23 @@ module.exports = function (self) {
 					label: 'Profile: Default: User 1',
 					default: 5,
 					choices: MOTOR_PROFILES,
-				}
+				},
+				{
+					type: 'checkbox',
+					id: 'lockout',
+					label: 'Lockout',
+					default: false,
+					tooltip: 'if its already moving somewhere, it wont recall somewhere else until it reaches its destination or it stops. Or if its the most recent recalled preset, it wont do anything',
+				},
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: setMotorProfile')
+				if (data.options.lockout) {
+					if (self.getVariableValue('IsMoving') || self.getVariableValue('CurrentMtrProf') === data.options.prodileid) {
+						self.log('warn', 'Lockout Initiated, wait till it reaches its destination, or recall a different profile first')
+						return;
+					}
+				}
 				self.sendEmotimoAPICommand('G102 P' + data.options.prodileid)
 			}
 		},
@@ -1082,12 +1094,12 @@ module.exports = function (self) {
 
 		// To-DO: Make reset preset action
 		// option to soft reset it, where it only resets companion things, and an option to full reset, sets preset positions in the emotimo to the default whatever positions
-		// To-DO: Make request action, to get the inputted preset/stop/performance values from the emotimo 
+		// To-DO: Make request action, to get the inputted preset/stop/performance values from the emotimo
 		// options for preset/stop/performance, where it sends the command to request approprate data
 
 		savePset: {
 			name: 'Save Preset',
-			options: [ 
+			options: [
 				{
 					type: 'dropdown',
 					id: 'settype',
@@ -1130,7 +1142,7 @@ module.exports = function (self) {
 		},
 		recallPset: {
 			name: 'Recall Preset',
-			options: [ 
+			options: [
 				{
 					type: 'dropdown',
 					id: 'settype',
@@ -1144,12 +1156,17 @@ module.exports = function (self) {
 					id: 'id',
 					label: 'Preset ID',
 					default: '0',
-					// min: 0,
-					// max: 127,
 					useVariables: { local: true },
 					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
 					tooltip: 'Enter a number (0-127) or a variable',
 					isVisible: (options) => options.settype === 'id',
+				},
+				{
+					type: 'checkbox',
+					id: 'lockout',
+					label: 'Lockout',
+					default: false,
+					tooltip: 'if its already moving somewhere, it wont recall somewhere else until it reaches its destination or it stops. Or if its the most recent recalled preset, it wont do anything',
 				},
 			],
 			callback: async (data) => {
@@ -1163,6 +1180,13 @@ module.exports = function (self) {
 					}
 				} else {
 					var preset = self.getVariableValue('CurrentPstSet')
+				}
+
+				if (data.options.lockout) {
+					if (self.getVariableValue('IsMoving') || self.getVariableValue('LastPstID') === preset) {
+						self.log('warn', 'Lockout Initiated, wait till it reaches its destination, or recall a different preset first')
+						return;
+					}
 				}
 
 				let setPstsRaw = self.getVariableValue('SetPsts')
@@ -1179,9 +1203,6 @@ module.exports = function (self) {
 					return;
 				}
 
-				self.setVariableValues({ LastPstID: preset })
-				self.log('debug', 'Recalled Preset: ' + preset)
-
 				// if (self.pstModified) { // if its not saved or its been modified, then send command
 					var runtemp = self.getVariableValue('Pst'+preset+'RunT') || 50
 					var ramptemp = self.getVariableValue('Pst'+preset+'RampT') || 10
@@ -1194,7 +1215,7 @@ module.exports = function (self) {
 		},
 		// removePset: {
 		// 	name: 'Remove Preset',
-		// 	options: [ 
+		// 	options: [
 		// 		{
 		// 			type: 'dropdown',
 		// 			id: 'settype',
@@ -1234,7 +1255,7 @@ module.exports = function (self) {
 
 		// 		if (preset < 0) {
 		// 			preset = 0;
-		// 		} else if (preset > 127) { 
+		// 		} else if (preset > 127) {
 		// 			preset = 127;
 		// 		}
 
@@ -1294,7 +1315,7 @@ module.exports = function (self) {
 				let preset = data.options.id
 				if (preset < 0) {
 					preset = 0;
-				} else if (preset > 127) { 
+				} else if (preset > 127) {
 					preset = 127;
 				}
 				if (preset <= 0) {
@@ -1348,7 +1369,7 @@ module.exports = function (self) {
 
 				if (preset < 0) {
 					preset = 0;
-				} else if (preset > 127) { 
+				} else if (preset > 127) {
 					preset = 127;
 				}
 
@@ -1373,7 +1394,7 @@ module.exports = function (self) {
 				self.setVariableValues({ CurrentPstM3Pos: m3pos })
 				self.setVariableValues({ CurrentPstM4Pos: m4pos })
 
-				self.checkFeedbacks("SetPresetSmart")
+				self.checkFeedbacks("SetPreset")
 			}
 		},
 
@@ -2077,7 +2098,7 @@ module.exports = function (self) {
 					type: 'number',
 					label: 'Preset ID',
 					default: 0,
-					min: 0, 
+					min: 0,
 					max: 127,
 					isVisible: (options) => options.smart === 1,
 				},
@@ -2143,7 +2164,7 @@ module.exports = function (self) {
 				var resolvedTiltValue = await self.parseVariablesInString(data.options.tCoords)
 				var resolvedSlideValue = await self.parseVariablesInString(data.options.sCoords)
 				var resolvedZoomValue = await self.parseVariablesInString(data.options.zCoords)
-				
+
 				// find if the variables/preset already exists
 				var exists = false
 				for (const item of variableList) {

@@ -1,6 +1,6 @@
 const { combineRgb } = require('@companion-module/base')
 const { COLORS } = require('./color.js')
-const { 
+const {
 	MOTOR_ID,
 	TN_MOTOR_ID,
 	DIRECTION_ID,
@@ -9,7 +9,7 @@ const {
 	MOTOR_PROFILES_VELOCITIES,
 	PRESET_ID,
 	LOOP_ID,
-	VIRTUAL_BUTTON 
+	VIRTUAL_BUTTON
 } = require('./lists')
 module.exports = async function (self) {
 
@@ -40,6 +40,22 @@ module.exports = async function (self) {
 				}
 			},
 		},
+		MovingStatus: {
+			name: 'Moving Status',
+			type: 'boolean',
+			label: 'Moving Status',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 127, 0),
+				color: combineRgb(0, 0, 0),
+			},
+			options: [],
+			callback: (feedback) => {
+				if (self.getVariableValue('IsMoving')) {
+					return true;
+				}
+				return false;
+			},
+		},
 		SetPreset: {
 			name: 'Set Preset',
 			type: 'boolean',
@@ -50,46 +66,154 @@ module.exports = async function (self) {
 			},
 			options: [
 				{
-					id: 'presetNum',
-					type: 'number',
-					label: 'Preset Number',
-					default: 0,
-					min: 0,
-					max: 128,
+					id: 'settype',
+					type: 'dropdown',
+					label: 'Set Type',
+					default: 'smart',
+					choices: [
+						{ id: 'id', label: 'ID' },
+						{ id: 'smart', label: 'Smart' },
+					],
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'textinput',
+					id: 'id',
+					label: 'Preset ID',
+					default: '0',
+					useVariables: { local: true },
+					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-127) or a variable',
+					isVisible: (options) => options.settype === 'id',
 				},
 			],
-			callback: (feedback) => {
-				var presetStr = 'Pst' + feedback.options.presetNum + 'Stat'
-				// console.log(presetStr);
-				var state = self.getVariableValue(presetStr)
-				if(state) {
-					return true
+			callback: async (feedback) => {
+				let preset;
+				if (feedback.options.settype === 'id') { // Not Smart type
+					// const s = (await self.parseVariablesInString(feedback.options.id)).trim()
+					// preset = Number(s)
+					preset = Number(feedback.options.id)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Feedback SetPreset: Preset must be 0-127; got ${s}`)
+						return;
+					}
 				} else {
-					return false
+					preset = self.getVariableValue('CurrentPstSet')
 				}
+
+				if (self.getVariableValue(`Pst${preset}Stat`)) {
+					return true
+				}
+				return false
 			},
 		},
-		SetPresetSmart: {
-			name: 'Set Preset Smart',
+		CurrentPreset: {
+			name: 'Current Recalled Preset',
 			type: 'boolean',
-			label: 'Channel State',
+			label: 'Current Recalled Preset',
 			defaultStyle: {
 				bgcolor: combineRgb(0, 127, 0),
 				color: combineRgb(0, 0, 0),
 			},
-			options: [],
-			callback: (feedback) => {
-				var presetID = self.getVariableValue('CurrentPstSet')
-
-				var presetStr = 'Pst' + presetID + 'Stat'
-				// console.log(presetStr);
-				var state = self.getVariableValue(presetStr)
-				if(state) {
-					// console.log(presetStr);
-					return true
+			options: [
+				{
+					id: 'settype',
+					type: 'dropdown',
+					label: 'Set Type',
+					default: 'smart',
+					choices: [
+						{ id: 'id', label: 'ID' },
+						{ id: 'smart', label: 'Smart' },
+					],
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'textinput',
+					id: 'id',
+					label: 'Preset ID',
+					default: '0',
+					useVariables: { local: true },
+					regex: '/^(?:([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-127) or a variable',
+					isVisible: (options) => options.settype === 'id',
+				},
+			],
+			callback: async (feedback) => {
+				let preset;
+				if (feedback.options.settype === 'id') { // Not Smart type
+					// const s = (await self.parseVariablesInString(feedback.options.id)).trim()
+					// preset = Number(s)
+					preset = Number(feedback.options.id)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Feedback CurrentPreset: Preset must be 0-127; got ${s}`)
+						return;
+					}
 				} else {
-					return false
+					preset = self.getVariableValue('CurrentPstSet')
 				}
+				if (preset === self.getVariableValue('LastPstID')) {
+					return true;
+				}
+				return false;
+			},
+		},
+		SetLoop: {
+			name: 'Set Loop',
+			type: 'boolean',
+			label: 'Channel State',
+			defaultStyle: {
+				bgcolor: combineRgb(102, 0, 0),
+				color: combineRgb(255, 255, 255),
+			},
+			options: [
+				{
+					id: 'settype',
+					type: 'dropdown',
+					label: 'Set Type',
+					default: 'smart',
+					choices: [
+						{ id: 'id', label: 'ID' },
+						{ id: 'smart', label: 'Smart' },
+					],
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'textinput',
+					id: 'id',
+					label: 'Loop ID',
+					default: '0',
+					useVariables: { local: true },
+					regex: '/^(?:([0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (0-7) or a variable',
+					isVisible: (options) => options.settype === 'id',
+				},
+			],
+			callback: async (feedback) => {
+				let preset;
+				if (feedback.options.settype === 'id') { // Not Smart type
+					// const s = (await self.parseVariablesInString(feedback.options.id)).trim()
+					// preset = Number(s)
+					preset = Number(feedback.options.id)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 127) {
+						self.log('warn', `Feedback SetLoop: Loop must be 0-7; got ${s}`)
+						return;
+					}
+				} else {
+					preset = self.getVariableValue('CurrentPstSet')
+				}
+				let setlps = []
+				try { // convert the "[]" to []
+					setlps = JSON.parse(this.getVariableValue('SetLps')) || []
+				} catch (e) {
+					setlps = []
+				}
+
+				// self.log('warn', 'setlps', setlps)
+
+				if (setlps.includes(String(preset))) {
+					return true
+				}
+				return false
 			},
 		},
 		LoopStatus: {
@@ -104,12 +228,60 @@ module.exports = async function (self) {
 			callback: (feedback) => {
 				var state = self.getVariableValue('LpActive')
 				if(state >= 0) {
-					// feedback.defaultStyle.bgcolor = combineRgb(127, 0, 0)
 					return true
 				} else {
-					// feedback.defaultStyle.bgcolor = combineRgb(0, 127, 0)
 					return false
 				}
+			},
+		},
+		CurrentLooping: {
+			name: 'Current Looping',
+			type: 'boolean',
+			label: 'Current Looping',
+			defaultStyle: {
+				bgcolor: COLORS.MEDIUM_GREEN,
+				color: COLORS.BLACK,
+			},
+			options: [
+				{
+					id: 'settype',
+					type: 'dropdown',
+					label: 'Set Type',
+					default: 'smart',
+					choices: [
+						{ id: 'id', label: 'ID' },
+						{ id: 'smart', label: 'Smart' },
+					],
+					tooltip: 'Smart: The current preset selected\nPreset: Select a specific preset to change',
+				},
+				{
+					type: 'textinput',
+					id: 'id',
+					label: 'Preset ID',
+					default: '0',
+					useVariables: { local: true },
+					regex: '/^(?:([0-7])|\\$\\([^)]*\\))$/',
+					tooltip: 'Enter a number (-1 -> 7) or a variable',
+					isVisible: (options) => options.settype === 'id',
+				},
+			],
+			callback: async (feedback) => {
+				let preset;
+				if (feedback.options.settype === 'id') { // Not Smart type
+					// const s = (await self.parseVariablesInString(feedback.options.id)).trim()
+					// preset = Number(s)
+					preset = Number(feedback.options.id)
+					if (!Number.isFinite(preset) || preset < 0 || preset > 7) {
+						self.log('warn', `Feedback CurrentLooping: Preset must be -1 -> 7; got ${s}`)
+						return;
+					}
+				} else {
+					preset = self.getVariableValue('CurrentLpSet')
+				}
+				if (self.getVariableValue('LpActive') === preset) {
+					return true;
+				}
+				return false;
 			},
 		},
 		StopAStatus: {
@@ -151,7 +323,7 @@ module.exports = async function (self) {
 				} else if (feedback.options.id_mot == 9) {
 					state = self.getVariableValue('RSFocusStopA')
 				}
-				
+
 				if(state == 1) {
 					// feedback.defaultStyle.bgcolor = combineRgb(127, 0, 0)
 					return true
@@ -200,7 +372,7 @@ module.exports = async function (self) {
 				} else if (feedback.options.id_mot == 9) {
 					state = self.getVariableValue('RSFocusStopB')
 				}
-				
+
 				if(state == 1) {
 					// feedback.defaultStyle.bgcolor = combineRgb(127, 0, 0)
 					return true
@@ -321,13 +493,9 @@ module.exports = async function (self) {
 		// CurrentAxisSpeed: {
 			//Can we use a feedback to dynamically change the Current Axis Speed Text
 		// }
-		
 	})
 }
 
-
-	// const { COLORS } = require('./colors.js')
-// import { COLORS } from './colors.js'	
 
 // heldFeedback: {
 		// 	type: 'boolean',

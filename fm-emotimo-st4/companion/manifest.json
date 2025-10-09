@@ -20,7 +20,7 @@
 		"entrypoint": "../main.js"
 	},
 	"legacyIds": ["fm-Emotimo-ST4"],
-	"manufacturer": "fm-eMotimo",
-	"products": ["ST4", "ST4.3", "SA2.6"],
+	"manufacturer": "FM",
+	"products": ["eMotimo ST4"],
 	"keywords": []
 }

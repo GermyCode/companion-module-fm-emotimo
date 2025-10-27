@@ -4675,6 +4675,7 @@ module.exports = {
 				name: `Loop ${inc} Recall`,
 				style: {
 					text: `Loop ${inc}\\nRecall`,
+					size: 18,
 					color: COLORS.WHITE, //COLORS.GRAY,
 					bgcolor: COLORS.DARK_RED,
 				},
@@ -4773,6 +4774,7 @@ module.exports = {
 				name: `Preset ${inc} Recall`,
 				style: {
 					text: `Preset\\nRecall\\n${inc}`,
+					size: 18,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
 				},
@@ -4893,6 +4895,7 @@ module.exports = {
 				name: `Preset ${inc} Recall`,
 				style: {
 					text: `Preset\\nRecall\\n${inc}`,
+					size: 18,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
 				},
@@ -5013,6 +5016,7 @@ module.exports = {
 				name: `Preset ${inc} Recall`,
 				style: {
 					text: `Preset\\nRecall\\n${inc}`,
+					size: 18,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
 				},
@@ -5137,6 +5141,7 @@ module.exports = {
 				name: `Loop ${inc} Recall`,
 				style: {
 					text: `Loop ${inc}\\nRecall`,
+					size: 18,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
 				},
@@ -5224,6 +5229,7 @@ module.exports = {
 				name: `Preset ${inc} Recall`,
 				style: {
 					text: `Preset\\nRecall\\n${inc}`,
+					size: 18,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
 				},
@@ -5328,6 +5334,7 @@ module.exports = {
 				name: `Preset ${inc} Recall`,
 				style: {
 					text: `Preset\\nRecall\\n${inc}`,
+					size: 18,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
 				},
@@ -5432,6 +5439,7 @@ module.exports = {
 				name: `Preset ${inc} Recall`,
 				style: {
 					text: `Preset\\nRecall\\n${inc}`,
+					size: 18,
 					color: COLORS.WHITE,
 					bgcolor: COLORS.DARK_RED,
 				},

@@ -1069,13 +1069,14 @@ module.exports = function (self) {
 			],
 			callback: async (data) => {
 				self.log('info', 'Action Triggered: setMotorProfile')
+				let profile = data.options.prodileid
 				if (data.options.lockout) {
-					if (self.getVariableValue('IsMoving') || self.getVariableValue('CurrentMtrProf') === data.options.prodileid) {
+					if (self.getVariableValue('IsMoving') || profile === MOTOR_PROFILES.find((i) => i.label === self.getVariableValue('CurrentMtrProf')).id) {
 						self.log('warn', 'Lockout Initiated, wait till it reaches its destination, or recall a different profile first')
 						return;
 					}
 				}
-				self.sendEmotimoAPICommand('G102 P' + data.options.prodileid)
+				self.sendEmotimoAPICommand('G102 P' + profile)
 			}
 		},
 
@@ -1395,6 +1396,7 @@ module.exports = function (self) {
 				self.setVariableValues({ CurrentPstM4Pos: m4pos })
 
 				self.checkFeedbacks("SetPreset")
+				self.checkFeedbacks("CurrentPreset")
 			}
 		},
 

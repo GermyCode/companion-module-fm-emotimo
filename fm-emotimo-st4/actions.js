@@ -200,12 +200,14 @@ makeNewLoop = function(self, id) {
 	LOOP_ID.push({ id: id, label: `Lp${id}` })
 	self.updateActions()
 
-	variableList.push({ name: `Loop${id}RunT`, variableId: `Lp${id}RunT` })
-	variableList.push({ name: `Loop${id}RampT`, variableId: `Lp${id}RampT` })
-	variableList.push({ name: `Loop${id}APoint`, variableId: `Lp${id}APoint` })
-	variableList.push({ name: `Loop${id}BPoint`, variableId: `Lp${id}BPoint` })
-	variableList.push({ name: `Loop${id}DwellA`, variableId: `Lp${id}DwellA` })
-	variableList.push({ name: `Loop${id}DwellB`, variableId: `Lp${id}DwellB` })
+	self.ensureVariableDefinitions([
+		{ name: `Loop${id}RunT`, variableId: `Lp${id}RunT` },
+		{ name: `Loop${id}RampT`, variableId: `Lp${id}RampT` },
+		{ name: `Loop${id}APoint`, variableId: `Lp${id}APoint` },
+		{ name: `Loop${id}BPoint`, variableId: `Lp${id}BPoint` },
+		{ name: `Loop${id}DwellA`, variableId: `Lp${id}DwellA` },
+		{ name: `Loop${id}DwellB`, variableId: `Lp${id}DwellB` },
+	]);
 
 	self.setVariableDefinitions(variableList)
 
@@ -222,13 +224,15 @@ makeNewPreset = function(self, id) {
 	PRESET_ID.push({ id: id, label: `Pst${id}` })
 	self.updateActions()
 
-	variableList.push({ name: `Preset${id}RunT`, variableId: `Pst${id}RunT` })
-	variableList.push({ name: `Preset${id}RampT`, variableId: `Pst${id}RampT` })
-	variableList.push({ name: `Preset${id}Status`, variableId: `Pst${id}Stat` })
-	variableList.push({ name: `Preset${id}PanPos`, variableId: `Pst${id}PanPos` })
-	variableList.push({ name: `Preset${id}TiltPos`, variableId: `Pst${id}TiltPos` })
-	variableList.push({ name: `Preset${id}M3Pos`, variableId: `Pst${id}M3Pos` })
-	variableList.push({ name: `Preset${id}M4Pos`, variableId: `Pst${id}M4Pos` })
+	self.ensureVariableDefinitions([
+		{ name: `Preset${id}RunT`, variableId: `Pst${id}RunT` },
+		{ name: `Preset${id}RampT`, variableId: `Pst${id}RampT` },
+		{ name: `Preset${id}Status`, variableId: `Pst${id}Stat` },
+		{ name: `Preset${id}PanPos`, variableId: `Pst${id}PanPos` },
+		{ name: `Preset${id}TiltPos`, variableId: `Pst${id}TiltPos` },
+		{ name: `Preset${id}M3Pos`, variableId: `Pst${id}M3Pos` },
+		{ name: `Preset${id}M4Pos`, variableId: `Pst${id}M4Pos` },
+	]);
 
 	self.setVariableDefinitions(variableList)
 
@@ -327,7 +331,7 @@ module.exports = function (self) {
 				} else {
 					var motor_id = self.getVariableValue('CurrentMtrSet')
 				}
-				self.sendEmotimoAPICommand('G300 M' + motor_id + ' V0')
+				self.stopMotorJog(motor_id);
 			},
 		},
 		setJogSpeedLimit: {
@@ -502,7 +506,7 @@ module.exports = function (self) {
 					self.setVariableValues({ FocusCruiseSpeed: 0 })
 				}
 
-				self.sendEmotimoAPICommand('G301 M' + data.options.id + ' V0')
+				self.stopMotorJog(data.options.id);
 			}
 		},
 
@@ -595,11 +599,11 @@ module.exports = function (self) {
 					increment = self.getVariableValue('TStep')
 					cmdParam = 'Y'
 				} else if (data.options.id == 3) {
-					temp = self.getVariableValue('SPos')
+					temp = self.getVariableValue('M3Pos')
 					increment = self.getVariableValue('SStep')
 					cmdParam = 'Z'
 				} else if (data.options.id == 4) {
-					temp = self.getVariableValue('MPos')
+					temp = self.getVariableValue('M4Pos')
 					increment = self.getVariableValue('MStep')
 					cmdParam = 'W'
 				} else if (data.options.id == 5) {
@@ -628,9 +632,9 @@ module.exports = function (self) {
 				} else if (data.options.id == 2) {
 					self.setVariableValues({ TPos: temp })
 				} else if (data.options.id == 3) {
-					self.setVariableValues({ SPos: temp })
+					self.setVariableValues({ M3Pos: temp })
 				} else if (data.options.id == 4) {
-					self.setVariableValues({ MPos: temp })
+					self.setVariableValues({ M4Pos: temp })
 				} else if (data.options.id == 5) {
 					self.setVariableValues({ FPos: temp })
 				} else if (data.options.id == 6) {
@@ -738,9 +742,8 @@ module.exports = function (self) {
 			name: 'Stop All Motors',
 			options: [],
 			callback: async () => {
-				self.log('info', 'Action Triggered: stopMotors')
-				self.setVariableValues({ 'LastPstID': -1 })
-				self.sendEmotimoAPICommand('G911')
+				self.log('info', 'Action Triggered: stopMotors');
+				self.stopAllMotors();
 			},
 		},
 
@@ -2030,9 +2033,23 @@ module.exports = function (self) {
 						self.sendEmotimoAPICommand(`G25 L${preset} A${lpAPt} B${lpBPt} T${(Number(runtemp) / 10)} R${(Number(ramptemp) / 10)} C${dwellA} D${dwellB}`);
 						// self.lpModified = false
 					// }
-					setTimeout(() => self.sendEmotimoAPICommand(`G24 L${preset}`), 100);
+					const generation = self.motionGeneration;
+					const sessionSocket = self.socket;
+
+					setTimeout(() => {
+						if (
+							self._destroyed ||
+							self.motionGeneration !== generation ||
+							self.socket !== sessionSocket ||
+							!sessionSocket?.isConnected
+						) {
+							return;
+						}
+
+						self.sendEmotimoAPICommand(`G24 L${preset}`);
+					}, 100);
 				} else { // loop active, to stop it
-					self.sendEmotimoAPICommand('G24')
+					self.stopLoop();
 				}
 			}
 		},
@@ -2167,29 +2184,8 @@ module.exports = function (self) {
 				var resolvedSlideValue = await self.parseVariablesInString(data.options.sCoords)
 				var resolvedZoomValue = await self.parseVariablesInString(data.options.zCoords)
 
-				// find if the variables/preset already exists
-				var exists = false
-				for (const item of variableList) {
-					if (item.variableId === `Pst${preset}Stat`) {
-						exists = true
-						break
-					}
-				}
-				if (!exists) {
-					self.log('debug', `Preset ${preset} does not exist yet. Adding now`)
-
-					PRESET_ID.push({ id: preset, label: `Pst${preset}` })
-					self.updateActions()
-
-					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` })
-					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` })
-					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` })
-					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` })
-					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` })
-					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` })
-					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` })
-
-					self.setVariableDefinitions(variableList)
+				if (!variableList.some(item => item.variableId === `Pst${preset}Stat`)) {
+					makeNewPreset(self, preset);
 				}
 
 				// G21 needs all axis to have a value in order to store a custom location
@@ -2198,7 +2194,7 @@ module.exports = function (self) {
 
 				// Pan
 				if (!resolvedPanValue) { // if blank, get the current position instead
-					resolvedPanValue = self.getVariableValue('MPos')
+					resolvedPanValue = self.getVariableValue('PPos')
 				}
 				cmd += ' X' + resolvedPanValue
 				if (preset === self.getVariableValue('CurrentPstSet')) {
@@ -2208,7 +2204,7 @@ module.exports = function (self) {
 				}
 				// Tilt
 				if (!resolvedTiltValue) { // if blank, get the current position instead
-					resolvedTiltValue = self.getVariableValue('MPos')
+					resolvedTiltValue = self.getVariableValue('TPos')
 				}
 				cmd += ' Y' + resolvedTiltValue
 				if (preset === self.getVariableValue('CurrentPstSet')) {
@@ -2218,7 +2214,7 @@ module.exports = function (self) {
 				}
 				// Slide
 				if (!resolvedSlideValue) { // if blank, get the current position instead
-					resolvedSlideValue = self.getVariableValue('MPos')
+					resolvedSlideValue = self.getVariableValue('M3Pos')
 				}
 				cmd += ' Z' + resolvedSlideValue
 				if (preset === self.getVariableValue('CurrentPstSet')) {
@@ -2228,7 +2224,7 @@ module.exports = function (self) {
 				}
 				//Zoom
 				if (!resolvedZoomValue) { // if blank, get the current position instead
-					resolvedZoomValue = self.getVariableValue('MPos')
+					resolvedZoomValue = self.getVariableValue('M4Pos')
 				}
 				cmd += ' W' + resolvedZoomValue
 				if (preset === self.getVariableValue('CurrentPstSet')) {
@@ -2252,7 +2248,7 @@ module.exports = function (self) {
 				}
 				cmd2 += ' A' + resolvedRampValue / 10
 				if (preset === self.getVariableValue('CurrentPstSet')) {
-					self.setVariableValues({ CurrentPstRun: resolvedRampValue })
+					self.setVariableValues({ CurrentPstRamp: resolvedRampValue })
 				} else {
 					self.setVariableValues({ [`Pst${preset}RampT`]: resolvedRampValue })
 				}
@@ -2329,14 +2325,14 @@ module.exports = function (self) {
 				// Slide
 				if (resolvedSlideValue) { // if not blank, do things
 					self.log('debug', `Setting motor M3 to position ${resolvedSlideValue}`)
-					self.setVariableValues({ 'SPos': resolvedSlideValue })
+					self.setVariableValues({ 'M3Pos': resolvedSlideValue })
 					self.sendEmotimoAPICommand(`G200 M3 P${resolvedSlideValue}`)
 					await wait(200) // waits 200ms before continuing
 				}
 				//Zoom
 				if (resolvedZoomValue) { // if not blank, do things
 					self.log('debug', `Setting motor M4 to position ${resolvedZoomValue}`)
-					self.setVariableValues({ 'MPos': resolvedZoomValue })
+					self.setVariableValues({ 'M4Pos': resolvedZoomValue })
 					self.sendEmotimoAPICommand(`G200 M4 P${resolvedZoomValue}`)
 					await wait(200) // waits 200ms before continuing
 				}

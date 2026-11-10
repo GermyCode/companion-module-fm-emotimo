@@ -10,8 +10,7 @@ module.exports = {
 				id: 'info',
 				width: 12,
 				label: 'Information',
-				value:
-					"This module controls the ST4, ST4.3 and SA2.6",
+				value: 'Controls Spectrum ST4, ST4.3, Studio, and SA2.6 Conductor over TCP.',
 			},
 			{
 				type: 'textinput',
@@ -27,16 +26,6 @@ module.exports = {
 				width: 4,
 				default: 5000,
 				regex: Regex.PORT,
-			},
-			{
-				type: 'dropdown',
-				id: 'prot',
-				label: 'Connect with TCP / UDP',
-				default: 'tcp',
-				choices: [
-					{ id: 'tcp', label: 'TCP' },
-					{ id: 'udp', label: 'UDP' },
-				],
 			},
 			{
 				type: 'dropdown',
@@ -57,7 +46,7 @@ module.exports = {
 			{
 				type: 'checkbox',
 				id: 'fetch',
-				label: 'Gets Presets, Motor performance, ect. on startup',
+				label: 'Fetch Presets, Motor Performance, and Virtual Stops on Connect',
 				width: 10,
 				default: true,
 			},
@@ -66,31 +55,36 @@ module.exports = {
 				id: 'startupPstAmountInfo',
 				width: 12,
 				label: 'Startup Preset Fetch',
-				value: 'Fetches the first X presets on startup. If the positions are all 0, then it doesn\'t store it. Set to 0 to not request presets.',
+				value: 'Requests the first X preset IDs. Set to 0 to skip preset requests. Presets with default values may not appear until saved.',
 				isVisible: (config) => !!config.fetch
 			},
 			{
-				type: 'textinput',
+				type: 'number',
 				id: 'startupPstAmount',
-				label: 'Preset Fetch amount',
+				label: 'Presets to Fetch',
 				width: 4,
 				default: 15,
-				isVisible: (config) => !!config.fetch
+				min: 0,
+				max: 128,
+				step: 1,
+				isVisible: (config) => !!config.fetch,
 			},
 			{
 				type: 'static-text',
 				id: 'intervalInfo',
 				width: 12,
 				label: 'Update Interval',
-				value:
-					'Please enter the amount of time in milliseconds to request new information from the device. Set to 0 to disable. Recomended 2000ms to get acurate positions without overloading.',
+				value: 'Requests updated motor positions at the specified interval. Default: 5000 ms. Use 2000 ms for more frequent updates. Set to 0 to disable position polling; connection keepalive remains active.',
 			},
 			{
-				type: 'textinput',
+				type: 'number',
 				id: 'interval',
-				label: 'Update Interval',
-				width: 3,
+				label: 'Position Polling Interval (ms)',
+				width: 4,
 				default: 5000,
+				min: 0,
+				max: 60000,
+				step: 500,
 			},
 
 			// ########################

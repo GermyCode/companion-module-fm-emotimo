@@ -19,6 +19,7 @@ const {
 const presets = require('./presets');
 
 const config = require('./config');
+const { QUERY_CAPABILITIES } = require('./models');
 
 class eMotimoModuleInstance extends InstanceBase {
 	constructor(internal) {
@@ -34,7 +35,22 @@ class eMotimoModuleInstance extends InstanceBase {
 		});
 
 		this.commandQueue = [];
+		this.backgroundQueue = [];
 		this.commandInFlight = false;
+		this.commandTimer = null;
+		this._destroyed = false;
+		this._startupTimer = null;
+
+		this.motorVelocityModes = new Map();
+		this.motionGeneration = 0;
+
+		this.keepAliveInterval = null;
+		this.positionPollInterval = null;
+		this.keepAliveMs = 10000;
+
+		this.responseBuffer = '';
+		this.responseFlushTimer = null;
+		this.responseIdleMs = 250;
 		this.sendDelayMs = 100;
 		this.recentList = [''];
 		this.keepRecentAmmount = 5 // 0-4 = 5 Total
@@ -54,27 +70,57 @@ class eMotimoModuleInstance extends InstanceBase {
 	}
 	// When module gets deleted
 	async destroy() {
-		this.log('debug', 'destroy');
+		this.log('debug', 'Destroying eMotimo module');
+
+		this._destroyed = true;
+		this._cleanupSocket();
 	}
 
 	async configUpdated(config) {
 		this.log('debug', "Config Updated");
 
-		if (this.socket) {
-			this.socket.destroy();
-			delete this.socket
-		}
+		if (this._destroyed) return;
+
+		this._cleanupSocket();
 
 		this.config = config
 
-		this.config.host = this.config.host || '';
-		this.config.port = this.config.port || 5000;
+		this.config.host = String(this.config.host ?? '').trim();
+
+		const port = Number(this.config.port);
+
+		this.config.port =
+			Number.isInteger(port) &&
+			port >= 1 &&
+			port <= 65535 ? port : 5000;
+
 		this.config.model = this.config.model || 'Spectrum ST4';
-		this.config.startupPstAmount = this.config.startupPstAmount || 30;
-		this.config.interval = this.config.interval || 5000;
+
+		const rawPresetCount = this.config.startupPstAmount;
+		const parsedPresetCount = Number(rawPresetCount);
+
+		this.config.startupPstAmount =
+			rawPresetCount == null ||
+			rawPresetCount === '' ||
+			!Number.isFinite(parsedPresetCount) ? 15 : Math.max(0, Math.min(128, Math.trunc(parsedPresetCount)));
+
+		const rawInterval = this.config.interval;
+		const parsedInterval = Number(rawInterval);
+
+		this.config.interval =
+			rawInterval == null ||
+			rawInterval === '' ||
+			!Number.isFinite(parsedInterval) ||
+			parsedInterval < 0 ? 5000 : parsedInterval === 0 ? 0 : Math.min(60000, Math.max(500, Math.trunc(parsedInterval)));
+
 		this.config.prot = 'tcp';
-		this.fetchStat = false;
-		this.motorCount = this.config.model === 'Spectrum ST4' ? 4 : 0; this.log('err' , 'Error getting motor count'); //(this.config.model === 'Spectrum ST4.3') ? 6 : (this.config.model === 'SA2.6 Conductor') ? 9 :
+
+		const capabilities =
+			QUERY_CAPABILITIES[this.config.model] ??
+			QUERY_CAPABILITIES.Other;
+
+		this.performanceQueryIds = [...capabilities.performance];
+		this.stopQueryIds = [...capabilities.stops];
 
 		this.customPanName = this.config.customNamePan || 'Pan';
 		this.customTiltName = this.config.customNameTilt || 'Tilt';
@@ -89,9 +135,6 @@ class eMotimoModuleInstance extends InstanceBase {
 
 		this.init_emotimo_variables();
 		this.initPresets();
-
-		// Give socket time to establish
-		if (config.fetch) setTimeout(() => this.fetchStartup(), (this.config.interval));
 	}
 
 	updateActions() {
@@ -104,10 +147,34 @@ class eMotimoModuleInstance extends InstanceBase {
 
 	updateVariableDefinitions() {
 		UpdateVariableDefinitions(this);
+		this._variableDefinitionsCount = variableList.length;
+	}
+
+	ensureVariableDefinitions(definitions) {
+		for (const definition of definitions) {
+			const exists = variableList.some(
+				item => item.variableId === definition.variableId
+			);
+
+			if (!exists) {
+				variableList.push(definition);
+			}
+		}
+
+		// Only publish the definitions if this instance
+		// hasn't already registered the current list.
+		if (this._variableDefinitionsCount !== variableList.length) {
+			this.setVariableDefinitions(variableList);
+			this._variableDefinitionsCount = variableList.length;
+		}
 	}
 
 	// DONT ADD \n OR ANY ENDING CRLF TO END, IT WILL BE HANDELED AUTOMATICALLY
 	sendEmotimoAPICommand = function (str, addToFront = false) {
+		if (!this.socket?.isConnected) {
+			this.log('warn', `Command dropped: not connected (${str})`);
+			return;
+		}
 		if (addToFront) {
 			// add to front, index 0
 			this.commandQueue.unshift(str);
@@ -122,17 +189,53 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.processQueue();
 	}
 
-	async processQueue() {
-		if (this.commandInFlight) return;           // one already in flight
-		if (this.commandQueue.length === 0) return; // nothing waiting
+	queueBackgroundQuery(command) {
+		if (this._destroyed || !this.socket?.isConnected) {
+			return false;
+		}
 
-		this.log('debug', `Command queue: ${this.commandQueue}  //  Recent Sent: ${this.recentList}`);
+		// Avoid duplicate outstanding queries
+		if (
+			this.commandQueue.includes(command) ||
+			this.backgroundQueue.includes(command)
+		) {
+			return true;
+		}
 
-		const cmd = this.commandQueue.shift(); // returns and removes the first item in the list, index 0
+		this.backgroundQueue.push(command);
+		this.processQueue();
+
+		return true;
+	}
+
+	processQueue() {
+		if (this.commandInFlight) return;
+		if (
+			this.commandQueue.length === 0 &&
+			this.backgroundQueue.length === 0
+		) return;
+
+		if (!this.socket?.isConnected) {
+			this.commandQueue = [];
+			this.backgroundQueue = [];
+			return;
+		}
+
+		const cmd = this.commandQueue.length > 0
+			? this.commandQueue.shift()
+			: this.backgroundQueue.shift();
+
 		this.commandInFlight = true;
 
-		// actually send it
-		this._sendNow(cmd);
+		try {
+			this._sendNow(cmd);
+		} finally {
+			this.commandTimer = setTimeout(() => {
+				this.commandTimer = null;
+				this.commandInFlight = false;
+				this.processQueue();
+			}, this.sendDelayMs);
+		}
 	}
 
 	_sendNow = function (str) {
@@ -147,26 +250,128 @@ class eMotimoModuleInstance extends InstanceBase {
 
 		this.log('debug', 'sending to ' + this.config.host + ': ' + sendBuf.toString());
 
-		if (this.socket !== undefined && this.socket.isConnected) {
-			try {
-				this.socket.send(sendBuf);
-			} catch (err) {
-				this.log('error', `Send failed: ${err.message}`);
-				this.commandInFlight = false;
+		if (!this.socket?.isConnected) {
+			this.log('warn', 'Cannot send: socket disconnected');
+			return false;
+		}
+
+		try {
+			const sent = this.socket.send(sendBuf);
+
+			if (sent === false) {
+				this.log('warn', `Command not sent: ${str}`);
+				return false;
 			}
-		} else {
-			this.log('error', 'Module: Socket not connected :(');
-			this.commandInFlight = false; // free up if failed
+
+			// Track successfully submitted velocity commands
+			const match = str.trim().match(
+				/^(G30[01])\s+M(\d+)\s+V(-?\d+(?:\.\d+)?)$/i
+			);
+
+			if (match) {
+				const mode = match[1].toUpperCase();
+				const motorId = Number(match[2]);
+				const velocity = Number(match[3]);
+
+				if (velocity === 0) {
+					this.motorVelocityModes.delete(motorId);
+				} else {
+					this.motorVelocityModes.set(motorId, mode);
+				}
+			} else if (str.trim().toUpperCase() === 'G911') {
+				this.motorVelocityModes.clear();
+			}
+
+			return true;
+		} catch (err) {
+			this.log('error', `Send failed: ${err.message}`);
+			return false;
 		}
 	};
 
-	init_tcp() {
-		this.log('debug', "Init TCP");
-		// if theres a socket already connected, remove it
-		if (this.socket) {
-			this.socket.destroy();
-			delete this.socket
+	stopAllMotors() {
+		// Invalidate any delayed movement actions
+		this.motionGeneration++;
+
+		// Cancel the current queue timer
+		if (this.commandTimer) {
+			clearTimeout(this.commandTimer);
+			this.commandTimer = null;
 		}
+
+		// Discard all commands waiting to be sent
+		this.commandQueue = [];
+		this.backgroundQueue = [];
+		this.commandInFlight = false;
+		this.recentList = [''];
+
+		// Send the stop immediately, outside the normal queue
+		const sent = this._sendNow('G911');
+
+		if (!sent) {
+			this.log('error', 'Emergency stop could not be sent: TCP unavailable');
+		}
+
+		return sent;
+	}
+
+	stopMotorJog(motorId) {
+		const id = Number(motorId);
+
+		if (
+			!Number.isInteger(id) ||
+			!MOTOR_ID.some(m => Number(m.id) === id)
+		) {
+			this.log('error', `Invalid motor ID for stop: ${motorId}`);
+			return false;
+		}
+
+		// Cancel delayed movement starts
+		this.motionGeneration++;
+
+		// Remove pending velocity commands for this motor
+		this.commandQueue = this.commandQueue.filter(command => {
+			const match = command.trim().match(
+				/^G30[01]\s+M(\d+)\s+V/i
+			);
+
+			return !match || Number(match[1]) !== id;
+		});
+
+		if (!this.socket?.isConnected) {
+			this.log('error', `Cannot stop motor ${id}: TCP unavailable`);
+			return false;
+		}
+
+		// Use the velocity mode last sent to this motor
+		const mode = this.motorVelocityModes.get(id);
+
+		if (mode) {
+			return this._sendNow(`${mode} M${id} V0`);
+		}
+
+		// Unknown mode: issue both documented zero-velocity forms
+		const stop300 = this._sendNow(`G300 M${id} V0`);
+		const stop301 = this._sendNow(`G301 M${id} V0`);
+
+		return stop300 && stop301;
+	}
+
+	stopLoop() {
+		// Invalidate delayed loop-start commands
+		this.motionGeneration++;
+
+		// Remove queued loop-start commands
+		this.commandQueue = this.commandQueue.filter(command =>
+			!/^G24\s+L\d+/i.test(command.trim())
+		);
+
+		// G24 without a loop ID exits looping mode
+		return this._sendNow('G24');
+	}
+
+	init_tcp() {
+		this.log('debug', 'Initializing TCP connection');
 
 		this.updateStatus(InstanceStatus.Connecting);
 
@@ -176,27 +381,52 @@ class eMotimoModuleInstance extends InstanceBase {
 			return;
 		}
 		this.log('debug', "Opening TCP:" + this.config.host.toString() + ":" + this.config.port.toString());
-		this.socket = new TCPHelper(this.config.host, this.config.port);
-		if (this.config.host == '') {
-			this.socket.isConnected == false;
-		}
+		const socket = new TCPHelper(this.config.host, this.config.port);
+		this.socket = socket;
 
-		this.socket.on('status_change', (status, message) => {
+		socket.on('connect', () => {
+			if (this._destroyed || this.socket !== socket) return;
+
+			this.log('info', 'TCP connection established');
+
+			// Begin each TCP session with a clean command state
+			this._resetTransportState();
+
+			// Keep the controller's API session alive
+			this._sendNow('G999');
+
+			// Refresh device information on every successful TCP connection
+			this._scheduleStartupFetch(socket);
+		});
+
+		socket.on('status_change', (status, message) => {
+			if (this._destroyed || this.socket !== socket) return;
+
 			this.updateStatus(status, message);
+
+			if (
+				status !== InstanceStatus.Ok &&
+				status !== InstanceStatus.Connecting
+			) {
+				this._resetTransportState();
+			}
 		});
 
-		this.socket.on('error', (err) => {
-			this.updateStatus(InstanceStatus.ConnectionFailure, err.message);
-			this.log('error', 'Module: Network error: ' + err.message);
-			// restart the whole module
-			this._onDead('Network error: ' + err.message);
+		socket.on('error', (err) => {
+			if (this._destroyed || this.socket !== socket) return;
+
+			this.log('warn', `TCP connection error: ${err.message}`);
+
+			// Reset commands, but DO NOT destroy TCPHelper
+			this._resetTransportState();
 		});
 
-		this.socket.on('close', (res) => {
-			this.updateStatus(InstanceStatus.ConnectionFailure, res.message);
-			this.log('error', 'Module: Network error: ' + res.message);
-			// restart the whole module
-			this._onDead('Connection closed by emotimo: ' + res.message);
+		socket.on('end', () => {
+			if (this._destroyed || this.socket !== socket) return;
+
+			this.log('warn', 'TCP connection ended');
+
+			this._resetTransportState();
 		});
 
 		/*
@@ -204,16 +434,8 @@ class eMotimoModuleInstance extends InstanceBase {
 		if the save response config is enabled then it saves the response as a variable in companion
 		then send the data recieved to get delt with
 		*/
-		this.socket.on('data', (data) => {
-			this.log('debug', 'Response: ' + data.toString());
-			// This is for if any reason we send a G500 and the response is not the normal response for a G500, the module wont wait for a proper response and eventually restart itself
-			if (data.toString().split(':')[0].trim() != 'Positions' && this.recentList[0] === 'G500') {
-				if (this.pending) {
-					this.log('warn', 'got a response, eventhough it might not be a response from a G500, but we got a response');
-					this.pending = false;
-					this.updateStatus(InstanceStatus.Ok, 'Connection Active');
-				}
-			}
+		socket.on('data', (data) => {
+			if (this._destroyed || this.socket !== socket) return;
 
 			if (this.config.saveresponse) {
 				let dataResponse = data
@@ -226,78 +448,255 @@ class eMotimoModuleInstance extends InstanceBase {
 
 				this.setVariableValues({ tcp_response: dataResponse });
 			}
-			// command queue processing
-			setTimeout(() => {
-				this.commandInFlight = false;
-				this.processQueue(); // send next
-			}, this.sendDelayMs);
-			// TCP Parsing Here
-			this.handleTCPResponse(data);
+
+			// Buffer incoming TCP data before parsing
+			this._handleTCPChunk(data, socket);
 		});
 
-		// if there is still a heartbeat going, remove it
-		if (this.heartbeatInterval) {
-			clearInterval(this.heartbeatInterval);
+		// Remove any previous communication timers
+		if (this.keepAliveInterval) {
+			clearInterval(this.keepAliveInterval);
 		}
 
-		// this._markRx(); // mark the last response date
-		this.pending = false // not currently waiting on a response
+		if (this.positionPollInterval) {
+			clearInterval(this.positionPollInterval);
+		}
 
-		// initialize new heartbeat
-		this.heartbeatInterval = setInterval(() => {
-			if (!this.socket?.isConnected) { // if the socket is not connected
-				this.log('error', 'Module: Socket not connected for heartbeat :(');
+		// Dedicated API keepalive - independent of command queue
+		this.keepAliveInterval = setInterval(() => {
+			if (
+				this._destroyed ||
+				this.socket !== socket ||
+				!socket.isConnected
+			) {
 				return;
 			}
-			if (this.retryCount > 5) {
-				this.retryCount = 0;
-				this._onDead('Retry cap reached');
+
+			this._sendNow('G999');
+		}, this.keepAliveMs);
+
+		// Independent motor position polling
+		const pollMs = Number(this.config.interval);
+
+		if (Number.isFinite(pollMs) && pollMs > 0) {
+			this.positionPollInterval = setInterval(() => {
+				if (
+					this._destroyed ||
+					this.socket !== socket ||
+					!socket.isConnected
+				) {
+					return;
+				}
+
+				// Don't add another G500 if one is already queued
+				if (this.commandQueue.includes('G500')) return;
+
+				this.sendEmotimoAPICommand('G500');
+
+			}, pollMs);
+		}
+
+		this.log('debug', 'Keepalive and position polling initialized');
+	}
+
+	_scheduleStartupFetch(socket) {
+		// Replace any previous scheduled fetch
+		if (this._startupTimer) {
+			clearTimeout(this._startupTimer);
+			this._startupTimer = null;
+		}
+
+		this._startupTimer = setTimeout(() => {
+			this._startupTimer = null;
+
+			// Don't fetch using an old or disconnected socket
+			if (
+				this._destroyed ||
+				this.socket !== socket ||
+				!socket.isConnected
+			) {
 				return;
 			}
-			if (this.pending) { // if were already waiting on a response dont send another
-				this.log('debug', 'Already waiting on a heartbeat response');
-				this.updateStatus(InstanceStatus.Connecting, 'Lost connection, trying to reconnect');
-				this.retryCount++;
-				return;
+
+			// Refresh current positions even if startup fetching is disabled
+			this.sendEmotimoAPICommand('G500', true);
+
+			// Additional read-only startup queries
+			if (this.config.fetch) {
+				this.fetchStartup(socket);
 			}
-			if (this.fetchStat) return;
-			this.pending = true;
-			const cmd = 'G500';
-			this.sendEmotimoAPICommand(cmd, true);
-			this.retryCount = 0;
-		}, this.config.interval);
-		this.log('debug', "Heartbeat Initialized");
+
+		}, 500);
+	}
+
+	_handleTCPChunk(chunk, socket) {
+		// Cancel any pending idle flush
+		if (this.responseFlushTimer) {
+			clearTimeout(this.responseFlushTimer);
+			this.responseFlushTimer = null;
+		}
+
+		// Append new data to whatever was left from before
+		this.responseBuffer += chunk.toString('latin1');
+
+		// Extract complete CR, LF, or CRLF-terminated lines
+		const lines = this.responseBuffer.split(/\r\n|\r|\n/);
+
+		// The last element may be an incomplete response
+		this.responseBuffer = lines.pop() || '';
+
+		// Process each complete response separately
+		for (const line of lines) {
+			this._handleTCPLine(line);
+		}
+
+		// Prevent an invalid or endless response from growing forever
+		if (this.responseBuffer.length > 16384) {
+			this.log('warn', 'TCP response buffer exceeded 16 KB; discarding');
+			this.responseBuffer = '';
+			return;
+		}
+
+		// Compatibility fallback for replies without a line ending
+		if (this.responseBuffer) {
+			this.responseFlushTimer = setTimeout(() => {
+				this.responseFlushTimer = null;
+
+				if (
+					this._destroyed ||
+					this.socket !== socket ||
+					!socket.isConnected
+				) {
+					return;
+				}
+
+				const remaining = this.responseBuffer;
+				this.responseBuffer = '';
+
+				this.log('debug', 'Processing unterminated TCP response');
+				this._handleTCPLine(remaining);
+			}, this.responseIdleMs);
+		}
+	}
+
+	_handleTCPLine(line) {
+		const response = line.trim();
+
+		// Ignore empty lines
+		if (!response) return;
+
+		this.log('debug', `Response: ${response}`);
+
+		// ST4/ST4.3 can return G500 without "Positions:"
+		const status = response.match(
+			/^([01]{4})\s+(-?\d+(?:\s*,\s*-?\d+){6})$/
+		);
+
+		const normalized = status
+			? `Positions: ${status[1]},${status[2]}`
+			: response;
+
+		try {
+			this.handleTCPResponse(normalized);
+		} catch (err) {
+			this.log('warn',
+				`Unable to parse eMotimo response "${response}": ${err.message}`
+			);
+		}
+	}
+
+	_resetTransportState() {
+		if (this._startupTimer) {
+			clearTimeout(this._startupTimer);
+			this._startupTimer = null;
+		}
+
+		// Cancel an outstanding queue timer
+		if (this.commandTimer) {
+			clearTimeout(this.commandTimer);
+			this.commandTimer = null;
+		}
+
+		// Never replay commands from the previous connection
+		this.commandQueue = [];
+		this.backgroundQueue = [];
+		this.commandInFlight = false;
+
+		// Forget the previous session's commands
+		this.recentList = [''];
+
+		// Discard incomplete responses from the old TCP session
+		if (this.responseFlushTimer) {
+			clearTimeout(this.responseFlushTimer);
+			this.responseFlushTimer = null;
+		}
+
+		this.responseBuffer = '';
+
+		// The previous connection's motor state is no longer trustworthy
+		this.motorVelocityModes.clear();
+
+		// Invalidate delayed commands from the previous connection
+		this.motionGeneration++;
 	}
 
 	_cleanupSocket() {
-		if (this.heartbeatInterval) { clearInterval(this.heartbeatInterval); this.heartbeatInterval = null }
-
-		if (this.commandQueue) this.commandQueue = [];
-		if (this.recentList) this.recentList = [];
-
-		if (this.socket) {
-			try { this.socket.removeAllListeners() } catch {};
-			try { this.socket.destroy() } catch {};
-			this.socket = null;
+		// Stop API keepalive
+		if (this.keepAliveInterval) {
+			clearInterval(this.keepAliveInterval);
+			this.keepAliveInterval = null;
 		}
-	}
 
-	_scheduleReconnect(reason = 'unknown') {
-		if (this._reconnectTimer) return; // already scheduled
-		if (!this._backoff) this._backoff = 2000; // starts at 2s then doubles every try
-		const delay = this._backoff;
-		this._backoff = Math.min(this._backoff * 2, 10000); // cap at 10s
-		this.log('error', `Reconnecting (reason: ${reason}) in ${delay}ms`);
-		this._reconnectTimer = setTimeout(() => {
-			this._reconnectTimer = null;
-			this.init_tcp();
-		}, delay);
-	}
+		// Stop position polling
+		if (this.positionPollInterval) {
+			clearInterval(this.positionPollInterval);
+			this.positionPollInterval = null;
+		}
 
-	_onDead(origin = 'unknown') {
-		this.log('error', `Connection marked dead via ${origin}`);
-		this._cleanupSocket();
-		this._scheduleReconnect(origin);
+		// Stop command queue timer
+		if (this.commandTimer) {
+			clearTimeout(this.commandTimer);
+			this.commandTimer = null;
+		}
+
+		// Stop delayed startup fetch
+		if (this._startupTimer) {
+			clearTimeout(this._startupTimer);
+			this._startupTimer = null;
+		}
+
+		// Reset communication state
+		this.commandQueue = [];
+		this.backgroundQueue = [];
+		this.commandInFlight = false;
+		this.recentList = [''];
+
+		// Discard incomplete responses from the old TCP session
+		if (this.responseFlushTimer) {
+			clearTimeout(this.responseFlushTimer);
+			this.responseFlushTimer = null;
+		}
+
+		this.responseBuffer = '';
+
+		// Reset motor control tracking
+		this.motorVelocityModes.clear();
+
+		// Invalidate delayed motor commands
+		this.motionGeneration++;
+
+		// Close the old socket
+		if (this.socket) {
+			const oldSocket = this.socket;
+			this.socket = null;
+
+			try {
+				oldSocket.removeAllListeners();
+				oldSocket.destroy();
+			} catch (err) {
+				this.log('warn', `Socket cleanup error: ${err.message}`);
+			}
+		}
 	}
 
 	handleTCPResponse = function (dataPacket) {
@@ -307,11 +706,22 @@ class eMotimoModuleInstance extends InstanceBase {
 		switch (tokens[0].trim()) { // trim to remove any ' ' or \n or anything similar
 			// response from the G500 command
 			case 'Positions':
-				if (this.pending) {
-					this.pending = false;
-					this.updateStatus(InstanceStatus.Ok, 'Connection Active');
+				const requiredPositions = this.config.model === 'SA2.6 Conductor' ? 10 : 8;
+				if (!tokens[1]) {
+					this.log('warn', 'G500 response has no position data');
+					return;
 				}
-				var data = tokens[1].split(',');
+
+				var data = tokens[1].split(',').map(v => v.trim());
+
+				// Movement flags + 7 axis positions
+				if (
+					data.length < requiredPositions ||
+					data.slice(0, requiredPositions).some(v => v === '' || !Number.isFinite(Number(v)))
+				) {
+					this.log('warn', `Invalid G500 response: ${dataPacket}`);
+					return;
+				}
 				// this.log('debug', "Position Update:" + data[0] + ":" + data[1]); //Data[0] has movement flags led by a space data[1] is Pan Position
 				if (parseInt(data[0]) !== 0 || this.getVariableValue('LpActive') !== -1) {
 					this.setVariableValues({ IsMoving: true });
@@ -327,7 +737,12 @@ class eMotimoModuleInstance extends InstanceBase {
 				this.setVariableValues({ FPos: Number(data[5])});
 				this.setVariableValues({ IPos: Number(data[6])});
 				this.setVariableValues({ ZPos: Number(data[7])});
-				// this.setVariableValues({ RPos: Number(data[8])});
+				if (data.length >= 10) {
+					this.setVariableValues({
+						RPos: Number(data[8]),
+						RSFocusPos: Number(data[9]),
+					});
+				}
 				return;
 			// response from the G21 command
 			case 'Preset Set':
@@ -429,7 +844,7 @@ class eMotimoModuleInstance extends InstanceBase {
 						this.log('error', `couldn't find id: ${motor} in MOTOR_ID. Error: ${e}`);
 					}
 				} else { // reset all axis
-					for (let i = 1; i <= this.motorCount; i++) {
+					for (const i of this.stopQueryIds) {
 						try { // map the motor id to a name using the MOTOR_ID object list
 							var axis = MOTOR_ID.find(m => m.id === i).label
 							this.setVariableValues({ [`${axis}StopA`]: 0 });
@@ -460,7 +875,6 @@ class eMotimoModuleInstance extends InstanceBase {
 			const match = line.match(/Preset (\d+): X(-?\d+)\s+Y(-?\d+)\s+Z(-?\d+)\s+W(-?\d+).*?RunTime:\s*(\d+)\s+RampTime:\s*(\d+)/);
 
 			if (match) {
-				this.pending = false;
 				const [, preset, pan, tilt, m3, m4, run, ramp] = match.map(Number);
 
 				// Check if it's an "active" preset
@@ -473,15 +887,15 @@ class eMotimoModuleInstance extends InstanceBase {
 						this.updateActions();
 					}
 
-					variableList.push({ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` });
-					variableList.push({ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` });
-					variableList.push({ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` });
-					variableList.push({ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` });
-					variableList.push({ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` });
-					variableList.push({ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` });
-					variableList.push({ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` });
-
-					this.setVariableDefinitions(variableList);
+					this.ensureVariableDefinitions([
+						{ name: `Preset${preset}RunT`, variableId: `Pst${preset}RunT` },
+						{ name: `Preset${preset}RampT`, variableId: `Pst${preset}RampT` },
+						{ name: `Preset${preset}Status`, variableId: `Pst${preset}Stat` },
+						{ name: `Preset${preset}PanPos`, variableId: `Pst${preset}PanPos` },
+						{ name: `Preset${preset}TiltPos`, variableId: `Pst${preset}TiltPos` },
+						{ name: `Preset${preset}M3Pos`, variableId: `Pst${preset}M3Pos` },
+						{ name: `Preset${preset}M4Pos`, variableId: `Pst${preset}M4Pos` },
+					]);
 
 					this.setVariableValues({
 						[`Pst${preset}Stat`]: 1,
@@ -519,69 +933,58 @@ class eMotimoModuleInstance extends InstanceBase {
 			}
 		}
 		if (tokens[0].startsWith('Motor performance set for')) {
-			// DEFAULT: Motor performance set for Pan: Vel.: 40000, Accel.: 750, IRUN: 10, IHOLD: 3
-			let data = tokens[0].split(' '); // data = ['Motor', 'performance', 'set', 'for', 'Pan']
-			let axis = data[4];
-			if (!tokens[1]) { // G100 response, 'Motor performance set for Pan' // tokens[1] would be undefined
+			const response = dataPacket.toString().trim();
+
+			const match = response.match(
+				/^Motor performance set for (\w+):\s*Vel\.:\s*(-?\d+)(?:,\s*Accel\.:\s*(-?\d+),\s*IRUN:\s*(\d+),\s*IHOLD:\s*(\d+))?$/i
+			);
+
+			if (!match) {
+				this.log('warn', `Unrecognized G101 response: ${response}`);
 				return;
 			}
-			// with the initial split at the top the response has multiple ':' in it so it splits it weird
-			// Pan: Vel.: 40000, Accel.: 750, IRUN: 10, IHOLD: 3 -> ['Vel.', '40000, Accel.', '750, IRUN', '10, IHOLD', '3']
-			// other is not needed since its just like 'Accel.' and so on.
-			var [velRaw, other] = tokens[2].split(',');
-			var [accelRaw, other] = tokens[3].split(',');
-			var [irunRaw, other] = tokens[4].split(',');
-			var [iholdRaw, other] = tokens[5].split(',');
 
-			// there is an extra space infront of them
-			var vel = velRaw.trim();
-			var accel = accelRaw.trim();
-			var irun = irunRaw.trim();
-			var ihold = iholdRaw.trim();
+			const [, axis, vel, accel, irun, ihold] = match;
 
-			var speeds = {Vel: vel, Accel: accel, IRUN: irun, IHOLD: ihold}
+			const speeds = {
+				Vel: vel,
+				Accel: accel ?? '',
+				IRUN: irun ?? '',
+				IHOLD: ihold ?? '',
+			};
 
-			this.setVariableValues({ [`${axis}SpeedProfileValues`]: speeds });
+			// Preserve the existing object-style variable value
+			this.setVariableValues({
+				[`${axis}SpeedProfileValues`]: speeds,
+			});
 
-			// for now only worry about the pan values since they are unique enough
+			// Match a known motor profile using the Pan values
+			if (axis === 'Pan' && accel !== undefined) {
+				const profile = MOTOR_PROFILES_VELOCITIES.find(item => {
+					const [, motor] = item.id.split(',');
 
-			// if ((this.getVariableValue('PanSpeedProfileValues') != '') && // checks if all the axis have been requested and arent blank
-			// 		(this.getVariableValue('TiltSpeedProfileValues' != '')) &&
-			// 		(this.getVariableValue('M3SpeedProfileValues') != '') &&
-			// 		(this.getVariableValue('M4SpeedProfileValues') != '')) {
-			//	// do something
-			//}
+					return motor === 'Pan' &&
+						item.Vel === vel &&
+						item.Accel === accel &&
+						item.IRUN === irun &&
+						item.IHOLD === ihold;
+				});
 
-			if (axis === 'Pan') {
-				for (let i = 0; i < MOTOR_PROFILES_VELOCITIES.length; i++) { // loop through all entries in the list
-					var foo = MOTOR_PROFILES_VELOCITIES[i] // foo = the entry object at index i // {id: 'Quiet/Fast,Pan', Vel: '90000', Accel: '2000', IRUN: '10', IHOLD: '3'},
-					var [bar1, bar2] = foo.id.split(','); // split the id // 'Quiet/Fast,Pan' -> ['Quiet/Fast', 'Pan']
-					if (bar2 === 'Pan') {
-						if (foo.Vel === vel &&
-								foo.Accel === accel &&
-								foo.IRUN === irun &&
-								foo.IHOLD === ihold ) { // check all the speed and see if they match
-							var profile = bar1;
-							break;
-						}
-					}
+				if (profile) {
+					const profileName = profile.id.split(',')[0];
+
+					this.setVariableValues({
+						CurrentMtrProf: profileName,
+					});
+
+					this.checkFeedbacks('MotorProfileSatus');
 				}
-
-				// var profile = MOTOR_PROFILES_VELOCITIES.find(m => {
-				// 	m.Vel === vel &&
-				// 	m.Accel === accel &&
-				// 	m.IRUN === irun &&
-				// 	m.IHOLD === ihold;
-				// });
-				this.log('debug', `Profile: ${profile} // vel: ${vel} // accel: ${accel} // irun: ${irun} // ihold: ${ihold}`);
-				this.setVariableValues({ 'CurrentMtrProf': profile });
-				this.checkFeedbacks('MotorProfileSatus');
 			}
+
 			return;
 		}
 		if (tokens[0].startsWith('Com\'d Not Recognized')) {
-			this.log('error', 'Com\'d Not Recognized. Resending: : ' + this.recentList[0]);
-			this.sendEmotimoAPICommand(this.recentList[0], true);
+			this.log('error', `eMotimo rejected a command: ${dataPacket.toString().trim()}`);
 			return;
 		}
 		// response for the G25 Command (save loop): response: 'Loop 2 Set' -> ['Loop', '2', 'Set']
@@ -682,7 +1085,7 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ FPos: 5000 });
 		this.setVariableValues({ IPos: 5000 });
 		this.setVariableValues({ ZPos: 5000 });
-		this.setVariableValues({ RPos: 0 });
+		this.setVariableValues({ RSFocusPos: 0 });
 		if (this.config.model == 'SA2.6 Conductor') {
 			this.setVariableValues({ TStep: 1 });
 			this.setVariableValues({ PStep: 1 });
@@ -691,7 +1094,7 @@ class eMotimoModuleInstance extends InstanceBase {
 			this.setVariableValues({ PStep: 1000 });
 		}
 		this.setVariableValues({ SStep: 1000 });
-		this.setVariableValues({ ZStep: 1000 });
+		this.setVariableValues({ MStep: 1000 });
 		this.setVariableValues({ FStep: 50 });
 		this.setVariableValues({ IStep: 50 });
 		this.setVariableValues({ ZStep: 50 });
@@ -773,45 +1176,46 @@ class eMotimoModuleInstance extends InstanceBase {
 		this.setVariableValues({ SetPsts: "[]" });
 	}
 
-	async fetchStartup() {
-		this.fetchStat = true;
-
-		try {
-			await this.fetchLoop('preset', 0, this.config.startupPstAmount, i => `G752 P${i}`);
-			await this.fetchLoop('Motor Performance', 1, this.motorCount, i => `G101 M${i}`);
-			await this.fetchLoop('Stops A', 1, this.motorCount, i => `G215 M${i}`);
-			await this.fetchLoop('Stops B', 1, this.motorCount, i => `G216 M${i}`);
-
-			this.log('debug', 'All startup fetches complete');
-		} catch (err) {
-			this.log('error', 'Fetch error: ' + err.message);
+	fetchStartup(socket) {
+		if (
+			this._destroyed ||
+			this.socket !== socket ||
+			!socket?.isConnected
+		) {
+			return;
 		}
-		this.fetchStat = false;
-	}
 
-	fetchLoop(label, min, max, commandBuilder) {
-		return new Promise((resolve, reject) => {
-			let i = min;
+		const commands = [];
 
-			const sendNext = () => {
-				if (!this.socket || !this.socket.isConnected) {
-					reject(new Error(`${label}: socket not connected`));
-					return;
-				}
+		// Request configured number of presets
+		for (let i = 0; i < this.config.startupPstAmount; i++) {
+			commands.push(`G752 P${i}`);
+		}
 
-				if (i > max) {
-					this.log('debug', `Finished fetching ${label}`);
-					resolve();
-					return;
-				}
+		// Request motor performance information
+		for (const id of this.performanceQueryIds) {
+			commands.push(`G101 M${id}`);
+		}
 
-				this.sendEmotimoAPICommand(commandBuilder(i));
-				i++;
-				setTimeout(sendNext, this.sendDelayMs * 1.5);
-			}
+		// Request virtual stop A positions
+		for (const id of this.stopQueryIds) {
+			commands.push(`G215 M${id}`);
+		}
 
-			sendNext();
-		});
+		// Request virtual stop B positions
+		for (const id of this.stopQueryIds) {
+			commands.push(`G216 M${id}`);
+		}
+
+		// Let the existing command queue control the sending rate
+		for (const command of commands) {
+			this.queueBackgroundQuery(command);
+		}
+
+		this.log(
+			'info',
+			`Queued ${commands.length} startup information requests`
+		);
 	}
 }
 

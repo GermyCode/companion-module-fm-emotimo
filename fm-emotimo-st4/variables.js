@@ -6,11 +6,11 @@ const variableList = [
 	{ name: 'FocusPosition', variableId: 'FPos' },
 	{ name: 'IrisPosition', variableId: 'IPos' },
 	{ name: 'ZoomPosition', variableId: 'ZPos' },
-	{ name: 'RollPosition', variableId: 'RPos' },
+	{ name: 'RSFocusPosition', variableId: 'RSFocusPos' },
 	{ name: 'PanIncrement', variableId: 'PStep' },
 	{ name: 'TiltIncrement', variableId: 'TStep' },
 	{ name: 'SlideIncrement', variableId: 'SStep' },
-	{ name: 'M4Increment', variableId: 'ZStep' },
+	{ name: 'M4Increment', variableId: 'MStep' },
 	{ name: 'FocusIncrement', variableId: 'FStep' },
 	{ name: 'IrisIncrement', variableId: 'IStep' },
 	{ name: 'ZoomIncrement', variableId: 'ZStep' },
@@ -104,6 +104,11 @@ const variableList = [
 	{ name: 'Tilt Speed Profile Values', variableId: 'TiltSpeedProfileValues'},
 	{ name: 'M3 Speed Profile Values', variableId: 'M3SpeedProfileValues'},
 	{ name: 'M4 Speed Profile Values', variableId: 'M4SpeedProfileValues'},
+	{ name: 'TN1 Speed Profile Values', variableId: 'TN1SpeedProfileValues' },
+	{ name: 'TN2 Speed Profile Values', variableId: 'TN2SpeedProfileValues' },
+	{ name: 'TN3 Speed Profile Values', variableId: 'TN3SpeedProfileValues' },
+	{ name: 'Roll Speed Profile Values', variableId: 'RollSpeedProfileValues' },
+	{ name: 'Focus Speed Profile Values', variableId: 'FocusSpeedProfileValues' },
 ]
 
 module.exports = async function (self) {self.setVariableDefinitions(variableList)}
